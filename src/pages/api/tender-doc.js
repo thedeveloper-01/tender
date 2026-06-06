@@ -3,7 +3,7 @@ import { PLANTS } from '../../lib/plants.js';
 export const prerender = false;
 
 const PORTAL_BASE = 'https://cspc.co.in/cspgcl_tendernotices/CSPGCL_Tender.aspx';
-const EVENT_TARGET_RE = /^GVTenderDetails\$ctl\d+\$lb\/.+\.pdf$/i;
+const EVENT_TARGET_RE = /^GVTenderDetails\$ctl\d+\$\w+/i;
 
 function readHiddenField(html, name) {
   const m = html.match(new RegExp(`id="${name}" value="([^"]*)"`));
