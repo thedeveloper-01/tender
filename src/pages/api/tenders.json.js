@@ -2,6 +2,7 @@ import * as cheerio from 'cheerio';
 import { PLANTS, isTenderActive, resolveTenderLocation } from '../../lib/plants.js';
 
 export const prerender = false;
+export const maxDuration = 30;
 
 /** Pick the main tender PDF link from a table row (prefers full NIT & TenderDoc). */
 function extractDocEventTarget($, tr) {
@@ -23,6 +24,30 @@ function extractDocEventTarget($, tr) {
   return preferred?.eventTarget || null;
 }
 
+/**
+ * Parse CSPGCL date strings like "19/06/2026 04:00PM" into ISO format.
+ * The portal uses DD/MM/YYYY HH:MMAM/PM — the old split-based parser
+ * produced invalid ISO strings like "2026-06-19T04:00PM:00".
+ */
+function parseDate(d) {
+  if (!d) return null;
+  // Primary: match "DD/MM/YYYY HH:MM(AM|PM)"
+  const match = d.match(/^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+  if (match) {
+    const [, day, month, year, rawHr, min, meridiem] = match;
+    let hr = parseInt(rawHr, 10);
+    if (meridiem) {
+      const isPM = meridiem.toUpperCase() === 'PM';
+      if (isPM && hr !== 12) hr += 12;
+      if (!isPM && hr === 12) hr = 0;
+    }
+    return `${year}-${month}-${day}T${String(hr).padStart(2, '0')}:${min}:00`;
+  }
+  // Fallback: native Date parse
+  const parsed = new Date(d);
+  return isNaN(parsed.getTime()) ? null : parsed.toISOString();
+}
+
 export async function GET() {
   let allTenders = [];
   let globalId = 1;
@@ -31,7 +56,14 @@ export async function GET() {
     const url = `https://cspc.co.in/cspgcl_tendernotices/CSPGCL_Tender.aspx?paramflag=${plant.paramflag}`;
 
     try {
-      const resp = await fetch(url);
+      const resp = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'en-IN,en;q=0.9',
+        },
+        signal: AbortSignal.timeout(25000),
+      });
       if (!resp.ok) continue;
       const html = await resp.text();
       const $ = cheerio.load(html);
@@ -49,15 +81,6 @@ export async function GET() {
           if (!str || str.toLowerCase() === 'nil' || str === '-') return null;
           const num = Number(str.replace(/[^0-9.]/g, ''));
           return isNaN(num) ? null : num;
-        };
-
-        const parseDate = (d) => {
-          if (!d) return null;
-          const parts = d.split(/[ \/:]/);
-          if (parts.length >= 3) {
-            return `${parts[2]}-${parts[1]}-${parts[0]}T${parts[3] || '00'}:${parts[4] || '00'}:00`;
-          }
-          return d;
         };
 
         const closingDate = parseDate(text(tds[6]));
@@ -83,10 +106,8 @@ export async function GET() {
           emd: parseNum(text(tds[5])),
           closing_date: closingDate,
           opening_date: parseDate(text(tds[7])),
-          // RFX/Remark is always the LAST td (index 14 or 15 when Date Extension present)
           rfx_id: (() => {
             const last = text(tds[tds.length - 1]);
-            // Skip if it looks like a doc label (NIT, Date Extension, Corrigendum, etc.)
             if (!last || /^(NIT|Date Extension|Corrigendum|Tender Doc|General Terms|Amendment|Offline Tender|Tender cost|Tender Cast|Tender Specn)/i.test(last)) return null;
             return last;
           })(),
