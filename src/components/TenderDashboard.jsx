@@ -575,7 +575,7 @@ export default function TenderDashboard() {
                     )}
 
                     {/* Financials */}
-                    <div className="grid grid-cols-2 gap-3 mb-4 bg-gray-50 rounded-lg p-3 border border-gray-100">
+                    <div className="grid grid-cols-2 gap-3 mb-3 bg-gray-50 rounded-lg p-3 border border-gray-100">
                       <div>
                         <p className="text-[10px] text-gray-500 uppercase font-semibold mb-0.5">Est. Cost</p>
                         <p className="text-sm font-bold text-gray-900">{formatRupee(tender.estimated_cost)}</p>
@@ -591,6 +591,64 @@ export default function TenderDashboard() {
                           </span>
                         </div>
                       )}
+                    </div>
+
+                    {/* Dates */}
+                    <div className="grid grid-cols-2 gap-3 mb-4 rounded-lg border border-gray-100 overflow-hidden">
+                      {/* Opening Date */}
+                      <div className="bg-blue-50 px-3 py-2.5">
+                        <div className="flex items-center gap-1 mb-1">
+                          <svg className="w-3 h-3 text-[#1A56DB] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <p className="text-[9px] text-[#1A56DB] uppercase font-bold tracking-wider leading-none">Opening</p>
+                        </div>
+                        <p className="text-xs font-semibold text-gray-800 leading-snug">
+                          {tender.opening_date
+                            ? new Date(tender.opening_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                            : '—'}
+                        </p>
+                        {tender.opening_date && (
+                          <p className="text-[10px] text-gray-500 mt-0.5">
+                            {new Date(tender.opening_date).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Closing Date */}
+                      {(() => {
+                        const daysLeft = getDaysLeft(tender.closing_date);
+                        const isExpired = daysLeft !== null && daysLeft < 0;
+                        const isUrgent = daysLeft !== null && daysLeft >= 0 && daysLeft <= 3;
+                        const bgClass = isExpired ? 'bg-red-50' : isUrgent ? 'bg-amber-50' : 'bg-gray-50';
+                        const labelColor = isExpired ? 'text-[#E02424]' : isUrgent ? 'text-[#C27803]' : 'text-gray-500';
+                        const iconColor = isExpired ? 'text-[#E02424]' : isUrgent ? 'text-[#C27803]' : 'text-gray-400';
+                        const textColor = isExpired ? 'text-[#E02424]' : isUrgent ? 'text-[#C27803]' : 'text-gray-800';
+                        return (
+                          <div className={`${bgClass} px-3 py-2.5`}>
+                            <div className="flex items-center gap-1 mb-1">
+                              <svg className={`w-3 h-3 ${iconColor} shrink-0`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              <p className={`text-[9px] ${labelColor} uppercase font-bold tracking-wider leading-none`}>Closing</p>
+                            </div>
+                            <p className={`text-xs font-semibold ${textColor} leading-snug`}>
+                              {tender.closing_date
+                                ? new Date(tender.closing_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                                : '—'}
+                            </p>
+                            {daysLeft !== null && (
+                              <p className={`text-[10px] mt-0.5 font-medium ${isExpired ? 'text-[#E02424]' : isUrgent ? 'text-[#C27803]' : 'text-gray-500'}`}>
+                                {isExpired
+                                  ? `Expired ${Math.abs(daysLeft)}d ago`
+                                  : daysLeft === 0
+                                    ? 'Closes today!'
+                                    : `${daysLeft}d left`}
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
 
                     {/* Risks */}
