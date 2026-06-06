@@ -1,0 +1,70 @@
+---
+// Footer component with links to legal pages
+---
+
+<footer class="bg-white border-t border-gray-200 mt-12 md:mt-16">
+  <div class="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-8 md:py-12">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-6 mb-8">
+      <!-- Brand Section -->
+      <div class="col-span-1 md:col-span-1">
+        <h3 class="text-lg font-bold text-gray-900 mb-2">CSPGCL</h3>
+        <p class="text-sm text-gray-600">Tender Intelligence Dashboard</p>
+        <p class="text-xs text-gray-500 mt-2">AI-powered tender analysis and insights</p>
+      </div>
+
+      <!-- Quick Links -->
+      <div>
+        <h4 class="text-sm font-semibold text-gray-900 mb-4">Product</h4>
+        <ul class="space-y-2">
+          <li><a href="/tenders" class="text-sm text-gray-600 hover:text-[#1A56DB] transition">Dashboard</a></li>
+          <li><a href="/about" class="text-sm text-gray-600 hover:text-[#1A56DB] transition">About</a></li>
+        </ul>
+      </div>
+
+      <!-- Legal & Compliance -->
+      <div>
+        <h4 class="text-sm font-semibold text-gray-900 mb-4">Legal</h4>
+        <ul class="space-y-2">
+          <li><a href="/privacy" class="text-sm text-gray-600 hover:text-[#1A56DB] transition">Privacy Policy</a></li>
+          <li><a href="/terms" class="text-sm text-gray-600 hover:text-[#1A56DB] transition">Terms & Conditions</a></li>
+        </ul>
+      </div>
+
+      <!-- Support & Contact -->
+      <div>
+        <h4 class="text-sm font-semibold text-gray-900 mb-4">Support</h4>
+        <ul class="space-y-2">
+          <li><a href="/contact" class="text-sm text-gray-600 hover:text-[#1A56DB] transition">Contact Us</a></li>
+          <li><a href="#" class="text-sm text-gray-600 hover:text-[#1A56DB] transition">Help Center</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Divider -->
+    <div class="border-t border-gray-100 pt-6">
+      <!-- Bottom Footer -->
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <p class="text-xs text-gray-500">
+          © {new Date().getFullYear()} CSPGCL Tender Dashboard. All rights reserved.
+        </p>
+        <div class="flex flex-wrap gap-4">
+          <a href="/privacy" class="text-xs text-gray-500 hover:text-gray-700 transition">Privacy</a>
+          <a href="/terms" class="text-xs text-gray-500 hover:text-gray-700 transition">Terms</a>
+          <a href="/contact" class="text-xs text-gray-500 hover:text-gray-700 transition">Contact</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<style is:global>
+  footer a {
+    text-decoration: none;
+  }
+
+  footer a:focus {
+    outline: 2px solid #1A56DB;
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+</style>

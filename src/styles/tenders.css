@@ -48,6 +48,52 @@
   to   { transform: rotate(360deg); }
 }
 
+/* ─── Mobile Responsive Utilities ─── */
+
+/* Ensure text is readable on mobile without zoom */
+@media (max-width: 640px) {
+  input, 
+  select, 
+  textarea, 
+  button {
+    font-size: 16px; /* Prevents iOS auto-zoom on focus */
+    padding: 0.625rem; /* ~10px, comfortable for touch */
+  }
+  
+  /* Touch-friendly link/button sizing */
+  a, button {
+    min-height: 44px; /* iOS recommended touch target size */
+    display: flex;
+    align-items: center;
+  }
+}
+
+/* Improve scrollability on mobile */
+@media (max-width: 768px) {
+  .tender-card {
+    min-height: auto;
+  }
+  
+  .category-badge {
+    font-size: 0.7rem;
+  }
+}
+
+/* Better spacing on larger phones */
+@media (min-width: 375px) and (max-width: 480px) {
+  body {
+    line-height: 1.5;
+  }
+}
+
+/* Ensure proper text sizing across all devices */
+@media (max-width: 640px) {
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.25rem; }
+  h3 { font-size: 1rem; }
+  p, span { font-size: 0.9375rem; }
+}
+
 /* ─── Utility classes ─── */
 
 .tender-card-closing-soon {
@@ -102,6 +148,16 @@
 ::-webkit-scrollbar-track  { background: transparent; }
 ::-webkit-scrollbar-thumb  { background: #D1D5DB; border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: #9CA3AF; }
+
+/* Hide scrollbar for mobile scrollable containers */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
 
 /* Focus ring style */
 .focus-ring:focus-visible {

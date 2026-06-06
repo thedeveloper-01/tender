@@ -1,1 +1,35 @@
 @import "tailwindcss";
+
+@layer base {
+  /* Mobile-first base styles */
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%; /* Prevent iOS font scaling */
+  }
+
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    tap-highlight-color: transparent;
+  }
+
+  /* Touch-friendly defaults */
+  button, a, input, select {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  input, textarea {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  /* Ensure inputs don't zoom on iOS */
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
