@@ -283,7 +283,7 @@ export default function TenderDashboard() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4 mb-4 md:mb-6">
           <div>
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 tracking-tight mb-2">
-              CSPGCL Tender Intelligence
+              CSPGCL TENDERS
             </h1>
             <p className="text-sm md:text-base text-gray-600 flex items-center gap-2 flex-wrap">
               <span className="relative flex h-3 w-3">
