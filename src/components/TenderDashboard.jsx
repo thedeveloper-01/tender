@@ -63,7 +63,7 @@ export default function TenderDashboard() {
     setError(null);
     setTenders([]);
     setEnrichedData({});
-    
+
     try {
       setLoadingStep(1);
       setLoadingText("Connecting to CSPGCL portal...");
@@ -197,7 +197,7 @@ export default function TenderDashboard() {
   };
 
   const toggleCategory = (cat) => {
-    setSelectedCategories(prev => 
+    setSelectedCategories(prev =>
       prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
     );
   };
@@ -227,7 +227,7 @@ export default function TenderDashboard() {
           </div>
           <h2 className="text-xl font-bold text-gray-900 mb-2">Connection Error</h2>
           <p className="text-gray-600 mb-6">{error}</p>
-          <button 
+          <button
             onClick={loadData}
             className="bg-[#1A56DB] text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition focus-ring"
           >
@@ -260,8 +260,8 @@ export default function TenderDashboard() {
             <span>{progress}%</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
-            <div 
-              className="bg-[#1A56DB] h-2.5 rounded-full transition-all duration-500 ease-out" 
+            <div
+              className="bg-[#1A56DB] h-2.5 rounded-full transition-all duration-500 ease-out"
               style={{ width: `${progress}%` }}
             ></div>
           </div>
@@ -277,7 +277,7 @@ export default function TenderDashboard() {
 
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 md:py-6 lg:py-8">
-      
+
       {/* HEADER */}
       <header className="mb-6 md:mb-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4 mb-4 md:mb-6">
@@ -294,7 +294,7 @@ export default function TenderDashboard() {
               {lastFetched && <span className="ml-2 text-sm text-gray-400">Updated {lastFetched.toLocaleTimeString()}</span>}
             </p>
           </div>
-          <button 
+          <button
             onClick={loadData}
             className="flex items-center gap-2 px-3 sm:px-4 py-2.5 md:py-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 text-gray-700 font-medium focus-ring transition whitespace-nowrap"
           >
@@ -315,16 +315,14 @@ export default function TenderDashboard() {
                 key={plant.id}
                 type="button"
                 onClick={() => setActivePlant(plant.id)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition border focus-ring ${
-                  isActive
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition border focus-ring ${isActive
                     ? 'bg-[#1A56DB] text-white border-[#1A56DB] shadow-sm'
                     : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-                }`}
+                  }`}
               >
                 {plant.shortLabel}
-                <span className={`ml-2 text-xs px-1.5 py-0.5 rounded-full ${
-                  isActive ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'
-                }`}>
+                <span className={`ml-2 text-xs px-1.5 py-0.5 rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'
+                  }`}>
                   {count}
                 </span>
               </button>
@@ -344,7 +342,7 @@ export default function TenderDashboard() {
               <span className="text-2xl font-bold text-[#1A56DB]">{filteredTenders.length}</span>
             </div>
           </div>
-          
+
           <div className="lg:col-span-3 bg-gradient-to-br from-[#1A56DB] to-[#1e3a8a] text-white rounded-xl p-6 shadow-md relative overflow-hidden">
             <div className="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-white opacity-5 rounded-full blur-2xl"></div>
             <h2 className="text-lg font-semibold mb-2 flex items-center gap-2">
@@ -361,18 +359,18 @@ export default function TenderDashboard() {
       </header>
 
       <div className="flex flex-col lg:flex-row gap-4 md:gap-5 lg:gap-6">
-        
+
         {/* SIDEBAR - FILTERS */}
         <aside className="w-full sm:w-72 lg:w-72 flex-shrink-0 space-y-4 md:space-y-5 lg:space-y-6">
           <div className="bg-white rounded-xl p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)] border border-gray-100">
-            
+
             {/* NL Search */}
             <form onSubmit={handleNlSearch} className="mb-6 relative">
               <label className="block text-sm font-semibold text-gray-900 mb-2">Quick Filter</label>
               <div className="relative">
-                <input 
-                  type="text" 
-                  placeholder="e.g. Civil works under 20 lakh" 
+                <input
+                  type="text"
+                  placeholder="e.g. Civil works under 20 lakh"
                   value={nlQuery}
                   onChange={e => setNlQuery(e.target.value)}
                   className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:border-[#1A56DB] focus:ring-1 focus:ring-[#1A56DB] outline-none transition"
@@ -381,8 +379,8 @@ export default function TenderDashboard() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="mt-2 w-full bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-medium py-2.5 md:py-1.5 rounded-lg transition"
               >
                 Filter
@@ -401,7 +399,7 @@ export default function TenderDashboard() {
               {/* Toggles */}
               <div>
                 <label className="flex items-center justify-between cursor-pointer group">
-                  <span className="text-sm text-gray-700 group-hover:text-gray-900">EMD ≤ {(emdCapValue/1000).toFixed(0)}k</span>
+                  <span className="text-sm text-gray-700 group-hover:text-gray-900">EMD ≤ {(emdCapValue / 1000).toFixed(0)}k</span>
                   <div className="relative">
                     <input type="checkbox" className="sr-only" checked={emdCapOn} onChange={e => setEmdCapOn(e.target.checked)} />
                     <div className={`block w-10 h-6 rounded-full transition ${emdCapOn ? 'bg-[#1A56DB]' : 'bg-gray-300'}`}></div>
@@ -409,10 +407,10 @@ export default function TenderDashboard() {
                   </div>
                 </label>
               </div>
-              
+
               <div>
                 <label className="flex items-center justify-between cursor-pointer group">
-                  <span className="text-sm text-gray-700 group-hover:text-gray-900">Cost ≤ {(bidCapValue/100000).toFixed(0)}L</span>
+                  <span className="text-sm text-gray-700 group-hover:text-gray-900">Cost ≤ {(bidCapValue / 100000).toFixed(0)}L</span>
                   <div className="relative">
                     <input type="checkbox" className="sr-only" checked={bidCapOn} onChange={e => setBidCapOn(e.target.checked)} />
                     <div className={`block w-10 h-6 rounded-full transition ${bidCapOn ? 'bg-[#1A56DB]' : 'bg-gray-300'}`}></div>
@@ -438,8 +436,8 @@ export default function TenderDashboard() {
                 <div className="space-y-2">
                   {allCategories.map(cat => (
                     <label key={cat} className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer hover:text-gray-900">
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         className="rounded border-gray-300 text-[#1A56DB] focus:ring-[#1A56DB]"
                         checked={selectedCategories.includes(cat)}
                         onChange={() => toggleCategory(cat)}
@@ -453,7 +451,7 @@ export default function TenderDashboard() {
               {/* Office */}
               <div>
                 <label className="block text-sm font-medium text-gray-900 mb-2">Issuing Office</label>
-                <select 
+                <select
                   value={selectedOffice}
                   onChange={e => setSelectedOffice(e.target.value)}
                   className="w-full text-sm border-gray-300 border rounded-lg p-2 focus:ring-[#1A56DB] focus:border-[#1A56DB] outline-none"
@@ -466,7 +464,7 @@ export default function TenderDashboard() {
               {/* Sort */}
               <div>
                 <label className="block text-sm font-medium text-gray-900 mb-2">Sort by Closing Date</label>
-                <select 
+                <select
                   value={sortDesc ? 'desc' : 'asc'}
                   onChange={e => setSortDesc(e.target.value === 'desc')}
                   className="w-full text-sm border-gray-300 border rounded-lg p-2 focus:ring-[#1A56DB] focus:border-[#1A56DB] outline-none"
@@ -502,7 +500,7 @@ export default function TenderDashboard() {
               </svg>
               <h3 className="text-xl font-bold text-gray-900 mb-2">No tenders match — try rephrasing</h3>
               <p className="text-gray-500">Try clearing some filters or using different keywords.</p>
-              <button 
+              <button
                 onClick={handleClearFilters}
                 className="mt-6 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg font-medium transition"
               >
@@ -513,8 +511,8 @@ export default function TenderDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4 lg:gap-5">
               {filteredTenders.map((tender) => {
                 return (
-                  <div 
-                    key={tender.sr_no} 
+                  <div
+                    key={tender.sr_no}
                     className="tender-card bg-white rounded-[10px] p-5 flex flex-col fade-in-up border border-gray-100 transition-all hover:shadow-md shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
                   >
                     {/* Top Row: Sr No, Score, Badges */}
@@ -541,7 +539,7 @@ export default function TenderDashboard() {
                     <p className="text-xs text-gray-500 mb-3 line-clamp-1" title={tender.issuing_office}>
                       {tender.issuing_office}
                     </p>
-                    
+
                     <div className="mb-4">
                       <p className={"text-gray-900 text-sm " + (expandedCards[tender.sr_no] ? '' : 'line-clamp-3')}>
                         {tender.scope_raw || tender.scope_summary}
