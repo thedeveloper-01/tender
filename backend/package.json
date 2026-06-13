@@ -1,0 +1,26 @@
+{
+  "name": "cgtenders-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "node src/server.js",
+    "start": "node src/server.js",
+    "postinstall": "prisma generate",
+    "db:push": "prisma db push",
+    "pipeline": "node -e \"import('./src/pipeline/run.js').then(m=>m.runPipeline()).then(()=>process.exit(0))\""
+  },
+  "dependencies": {
+    "@prisma/client": "^5.20.0",
+    "axios": "^1.7.7",
+    "cheerio": "^1.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "node-cron": "^3.0.3",
+    "pdf-parse": "^1.1.1"
+  },
+  "devDependencies": {
+    "prisma": "^5.20.0"
+  }
+}

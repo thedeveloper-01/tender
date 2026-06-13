@@ -2,9 +2,26 @@
 import TenderLayout from '../layouts/TenderLayout.astro';
 import TenderDashboard from '../components/TenderDashboard.jsx';
 import Footer from '../components/Footer.astro';
+
+const API_URL = process.env.API_URL || 'http://localhost:4000';
+
+let initialTenders = [];
+try {
+  // Fetch a reasonable batch of active tenders to render instantly
+  const res = await fetch(`${API_URL}/api/tenders?limit=200&status=open`);
+  if (res.ok) {
+    const data = await res.json();
+    initialTenders = data.tenders || [];
+  }
+} catch (e) {
+  console.error('[tenders.astro] Failed to fetch server-side tenders:', e.message);
+}
 ---
 
-<TenderLayout>
-  <TenderDashboard client:load />
+<TenderLayout 
+  title="Government Tenders Dashboard | CGTenders.com" 
+  description="Search, sort and filter active Chhattisgarh government tenders from GeM and CSPGCL. View estimated costs, EMDs, and AI-powered viability assessment."
+>
+  <TenderDashboard client:load initialTenders={initialTenders} />
   <Footer />
 </TenderLayout>

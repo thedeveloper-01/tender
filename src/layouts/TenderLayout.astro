@@ -5,12 +5,16 @@ import '../styles/tenders.css';
 export interface Props {
   title?: string;
   description?: string;
+  jsonLd?: string;
 }
 
 const {
-  title = 'CSPGCL TENDERS',
-  description = 'Live CSPGCL tender notices with AI-powered summaries, viability scores, risk analysis, and smart filters. Built for procurement teams.',
+  title = 'CGTenders.com | Chhattisgarh Government Tender Aggregator',
+  description = 'Aggregate, search, and analyze open government tenders relevant to Chhattisgarh from GeM and CSPGCL with smart filters and AI-powered insights.',
+  jsonLd,
 } = Astro.props;
+
+const canonicalUrl = Astro.url.href;
 ---
 
 <!doctype html>
@@ -20,11 +24,21 @@ const {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
     <meta name="robots" content="index, follow" />
+    <link rel="canonical" href={canonicalUrl} />
 
     <!-- Open Graph -->
+    <meta property="og:site_name" content="CGTenders.com" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalUrl} />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+
+    {jsonLd && <script type="application/ld+json" set:html={jsonLd} />}
 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" href="/favicon.ico" />

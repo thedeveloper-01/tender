@@ -1,0 +1,460 @@
+---
+import TenderLayout from '../../layouts/TenderLayout.astro';
+import Footer from '../../components/Footer.astro';
+import { CITIES, cityToSlug } from '../../lib/cities.js';
+
+const API_URL = process.env.API_URL || 'http://localhost:4000';
+const { slug } = Astro.params;
+
+// 1. Determine if the slug is a City/District Page
+const matchedCity = CITIES.find(c => cityToSlug(c) === slug.toLowerCase());
+
+let isCityPage = false;
+let cityData = { name: '', tenders: [], intro: '' };
+let tenderData = null;
+let pageTitle = '';
+let pageDescription = '';
+
+if (matchedCity) {
+  isCityPage = true;
+  cityData.name = matchedCity;
+  
+  // Set a premium unique SEO intro paragraph per district
+  const cityIntros = {
+    'Raipur': 'As the capital city of Chhattisgarh, Raipur is the central administrative and commercial hub. Procurement and civil tenders in Raipur cover high-value infrastructure projects, smart city developments, IT services, and corporate supplies for government directorates.',
+    'Bilaspur': 'Known as the judicial capital and host of the CG High Court, Bilaspur is a critical center for legal, administrative, and public infrastructure works. Tenders here frequently cover road network expansions, municipal supplies, and educational institution logistics.',
+    'Durg': 'Durg division, closely integrated with the Bhilai industrial zone, is a major industrial and education center. Opportunities in Durg focus on industrial manufacturing support, civil construction, municipal services, and technical training facilities.',
+    'Korba': 'Recognized as the power capital of Chhattisgarh, Korba is the industrial powerhouse driven by massive coal mining and thermal power plants. Tenders in Korba are heavily focused on engineering, mechanical works, ash disposal, pollution control, and heavy equipment maintenance for plants (including Hasdeo and DSPM).',
+    'Raigarh': 'Raigarh is a key industrial region noted for steel production and power generation. Tenders in this district focus on mining operations, civil works, logistical services, and industrial material supply.',
+    'Rajnandgaon': 'Bordering Maharashtra, Rajnandgaon is a prominent agricultural and trade hub. Public contracts in Rajnandgaon primarily cover rural irrigation schemes, crop logistics, public office repairs, and social welfare supplies.',
+    'Bastar': 'Centered around Jagdalpur, the Bastar district is culturally rich and heavily forested. Procurement opportunities in Bastar support tribal welfare programs, forest resource development, eco-tourism projects, and local building construction.',
+    'Surguja': 'With Ambikapur as its district headquarters, Surguja represents the northern hilly terrain of CG. Tenders focus on agricultural development, local healthcare facility expansions, solar installations, and public infrastructure links.'
+  };
+  
+  cityData.intro = cityIntros[matchedCity] || `Explore active government tenders and procurement opportunities in the ${matchedCity} district of Chhattisgarh. This dashboard aggregates live listings with localized details, EMD requirements, and bid value parameters.`;
+  pageTitle = `Tenders in ${cityData.name} | CGTenders.com`;
+  pageDescription = cityData.intro;
+
+  // Fetch tenders for this city
+  try {
+    const res = await fetch(`${API_URL}/api/tenders?city=${encodeURIComponent(matchedCity)}&status=open`);
+    if (res.ok) {
+      const data = await res.json();
+      cityData.tenders = data.tenders || [];
+    }
+  } catch (e) {
+    console.error(`[city-page] Failed to fetch tenders for ${matchedCity}:`, e.message);
+  }
+} else {
+  // 2. Otherwise, treat it as a Tender Detail Page
+  const parts = slug.split('--');
+  const source = parts[0]?.toUpperCase();
+  const bidNumber = parts[1] ? decodeURIComponent(parts[1]) : null;
+
+  if (source && bidNumber) {
+    try {
+      const res = await fetch(`${API_URL}/api/tenders/${source}/${encodeURIComponent(bidNumber)}`);
+      if (res.ok) {
+        tenderData = await res.json();
+      }
+    } catch (e) {
+      console.error(`[detail-page] Failed to fetch tender details for ${source}/${bidNumber}:`, e.message);
+    }
+  }
+}
+
+// Formatters
+const formatRupee = (val) => {
+  if (val == null || isNaN(val)) return 'Not specified';
+  return '₹' + Number(val).toLocaleString('en-IN');
+};
+
+const getDaysLeft = (dateStr) => {
+  if (!dateStr) return null;
+  const target = new Date(dateStr);
+  if (isNaN(target.getTime())) return null;
+  const now = new Date();
+  const diffMs = target - now;
+  return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+};
+
+function getTenderSlug(tender) {
+  const safeBid = encodeURIComponent(tender.bidNumber);
+  const safeTitle = tender.title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+    .slice(0, 50);
+  return `${tender.source.toLowerCase()}--${safeBid}--${safeTitle}`;
+}
+
+// Setup Page Metadata for Tender detail view
+if (!isCityPage) {
+  if (tenderData) {
+    pageTitle = `${tenderData.title.slice(0, 50)}... | CGTenders.com`;
+    pageDescription = `Bid details for tender no ${tenderData.bidNumber} issued by ${tenderData.organization || 'Chhattisgarh government'}. Est. cost: ${formatRupee(tenderData.bidValue)}.`;
+  } else {
+    pageTitle = 'Tender Not Found | CGTenders.com';
+    pageDescription = 'The requested tender might be closed, deleted, or does not exist.';
+  }
+}
+---
+
+{isCityPage ? (
+  <TenderLayout title={pageTitle} description={pageDescription}>
+    <div class="min-h-screen flex flex-col bg-[#F8F9FC]">
+      <main class="flex-1 max-w-7xl mx-auto px-4 py-8 w-full">
+        <!-- Breadcrumb -->
+        <nav class="flex text-sm text-gray-500 mb-6">
+          <a href="/" class="hover:text-[#1A56DB]">Home</a>
+          <span class="mx-2">/</span>
+          <a href="/tenders" class="hover:text-[#1A56DB]">Tenders</a>
+          <span class="mx-2">/</span>
+          <span class="text-gray-800 font-medium">{cityData.name}</span>
+        </nav>
+
+        <!-- District Header -->
+        <header class="bg-white rounded-2xl p-6 md:p-8 border border-gray-150 shadow-sm mb-8 relative overflow-hidden">
+          <div class="absolute top-0 right-0 -mt-8 -mr-8 w-40 h-40 bg-blue-500/5 rounded-full blur-2xl"></div>
+          <h1 class="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight mb-3">
+            Tenders in {cityData.name}
+          </h1>
+          <p class="text-gray-650 leading-relaxed text-sm md:text-base max-w-4xl">
+            {cityData.intro}
+          </p>
+        </header>
+
+        <!-- Listing Grid -->
+        <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <span>Active Bids ({cityData.tenders.length})</span>
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+        </h2>
+
+        {cityData.tenders.length === 0 ? (
+          <div class="bg-white rounded-2xl p-12 text-center border border-gray-150 shadow-sm">
+            <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <h3 class="text-lg font-bold text-gray-950 mb-1">No open tenders listed in {cityData.name}</h3>
+            <p class="text-sm text-gray-500">Please check back later or search with filters on the main dashboard.</p>
+            <a href="/tenders" class="mt-4 inline-flex px-4 py-2 bg-gray-150 hover:bg-gray-200 text-gray-800 rounded-lg text-sm font-semibold transition">
+              Go to Dashboard
+            </a>
+          </div>
+        ) : (
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {cityData.tenders.map(tender => {
+              const daysLeft = getDaysLeft(tender.endDate);
+              const isUrgent = daysLeft !== null && daysLeft >= 0 && [0, 1, 2, 3].includes(daysLeft);
+              
+              return (
+                <div class="bg-white rounded-2xl p-5 border border-gray-150 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+                  <div>
+                    <div class="flex justify-between items-start mb-3">
+                      <span class={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${
+                        tender.source === 'GEM' ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                      }`}>
+                        {tender.source}
+                      </span>
+                      {tender.viabilityScore && (
+                        <div class="w-6 h-6 flex items-center justify-center rounded bg-gray-100 text-[10px] font-bold text-gray-700">
+                          {tender.viabilityScore}
+                        </div>
+                      )}
+                    </div>
+                    <h3 class="text-xs text-gray-500 font-semibold mb-2 line-clamp-1">{tender.organization}</h3>
+                    <p class="text-sm font-medium text-gray-900 mb-4 line-clamp-3 min-h-[50px]">{tender.title}</p>
+                  </div>
+
+                  <div class="space-y-3 mt-auto">
+                    <div class="grid grid-cols-2 gap-2 bg-gray-50 rounded-xl p-2.5 border border-gray-100 text-xs">
+                      <div>
+                        <span class="text-[9px] text-gray-400 font-bold uppercase">Cost</span>
+                        <p class="font-bold text-gray-900">{formatRupee(tender.bidValue)}</p>
+                      </div>
+                      <div>
+                        <span class="text-[9px] text-gray-400 font-bold uppercase">EMD</span>
+                        <p class="font-bold text-gray-900">{formatRupee(tender.emdAmount)}</p>
+                      </div>
+                    </div>
+                    <div class="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-gray-100">
+                      <span>{daysLeft === null ? 'No date' : daysLeft < 0 ? 'Closed' : `${daysLeft} days left`}</span>
+                      <a href={`/tenders/${getTenderSlug(tender)}`} class="font-bold text-[#1A56DB] hover:underline">
+                        Details &rarr;
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </main>
+      <Footer />
+    </div>
+  </TenderLayout>
+) : tenderData ? (
+  <TenderLayout title={pageTitle} description={pageDescription}>
+    <div class="min-h-screen flex flex-col bg-[#F8F9FC]">
+      <main class="flex-1 max-w-7xl mx-auto px-4 py-8 w-full">
+        <!-- Breadcrumb -->
+        <nav class="flex text-sm text-gray-500 mb-6">
+          <a href="/" class="hover:text-[#1A56DB]">Home</a>
+          <span class="mx-2">/</span>
+          <a href="/tenders" class="hover:text-[#1A56DB]">Tenders</a>
+          <span class="mx-2">/</span>
+          <span class="text-gray-800 font-medium line-clamp-1">{tenderData.bidNumber}</span>
+        </nav>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          <!-- LEFT / CENTRAL COLUMN: Core details & PDF params -->
+          <div class="lg:col-span-2 space-y-6">
+            
+            <!-- Tender Main Card -->
+            <div class="bg-white rounded-2xl p-6 md:p-8 border border-gray-150 shadow-sm">
+              <div class="flex items-center gap-2.5 mb-4">
+                <span class={`text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-md border ${
+                  tenderData.source === 'GEM' ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                }`}>
+                  {tenderData.source} Portal
+                </span>
+                <span class="text-xs text-gray-400 font-medium">Fetched on {new Date(tenderData.fetchedAt).toLocaleDateString('en-IN')}</span>
+              </div>
+
+              <h1 class="text-xl sm:text-2xl font-bold text-gray-900 leading-snug mb-4">
+                {tenderData.title}
+              </h1>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-b border-gray-100 py-4 mb-4 text-sm">
+                <div>
+                  <span class="text-xs text-gray-400 font-semibold block uppercase">Department / Client</span>
+                  <span class="font-medium text-gray-800">{tenderData.department || 'Not specified'}</span>
+                </div>
+                <div>
+                  <span class="text-xs text-gray-400 font-semibold block uppercase">Issuing Office</span>
+                  <span class="font-medium text-gray-800">{tenderData.organization || 'Not specified'}</span>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-gray-600">
+                <div>
+                  <span class="text-xs text-gray-400 font-semibold block uppercase">Bid Number</span>
+                  <span class="font-mono text-gray-900 font-medium break-all">{tenderData.bidNumber}</span>
+                </div>
+                <div>
+                  <span class="text-xs text-gray-400 font-semibold block uppercase">District / City</span>
+                  <span class="font-medium text-gray-900">{tenderData.locationCity || 'Unspecified'}</span>
+                </div>
+                <div>
+                  <span class="text-xs text-gray-400 font-semibold block uppercase">Quantity</span>
+                  <span class="font-medium text-gray-950">{tenderData.quantity || 'As per doc'}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- PDF Extracted Parameter Panel -->
+            <div class="bg-white rounded-2xl p-6 md:p-8 border border-gray-150 shadow-sm">
+              <h2 class="text-lg font-bold text-gray-950 mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-[#1A56DB]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Extracted PDF Parameters
+              </h2>
+              
+              {tenderData.sourceMeta?.pdfExtract?.fields && Object.keys(tenderData.sourceMeta.pdfExtract.fields).length > 0 ? (
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {Object.entries(tenderData.sourceMeta.pdfExtract.fields).map(([key, field]) => (
+                    <div class="bg-gray-50 border border-gray-100 rounded-xl p-4 flex flex-col justify-between">
+                      <span class="text-xs text-gray-500 font-semibold mb-1 block">{(field as any).label}</span>
+                      <span class="text-sm font-bold text-gray-800">{(field as any).value}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div class="bg-gray-50 rounded-xl p-6 text-center border border-dashed border-gray-200">
+                  <p class="text-sm text-gray-500">No additional parameters found or PDF scan is non-textual.</p>
+                  <span class="text-xs bg-amber-50 border border-amber-100 text-amber-800 px-2 py-0.5 rounded mt-2 inline-block">
+                    Status: {tenderData.valueExtractionStatus === 'not_found' ? 'Value Not Disclosed' : 'Not Attempted'}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <!-- View More Details / Embedded PDF Block -->
+            <div class="bg-white rounded-2xl p-6 border border-gray-150 shadow-sm">
+              <details class="group">
+                <summary class="flex justify-between items-center font-bold text-gray-900 cursor-pointer list-none select-none py-2 outline-none">
+                  <span class="text-lg font-bold flex items-center gap-2 text-[#1A56DB]">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                  </span></summary>
+                  <span class="text-sm text-[#1A56DB] group-open:hidden">View Document & More Details</span>
+                  <span class="text-sm text-gray-500 hidden group-open:inline">Hide Document</span>
+                  <span class="text-gray-400 transition-transform group-open:rotate-180">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                  </span>
+                </summary>
+                
+                <div class="mt-6 space-y-6 pt-6 border-t border-gray-100">
+                  {tenderData.pdfPath ? (
+                    <div class="space-y-4">
+                      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                        <span class="text-xs text-gray-500 font-semibold uppercase">Embedded PDF Document Viewer</span>
+                        <a 
+                          href={`/api/tenders/${tenderData.source}/${encodeURIComponent(tenderData.bidNumber)}/document`}
+                          target="_blank"
+                          class="text-xs font-semibold bg-gray-100 border border-gray-250 text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-150 transition"
+                        >
+                          Open in New Tab
+                        </a>
+                      </div>
+                      <iframe 
+                        src={`/api/tenders/${tenderData.source}/${encodeURIComponent(tenderData.bidNumber)}/document`} 
+                        class="w-full h-[600px] border border-gray-200 rounded-xl bg-gray-50"
+                      />
+                    </div>
+                  ) : (
+                    <div class="bg-gray-50 border border-gray-200 rounded-xl p-8 text-center text-gray-500 text-sm">
+                      Tender document file is not downloaded. 
+                      <a href={tenderData.bidLink} target="_blank" class="text-[#1A56DB] font-semibold hover:underline block mt-2">
+                        Click here to visit original portal page
+                      </a>
+                    </div>
+                  )}
+
+                  {tenderData.sourceMeta?.pdfExtract?.text && (
+                    <div class="space-y-2">
+                      <span class="text-xs text-gray-400 font-semibold block uppercase">Raw Text Excerpt (AI-parsed)</span>
+                      <pre class="bg-gray-50 border border-gray-100 rounded-xl p-4 text-[11px] font-mono text-gray-600 overflow-auto max-h-48 whitespace-pre-wrap leading-relaxed">
+                        {tenderData.sourceMeta.pdfExtract.text}
+                      </pre>
+                    </div>
+                  )}
+                </div>
+              </details>
+            </div>
+
+          </div>
+
+          <!-- RIGHT COLUMN: Financials, Viability & Risks -->
+          <div class="space-y-6">
+            
+            <!-- Dates Card -->
+            <div class="bg-white rounded-2xl p-6 border border-gray-150 shadow-sm">
+              <h3 class="text-sm font-bold text-gray-900 uppercase tracking-widest mb-4">Deadlines</h3>
+              <div class="space-y-4 text-sm">
+                <div class="flex justify-between items-center py-2.5 border-b border-gray-50">
+                  <span class="text-gray-500 font-semibold">Start Date</span>
+                  <span class="font-medium text-gray-800">
+                    {tenderData.startDate ? new Date(tenderData.startDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+                  </span>
+                </div>
+                <div class="flex justify-between items-center py-2.5">
+                  <span class="text-gray-500 font-semibold">Closing Date</span>
+                  <div class="text-right">
+                    <p class="font-bold text-gray-900">
+                      {tenderData.endDate ? new Date(tenderData.endDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+                    </p>
+                    {(() => {
+                      const daysLeft = getDaysLeft(tenderData.endDate);
+                      const isExpired = daysLeft !== null && Math.sign(daysLeft) === -1;
+                      return (
+                        <p class={`text-[10px] font-bold mt-0.5 ${isExpired ? 'text-[#E02424]' : 'text-[#C27803]'}`}>
+                          {daysLeft === null ? '' : isExpired ? `Expired ${Math.abs(daysLeft)}d ago` : `${daysLeft} days left`}
+                        </p>
+                      );
+                    })()}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Financials Card -->
+            <div class="bg-white rounded-2xl p-6 border border-gray-150 shadow-sm">
+              <h3 class="text-sm font-bold text-gray-900 uppercase tracking-widest mb-4">Financial Details</h3>
+              <div class="space-y-4">
+                <div class="p-3 bg-gray-50 border border-gray-100 rounded-xl">
+                  <span class="text-[10px] text-gray-400 font-bold block uppercase mb-0.5">Estimated Cost</span>
+                  <p class="text-lg font-extrabold text-gray-950">{formatRupee(tenderData.bidValue)}</p>
+                  {tenderData.valueExtractionStatus === 'not_found' && (
+                    <span class="text-[9px] bg-amber-50 text-amber-800 px-1.5 py-0.5 rounded font-semibold border border-amber-100 mt-1.5 inline-block">Value not specified in listing</span>
+                  )}
+                </div>
+                <div class="p-3 bg-gray-50 border border-gray-100 rounded-xl">
+                  <span class="text-[10px] text-gray-400 font-bold block uppercase mb-0.5">Earnest Money Deposit (EMD)</span>
+                  <p class="text-lg font-extrabold text-gray-950">{formatRupee(tenderData.emdAmount)}</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Viability Assessment -->
+            {tenderData.viabilityScore && (
+              <div class="bg-white rounded-2xl p-6 border border-gray-150 shadow-sm text-center">
+                <h3 class="text-sm font-bold text-gray-900 uppercase tracking-widest mb-4">Viability Score</h3>
+                <div class="flex justify-center mb-3">
+                  <div class={`w-16 h-16 rounded-2xl flex flex-col items-center justify-center shadow-md ${
+                    tenderData.viabilityScore >= 8 ? 'bg-[#057A55] text-white' : tenderData.viabilityScore >= 5 ? 'bg-[#C27803] text-white' : 'bg-[#E02424] text-white'
+                  }`}>
+                    <span class="text-2xl font-extrabold">{tenderData.viabilityScore}</span>
+                    <span class="text-[8px] uppercase tracking-wider font-bold opacity-80 -mt-0.5">/ 10</span>
+                  </div>
+                </div>
+                <p class="text-xs text-gray-500 leading-normal max-w-[220px] mx-auto">
+                  Derived from bidder cost-EMD ratio and available submission window constraints.
+                </p>
+              </div>
+            )}
+
+            <!-- Risks Card -->
+            <div class="bg-white rounded-2xl p-6 border border-gray-150 shadow-sm">
+              <h3 class="text-sm font-bold text-gray-900 uppercase tracking-widest mb-3">Risk Assessment</h3>
+              {tenderData.risks && tenderData.risks.length > 0 ? (
+                <div class="space-y-2">
+                  {tenderData.risks.map((r, idx) => (
+                    <div key={idx} class="flex items-center gap-2 text-xs bg-red-50 border border-red-100 text-[#E02424] px-3 py-2 rounded-xl">
+                      <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                      <span class="font-medium">{r}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p class="text-xs text-gray-500 italic">No critical risks identified for this opportunity.</p>
+              )}
+            </div>
+
+            <!-- Original portal link -->
+            <div class="pt-2">
+              <a 
+                href={tenderData.bidLink} 
+                target="_blank" 
+                class="w-full text-center bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 rounded-xl block text-sm transition shadow-sm hover:shadow"
+              >
+                View on Original {tenderData.source === 'GEM' ? 'GeM' : 'CSPGCL'} Portal
+              </a>
+            </div>
+
+          </div>
+
+        </div>
+      </main>
+      <Footer />
+    </div>
+  </TenderLayout>
+) : (
+  <TenderLayout title={pageTitle} description={pageDescription}>
+    <div class="min-h-screen flex flex-col bg-[#F8F9FC] justify-between">
+      <main class="flex-1 flex items-center justify-center p-8">
+        <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-150 max-w-md w-full text-center">
+          <div class="text-[#E02424] mb-3">
+            <svg class="w-12 h-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          </div>
+          <h2 class="text-xl font-bold text-gray-900 mb-1">Tender Not Found</h2>
+          <p class="text-sm text-gray-500 mb-6">The requested tender might be closed, deleted, or does not exist in our aggregator.</p>
+          <a href="/tenders" class="px-6 py-2.5 bg-[#1A56DB] hover:bg-blue-700 text-white font-semibold rounded-lg text-sm transition">
+            Browse Tenders
+          </a>
+        </div>
+      </main>
+      <Footer />
+    </div>
+  </TenderLayout>
+)}

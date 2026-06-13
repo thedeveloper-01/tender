@@ -1,0 +1,88 @@
+import { resolveCityForGem, resolveCityForCspgcl } from './locationResolve.js';
+import { CSPGCL_PORTAL_BASE } from './pdf.js';
+
+function deriveStatus(endDate) {
+  if (!endDate) return 'open';
+  return new Date(endDate) >= new Date() ? 'open' : 'closed';
+}
+
+/** Stable hash-like key for CSPGCL records missing a tender notice number. */
+function stableKey(parts) {
+  const str = parts.join('|');
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return `CSPGCL-GEN-${Math.abs(hash)}`;
+}
+
+/** Map a raw GeM record into the unified Tender shape. */
+export function normalizeGem(raw) {
+  const endDate = raw.endDate ? new Date(raw.endDate) : null;
+  return {
+    source: 'GEM',
+    bidNumber: raw.bidNumber,
+    title: raw.title,
+    department: raw.department || null,
+    organization: raw.organization || null,
+    category: [], // filled in by analysis step
+    locationState: 'Chhattisgarh',
+    locationCity: resolveCityForGem(raw.locationText),
+    startDate: raw.startDate ? new Date(raw.startDate) : null,
+    endDate,
+    quantity: raw.quantity || null,
+    bidValue: raw.bidValue ?? null,
+    emdAmount: raw.emdAmount ?? null,
+    valueExtractionStatus: raw.bidValue != null ? 'extracted' : 'not_attempted',
+    viabilityScore: null,
+    risks: [],
+    pdfPath: null,
+    bidLink: raw.bidLink,
+    status: deriveStatus(endDate),
+    fetchedAt: new Date(),
+    sourceMeta: { locationTextRaw: raw.locationText || null },
+    rawJson: raw,
+  };
+}
+
+/** Map a raw CSPGCL record into the unified Tender shape. */
+export function normalizeCspgcl(raw) {
+  const endDate = raw.closingDate ? new Date(raw.closingDate) : null;
+  const bidNumber =
+    raw.tenderNoticeNo && raw.tenderNoticeNo.trim()
+      ? raw.tenderNoticeNo.trim()
+      : stableKey([raw.issuingOffice, raw.scopeRaw, raw.closingDate]);
+
+  return {
+    source: 'CSPGCL',
+    bidNumber,
+    title: raw.scopeRaw,
+    department: null,
+    organization: raw.issuingOffice || null,
+    category: [],
+    locationState: 'Chhattisgarh',
+    locationCity: resolveCityForCspgcl(raw),
+    startDate: raw.openingDate ? new Date(raw.openingDate) : null,
+    endDate,
+    quantity: null,
+    bidValue: raw.estimatedCost ?? null,
+    emdAmount: raw.emd ?? null,
+    valueExtractionStatus: raw.estimatedCost != null ? 'extracted' : 'not_attempted',
+    viabilityScore: null,
+    risks: [],
+    pdfPath: null,
+    bidLink: `${CSPGCL_PORTAL_BASE}?paramflag=${raw.paramflag}`,
+    status: deriveStatus(endDate),
+    fetchedAt: new Date(),
+    sourceMeta: {
+      plantId: raw.plantId,
+      plantLabel: raw.plantLabel,
+      paramflag: raw.paramflag,
+      rfxId: raw.rfxId,
+      docEventTarget: raw.docEventTarget,
+      isEbidding: !!raw.isEbidding,
+    },
+    rawJson: raw,
+  };
+}
