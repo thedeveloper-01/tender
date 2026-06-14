@@ -314,7 +314,7 @@ const DEFAULT_FILTERS = {
   category: '', minValue: '', maxValue: '', minEmd: '', maxEmd: '',
 };
 
-export default function TenderDashboard({ initialCity = '' }) {
+export default function TenderDashboard({ initialCity = '', initialSource = 'all' }) {
   const [tenders, setTenders] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -322,7 +322,18 @@ export default function TenderDashboard({ initialCity = '' }) {
   const [error, setError] = useState(null);
   const [q, setQ] = useState('');
   const [sort, setSort] = useState('endDate_asc');
-  const [filters, setFilters] = useState({ ...DEFAULT_FILTERS, city: initialCity || 'all' });
+  const [filters, setFilters] = useState(() => {
+    let source = initialSource || 'all';
+    let city = initialCity || 'all';
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const s = params.get('source');
+      if (s === 'GEM' || s === 'CSPGCL' || s === 'all') source = s;
+      const c = params.get('city');
+      if (c) city = c;
+    }
+    return { ...DEFAULT_FILTERS, source, city };
+  });
   const debounceRef = useRef(null);
 
   const loadTenders = useCallback(async (currentFilters, currentQ, currentSort, currentPage) => {

@@ -1,0 +1,49 @@
+---
+import TenderLayout from '../../layouts/TenderLayout.astro';
+import Navbar from '../../components/Navbar.astro';
+import Footer from '../../components/Footer.astro';
+import TenderDashboard from '../../components/TenderDashboard.jsx';
+import { fetchStats } from '../../lib/api.js';
+
+let stats = { totalOpenTenders: 0, totalEstimatedValue: 0, bySource: {}, lastFetchAt: null };
+try {
+  stats = await fetchStats();
+} catch (e: any) {
+  console.error('[tenders-cspgcl] stats error:', e.message);
+}
+
+const lastUpdated = stats.lastFetchAt
+  ? new Date(stats.lastFetchAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+  : null;
+---
+
+<TenderLayout
+  title="CSPGCL Tenders — CGTenders.com"
+  description="Search and filter open CSPGCL tenders in Chhattisgarh. Filter by district, category, bid value, EMD, and closing date."
+  canonical="/tenders/cspgcl"
+>
+  <Navbar />
+  <main>
+    <div class="bg-white border-b border-gray-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 md:py-6">
+        <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+          <div>
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-900 font-['Outfit']">CSPGCL Tenders</h1>
+            <p class="text-sm text-gray-500 mt-0.5">
+              Chhattisgarh State Power Generation Company open tenders
+              {lastUpdated && <span class="text-gray-400"> · Updated {lastUpdated}</span>}
+            </p>
+          </div>
+          <div class="flex items-center gap-3 flex-wrap">
+            <div class="flex items-center gap-2 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2">
+              <span class="text-xl font-extrabold text-amber-700 font-['Outfit'] leading-none">{stats.bySource?.CSPGCL || 0}</span>
+              <span class="text-xs text-amber-600 font-medium leading-tight">CSPGCL Tenders<br/>Open</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <TenderDashboard client:load initialSource="CSPGCL" />
+  </main>
+  <Footer />
+</TenderLayout>
