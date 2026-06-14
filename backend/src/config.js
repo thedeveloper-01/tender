@@ -7,7 +7,7 @@ export const config = {
   pdfRetentionDays: Number(process.env.PDF_RETENTION_DAYS || 2),
   autoDeleteClosedAfterDays: Number(process.env.AUTO_DELETE_CLOSED_AFTER_DAYS || 2),
   archiveMode: (process.env.ARCHIVE_MODE ?? 'true') === 'true',
-  useMockGem: (process.env.USE_MOCK_GEM ?? 'true') === 'true',
+  useMockGem: (process.env.USE_MOCK_GEM ?? 'false') === 'true',
   adminToken: process.env.ADMIN_TOKEN || 'changeme',
   siteUrl: process.env.SITE_URL || 'https://cgtenders.com',
   port: Number(process.env.PORT || 4000),
