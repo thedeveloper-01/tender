@@ -41,7 +41,7 @@ export function normalizeGem(raw) {
     bidLink: raw.bidLink,
     status: deriveStatus(endDate),
     fetchedAt: new Date(),
-    sourceMeta: { locationTextRaw: raw.locationText || null },
+    sourceMeta: { locationTextRaw: raw.locationText || null, gemId: raw.gemId ?? null },
     rawJson: raw,
   };
 }

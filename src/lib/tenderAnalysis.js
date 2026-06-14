@@ -1,21 +1,45 @@
 /**
  * tenderAnalysis.js — Free, local analysis engine (no API key needed)
  *
- * Replaces all Claude/OpenAI calls with rule-based, keyword-driven logic
- * that runs entirely in the browser.
+ * Replaces all Claude/OpenAI calls with rule-based, keyword-driven logic.
  *
  * Functions exported:
  *   fetchTendersFromApi()              → tenders[]
  *   enrichTendersLocally(tenders)      → enrichments[]
  *   generateTrendSummary(tenders)      → string
  *   localNlSearch(query, tenders)      → filterObject
- *   generateTenderAnswer(q, tender, h) → string
+ *   generateTenderAnswer(q, tender)    → string
+ *
+ * Accepts tenders in either CSPGCL raw format or API camelCase format.
+ * Internally normalizes to camelCase: title, bidValue, emdAmount, endDate, organization, bidNumber.
  */
+
+// ─── Normalization ──────────────────────────────────────────────────────────
+
+/** Normalize a tender object to camelCase API format. */
+function normalize(t) {
+  return {
+    bidNumber:    t.bidNumber    || t.tender_notice_no || t.sr_no || '',
+    title:        t.title        || t.scope_raw        || '',
+    organization: t.organization || t.issuing_office   || '',
+    bidValue:     t.bidValue     ?? t.estimated_cost   ?? null,
+    emdAmount:    t.emdAmount    ?? t.emd              ?? null,
+    endDate:      t.endDate      || t.closing_date     || null,
+    startDate:    t.startDate    || t.opening_date     || null,
+    category:     t.category     || [],
+    source:       t.source       || 'CSPGCL',
+    isEbidding:   t.sourceMeta?.isEbidding ?? t.is_ebidding ?? false,
+    locationCity: t.locationCity || null,
+    risks:        t.risks        || [],
+    // Keep raw fields for backward compat
+    _raw: t,
+  };
+}
 
 // ─── 1. Fetch from local API route ──────────────────────────────────────────
 
 export async function fetchTendersFromApi(onProgress) {
-  if (onProgress) onProgress('Connecting to CSPGCL portal...');
+  if (onProgress) onProgress('Connecting to API...');
 
   const resp = await fetch('/api/tenders.json');
 
@@ -26,7 +50,7 @@ export async function fetchTendersFromApi(onProgress) {
   const data = await resp.json();
 
   if (!Array.isArray(data) || data.length === 0) {
-    throw new Error('No tenders found on CSPGCL portal. The site may be temporarily down.');
+    throw new Error('No tenders found. The portal may be temporarily down.');
   }
 
   if (onProgress) onProgress(`Fetched ${data.length} tenders.`);
@@ -66,13 +90,11 @@ function categorize(scope) {
 function summarizeScope(scope) {
   if (!scope) return 'No scope description available.';
 
-  // Clean up the scope text
   let text = scope
     .replace(/\s+/g, ' ')
     .replace(/["""]/g, '"')
     .trim();
 
-  // Truncate to a reasonable summary length
   if (text.length > 200) {
     const cutoff = text.lastIndexOf(' ', 200);
     text = text.slice(0, cutoff > 100 ? cutoff : 200) + '…';
@@ -81,81 +103,77 @@ function summarizeScope(scope) {
   return text;
 }
 
-function scoreViability(tender) {
-  let score = 6; // Start at neutral
+function scoreViability(t) {
+  const tender = normalize(t);
+  let score = 6;
 
-  const cost = tender.estimated_cost;
-  const emd = tender.emd;
-  const closingDate = tender.closing_date;
+  const cost = tender.bidValue;
+  const emd = tender.emdAmount;
+  const closingDate = tender.endDate;
 
-  // Cost range assessment
   if (cost != null) {
-    if (cost <= 5000000) score += 2;       // ≤50L — very accessible
-    else if (cost <= 20000000) score += 1;  // ≤2Cr — moderate
-    else score -= 1;                        // Large project
+    if (cost <= 5000000) score += 2;
+    else if (cost <= 20000000) score += 1;
+    else score -= 1;
   }
 
-  // EMD assessment
   if (emd != null && cost != null && cost > 0) {
     const emdRatio = emd / cost;
-    if (emdRatio > 0.05) score -= 1;       // EMD > 5% of cost — high
-    if (emdRatio <= 0.02) score += 1;      // EMD ≤ 2% — friendly
+    if (emdRatio > 0.05) score -= 1;
+    if (emdRatio <= 0.02) score += 1;
   }
 
-  // Deadline assessment
   if (closingDate) {
     const daysLeft = Math.ceil((new Date(closingDate) - new Date()) / (1000 * 60 * 60 * 24));
-    if (daysLeft < 0) score -= 2;          // Expired
-    else if (daysLeft <= 3) score -= 1;    // Very tight
-    else if (daysLeft >= 14) score += 1;   // Comfortable window
+    if (daysLeft < 0) score -= 2;
+    else if (daysLeft <= 3) score -= 1;
+    else if (daysLeft >= 14) score += 1;
   }
 
-  // e-Bidding is easier for new entrants
-  if (tender.is_ebidding) score += 1;
+  if (tender.isEbidding) score += 1;
 
-  // Clamp 1–10
   return Math.max(1, Math.min(10, score));
 }
 
-function identifyRisks(tender) {
+function identifyRisks(t) {
+  const tender = normalize(t);
   const risks = [];
-  const cost = tender.estimated_cost;
-  const emd = tender.emd;
-  const scope = (tender.scope_raw || '').toLowerCase();
+  const cost = tender.bidValue;
+  const emd = tender.emdAmount;
+  const scope = (tender.title || '').toLowerCase();
 
-  // Deadline risks
-  if (tender.closing_date) {
-    const daysLeft = Math.ceil((new Date(tender.closing_date) - new Date()) / (1000 * 60 * 60 * 24));
+  if (tender.endDate) {
+    const daysLeft = Math.ceil((new Date(tender.endDate) - new Date()) / (1000 * 60 * 60 * 24));
     if (daysLeft < 0) risks.push('Tender expired');
     else if (daysLeft <= 2) risks.push('Closing in < 48 hours');
     else if (daysLeft <= 5) risks.push('Short submission window');
   }
 
-  // EMD risks
   if (emd != null && cost != null && cost > 0) {
     if (emd / cost > 0.05) risks.push('High EMD relative to value');
   }
   if (emd != null && emd > 500000) risks.push('EMD exceeds ₹5 lakh');
 
-  // Cost risks
   if (cost != null && cost > 50000000) risks.push('Large-scale project (₹5 Cr+)');
 
-  // Scope risks
   if (scope.includes('specialized') || scope.includes('specialised')) risks.push('Specialised work required');
   if (scope.includes('turnkey') || scope.includes('epc')) risks.push('EPC/Turnkey complexity');
   if (scope.includes('hazardous') || scope.includes('chemical')) risks.push('Hazardous materials involved');
 
-  return risks.slice(0, 4); // Max 4 risks
+  return risks.slice(0, 4);
 }
 
 export function enrichTendersLocally(tenders) {
-  return tenders.map(t => ({
-    sr_no:           t.sr_no,
-    scope_summary:   summarizeScope(t.scope_raw),
-    category:        categorize(t.scope_raw),
-    viability_score: scoreViability(t),
-    risks:           identifyRisks(t),
-  }));
+  return tenders.map(t => {
+    const n = normalize(t);
+    return {
+      bidNumber:       n.bidNumber,
+      scope_summary:   summarizeScope(n.title),
+      category:        n.category.length > 0 ? n.category : categorize(n.title),
+      viability_score: scoreViability(t),
+      risks:           identifyRisks(t),
+    };
+  });
 }
 
 // ─── 3. Trend Summary ────────────────────────────────────────────────────────
@@ -163,10 +181,11 @@ export function enrichTendersLocally(tenders) {
 export function generateTrendSummary(tenders) {
   if (!tenders.length) return 'No tenders available for analysis.';
 
-  // Count categories
+  const normalized = tenders.map(normalize);
+
   const catCounts = {};
-  tenders.forEach(t => {
-    const cats = t.category || categorize(t.scope_raw);
+  normalized.forEach(t => {
+    const cats = t.category.length > 0 ? t.category : categorize(t.title);
     cats.forEach(c => { catCounts[c] = (catCounts[c] || 0) + 1; });
   });
 
@@ -174,21 +193,20 @@ export function generateTrendSummary(tenders) {
   const topCat = sorted[0];
   const secondCat = sorted[1];
 
-  // Deadline analysis
   const now = new Date();
   let closingSoon = 0;
   let expired = 0;
   let totalCost = 0;
   let costCount = 0;
 
-  tenders.forEach(t => {
-    if (t.closing_date) {
-      const days = Math.ceil((new Date(t.closing_date) - now) / (1000 * 60 * 60 * 24));
+  normalized.forEach(t => {
+    if (t.endDate) {
+      const days = Math.ceil((new Date(t.endDate) - now) / (1000 * 60 * 60 * 24));
       if (days < 0) expired++;
       else if (days <= 7) closingSoon++;
     }
-    if (t.estimated_cost != null) {
-      totalCost += t.estimated_cost;
+    if (t.bidValue != null) {
+      totalCost += t.bidValue;
       costCount++;
     }
   });
@@ -196,8 +214,7 @@ export function generateTrendSummary(tenders) {
   const avgCost = costCount > 0 ? totalCost / costCount : 0;
   const formatLakh = (v) => (v / 100000).toFixed(1) + ' lakh';
 
-  // Build natural-sounding summary
-  let summary = `The current batch of ${tenders.length} CSPGCL tenders is dominated by ${topCat[0]} (${topCat[1]} tenders)`;
+  let summary = `The current batch of ${tenders.length} tenders is dominated by ${topCat[0]} (${topCat[1]} tenders)`;
   if (secondCat) summary += ` followed by ${secondCat[0]} (${secondCat[1]} tenders)`;
   summary += '. ';
 
@@ -214,7 +231,7 @@ export function generateTrendSummary(tenders) {
     summary += avgCost < 2000000
       ? 'indicating primarily small-to-medium scale opportunities suitable for SMEs.'
       : avgCost < 10000000
-        ? 'suggesting a mix of moderate-scale works across CSPGCL divisions.'
+        ? 'suggesting a mix of moderate-scale works.'
         : 'reflecting several high-value projects that may require significant capacity.';
   }
 
@@ -230,24 +247,21 @@ export function localNlSearch(query, tenders = []) {
     maxCost: null,
     maxEmd: null,
     keyword: null,
-    officeFilter: null
+    organizationFilter: null
   };
 
-  // Match issuing office from known list
   if (tenders.length > 0) {
-    const offices = [...new Set(tenders.map(t => t.issuing_office).filter(Boolean))];
-    const matchedOffice = offices.find(o => lower.includes(o.toLowerCase()));
-    if (matchedOffice) result.officeFilter = matchedOffice;
+    const orgs = [...new Set(tenders.map(t => (t.organization || t.issuing_office || '')).filter(Boolean))];
+    const matchedOrg = orgs.find(o => lower.includes(o.toLowerCase()));
+    if (matchedOrg) result.organizationFilter = matchedOrg;
   }
 
-  // Category detection
   for (const [category] of Object.entries(CATEGORY_KEYWORDS)) {
     if (lower.includes(category.toLowerCase())) {
       result.categories.push(category);
     }
   }
 
-  // Additional natural language category mappings
   if (lower.includes('civil') || lower.includes('construction') || lower.includes('building')) {
     if (!result.categories.includes('Civil Works')) result.categories.push('Civil Works');
   }
@@ -255,7 +269,6 @@ export function localNlSearch(query, tenders = []) {
     if (!result.categories.includes('Manpower')) result.categories.push('Manpower');
   }
 
-  // Cost parsing — "under X lakh", "below X crore", etc.
   const lakhMatch = lower.match(/(?:under|below|less than|max|upto|up to|within)\s*(?:₹|rs\.?|inr)?\s*([\d.]+)\s*(?:lakh|lac|l\b)/i);
   if (lakhMatch) result.maxCost = parseFloat(lakhMatch[1]) * 100000;
 
@@ -268,7 +281,6 @@ export function localNlSearch(query, tenders = []) {
     if (val > 1000) result.maxCost = val;
   }
 
-  // EMD parsing
   const emdMatch = lower.match(/emd\s*(?:under|below|less than|max|upto|up to|within)?\s*(?:₹|rs\.?|inr)?\s*([\d.]+)\s*(?:k|thousand)?/i);
   if (emdMatch) {
     let val = parseFloat(emdMatch[1]);
@@ -276,11 +288,9 @@ export function localNlSearch(query, tenders = []) {
     result.maxEmd = val;
   }
 
-  // Keyword extraction — grab remaining meaningful terms
   const stopWords = ['find', 'show', 'get', 'search', 'tender', 'tenders', 'me', 'all', 'the', 'with', 'for', 'and', 'or', 'in', 'at', 'of', 'under', 'below', 'above', 'less', 'than', 'more', 'lakh', 'crore', 'lac', 'rupees', 'rs', 'inr', 'cost', 'emd', 'works', 'work'];
   const words = lower.split(/\s+/).filter(w => w.length > 2 && !stopWords.includes(w));
 
-  // Find meaningful keywords not already covered by categories
   const catLower = result.categories.map(c => c.toLowerCase().split(' ')).flat();
   const remainingWords = words.filter(w => !catLower.includes(w));
   if (remainingWords.length > 0) {
@@ -293,23 +303,23 @@ export function localNlSearch(query, tenders = []) {
 // ─── 5. Tender Q&A ───────────────────────────────────────────────────────────
 
 export function generateTenderAnswer(question, tender) {
+  const t = normalize(tender);
   const q = question.toLowerCase();
   const fmt = (v) =>
     v != null && !isNaN(v)
       ? '₹' + Number(v).toLocaleString('en-IN')
       : 'Not specified';
 
-  // Common question patterns
   if (q.includes('cost') || q.includes('price') || q.includes('value') || q.includes('budget')) {
-    return `The estimated cost of this tender is ${fmt(tender.estimated_cost)}. The EMD (Earnest Money Deposit) required is ${fmt(tender.emd)}.`;
+    return `The estimated cost of this tender is ${fmt(t.bidValue)}. The EMD (Earnest Money Deposit) required is ${fmt(t.emdAmount)}.`;
   }
 
   if (q.includes('deadline') || q.includes('closing') || q.includes('last date') || q.includes('when')) {
-    const closing = tender.closing_date || 'Not specified';
-    const opening = tender.opening_date || 'Not specified';
+    const closing = t.endDate || 'Not specified';
+    const opening = t.startDate || 'Not specified';
     let response = `The closing date for this tender is ${closing}.`;
-    if (tender.closing_date) {
-      const days = Math.ceil((new Date(tender.closing_date) - new Date()) / (1000 * 60 * 60 * 24));
+    if (t.endDate) {
+      const days = Math.ceil((new Date(t.endDate) - new Date()) / (1000 * 60 * 60 * 24));
       if (days < 0) response += ` This tender has already expired (${Math.abs(days)} days ago).`;
       else if (days === 0) response += ' This tender closes today!';
       else response += ` That's ${days} day${days > 1 ? 's' : ''} from now.`;
@@ -319,29 +329,29 @@ export function generateTenderAnswer(question, tender) {
   }
 
   if (q.includes('emd') || q.includes('earnest') || q.includes('deposit')) {
-    return `The EMD (Earnest Money Deposit) for this tender is ${fmt(tender.emd)}. ${
-      tender.estimated_cost && tender.emd
-        ? `This is ${((tender.emd / tender.estimated_cost) * 100).toFixed(2)}% of the estimated cost.`
+    return `The EMD (Earnest Money Deposit) for this tender is ${fmt(t.emdAmount)}. ${
+      t.bidValue && t.emdAmount
+        ? `This is ${((t.emdAmount / t.bidValue) * 100).toFixed(2)}% of the estimated cost.`
         : ''
     }`;
   }
 
   if (q.includes('scope') || q.includes('work') || q.includes('description') || q.includes('about') || q.includes('what')) {
-    return `This tender (${tender.tender_notice_no || 'N/A'}) from ${tender.issuing_office || 'N/A'} involves: ${tender.scope_raw || 'No scope description available.'}`;
+    return `This tender (${t.bidNumber || 'N/A'}) from ${t.organization || 'N/A'} involves: ${t.title || 'No description available.'}`;
   }
 
   if (q.includes('office') || q.includes('department') || q.includes('who') || q.includes('issued')) {
-    return `This tender was issued by: ${tender.issuing_office || 'Not specified'}.`;
+    return `This tender was issued by: ${t.organization || 'Not specified'}.`;
   }
 
   if (q.includes('ebid') || q.includes('e-bid') || q.includes('online') || q.includes('electronic')) {
-    return tender.is_ebidding
+    return t.isEbidding
       ? 'Yes, this tender supports e-Bidding / e-Procurement. You can submit your bid online through the portal.'
       : 'This tender does not appear to be listed for e-Bidding. You may need to submit a physical bid.';
   }
 
   if (q.includes('eligible') || q.includes('qualification') || q.includes('criteria') || q.includes('can i')) {
-    return `To determine eligibility, you should review the full tender document for qualification criteria. Key details: Cost — ${fmt(tender.estimated_cost)}, EMD — ${fmt(tender.emd)}, Office — ${tender.issuing_office || 'N/A'}. Check the tender document for specific experience, turnover, and registration requirements.`;
+    return `To determine eligibility, you should review the full tender document for qualification criteria. Key details: Cost — ${fmt(t.bidValue)}, EMD — ${fmt(t.emdAmount)}, Office — ${t.organization || 'N/A'}. Check the tender document for specific experience, turnover, and registration requirements.`;
   }
 
   if (q.includes('risk') || q.includes('concern') || q.includes('challenge')) {
@@ -350,15 +360,13 @@ export function generateTenderAnswer(question, tender) {
     return `Key risks identified:\n${risks.map((r, i) => `${i + 1}. ${r}`).join('\n')}`;
   }
 
-  // Default comprehensive answer
-  return `Here's a summary of Tender #${tender.sr_no}:
-• Office: ${tender.issuing_office || 'N/A'}
-• Notice No: ${tender.tender_notice_no || 'N/A'}
-• Scope: ${(tender.scope_raw || 'N/A').slice(0, 150)}${(tender.scope_raw || '').length > 150 ? '…' : ''}
-• Estimated Cost: ${fmt(tender.estimated_cost)}
-• EMD: ${fmt(tender.emd)}
-• Closing: ${tender.closing_date || 'N/A'}
-• e-Bidding: ${tender.is_ebidding ? 'Yes' : 'No'}
+  return `Here's a summary of Tender #${t.bidNumber}:
+• Office: ${t.organization || 'N/A'}
+• Scope: ${(t.title || 'N/A').slice(0, 150)}${(t.title || '').length > 150 ? '…' : ''}
+• Estimated Cost: ${fmt(t.bidValue)}
+• EMD: ${fmt(t.emdAmount)}
+• Closing: ${t.endDate || 'N/A'}
+• e-Bidding: ${t.isEbidding ? 'Yes' : 'No'}
 
 Feel free to ask about specific aspects like cost, deadline, scope, or eligibility.`;
 }

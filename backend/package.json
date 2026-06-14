@@ -8,7 +8,8 @@
     "start": "node src/server.js",
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
-    "pipeline": "node -e \"import('./src/pipeline/run.js').then(m=>m.runPipeline()).then(()=>process.exit(0))\""
+    "pipeline": "node -e \"import('./src/pipeline/run.js').then(m=>m.runPipeline()).then(()=>process.exit(0))\"",
+    "gem:scrape": "node src/gem_scraper_run.js"
   },
   "dependencies": {
     "@prisma/client": "^5.20.0",
@@ -19,6 +20,7 @@
     "express": "^4.21.0",
     "node-cron": "^3.0.3",
     "pdf-parse": "^1.1.1",
+    "playwright": "^1.48.0",
     "undici": "^8.4.1"
   },
   "devDependencies": {

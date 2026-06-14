@@ -15,6 +15,7 @@ export const config = {
   corsOrigin: process.env.CORS_ORIGIN || '*',
   documentsDir: process.env.DOCUMENTS_DIR || 'documents',
   skipCspgcl: (process.env.SKIP_CSPGCL ?? 'false') === 'true',
+  skipGem: (process.env.SKIP_GEM ?? 'false') === 'true',  // set true on Render — GEM is local-only
   proxyUrl: process.env.PROXY_URL || null,
 };
 

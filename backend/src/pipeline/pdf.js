@@ -42,17 +42,47 @@ export async function downloadPdf(tender) {
 }
 
 async function downloadGemPdf(tender, filePath) {
-  if (!tender.bidLink) return null;
-  const resp = await fetch(tender.bidLink, {
-    headers: { 'User-Agent': 'Mozilla/5.0 CGTenders-Bot/1.0' },
-    signal: AbortSignal.timeout(30000),
-  });
-  if (!resp.ok) return null;
+  // GEM PDF URL requires the NUMERIC internal ID (b_id / gemId from Solr).
+  // The encoded bid-number URL (showbidDocument/GEM%2F...) always returns 404.
+  // Confirmed by live inspection: showbidDocument/{numericId} → 200 + PDF.
+  const gemId = tender.sourceMeta?.gemId;
+  if (!gemId) {
+    console.warn(`[pdf] GEM tender ${tender.bidNumber} has no gemId — cannot download PDF`);
+    return null;
+  }
+
+  const GEM_BASE = 'https://bidplus.gem.gov.in';
+  const pdfUrl = `${GEM_BASE}/showbidDocument/${gemId}`;
+
+  let resp;
+  try {
+    resp = await fetch(pdfUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'application/pdf,*/*',
+        'Referer': `${GEM_BASE}/advance-search`,
+      },
+      signal: AbortSignal.timeout(30000),
+    });
+  } catch (e) {
+    console.warn(`[pdf] fetch error for ${pdfUrl}:`, e.message);
+    return null;
+  }
+
+  if (!resp.ok) {
+    console.warn(`[pdf] GEM PDF ${pdfUrl} → HTTP ${resp.status}`);
+    return null;
+  }
+
   const contentType = resp.headers.get('content-type') || '';
-  if (!contentType.includes('pdf')) return null;
+  if (!contentType.includes('pdf')) {
+    console.warn(`[pdf] GEM PDF ${pdfUrl} → unexpected content-type: ${contentType}`);
+    return null;
+  }
 
   const buf = Buffer.from(await resp.arrayBuffer());
   fs.writeFileSync(filePath, buf);
+  console.log(`[pdf] saved ${buf.length} bytes → ${filePath}`);
   return filePath;
 }
 

@@ -36,12 +36,18 @@ export async function runPipeline() {
   let gemRaw = [];
   let cspgclRaw = [];
 
-  try {
-    gemRaw = await fetchGemTenders();
-  } catch (e) {
-    const detail = e.cause ? `${e.message} (cause: ${e.cause.message || e.cause})` : e.stack || e.message;
-    console.error('[pipeline] GeM fetch failed:', detail);
-    errors.push(`GEM fetch error: ${detail}`);
+  // GEM is scraped locally via gem_scraper_run.js — never run on the server.
+  // Set SKIP_GEM=true in Render env vars to enforce this.
+  if (!config.skipGem) {
+    try {
+      gemRaw = await fetchGemTenders();
+    } catch (e) {
+      const detail = e.cause ? `${e.message} (cause: ${e.cause.message || e.cause})` : e.stack || e.message;
+      console.error('[pipeline] GeM fetch failed:', detail);
+      errors.push(`GEM fetch error: ${detail}`);
+    }
+  } else {
+    console.log('[pipeline] skipping GEM fetch stage (SKIP_GEM=true) — handled by local scraper');
   }
 
   if (!config.skipCspgcl) {
@@ -240,7 +246,7 @@ export async function runPipeline() {
 
   console.log(
     `[pipeline] run complete: found=${found} new=${newCount} updated=${updatedCount} pdfs=${pdfsDownloaded} ` +
-      `extractedOk=${extractionOk} extractFail=${extractionFail} cleaned=${cleanedRecords} errors=${errors.length}`
+    `extractedOk=${extractionOk} extractFail=${extractionFail} cleaned=${cleanedRecords} errors=${errors.length}`
   );
 
   return log;

@@ -5,8 +5,17 @@ import pdfParse from 'pdf-parse';
 const PORTAL_BASE = 'https://cspc.co.in/cspgcl_tendernotices/CSPGCL_Tender.aspx';
 
 function readHiddenField(html, name) {
-  const m = html.match(new RegExp(`id="${name}" value="([^"]*)"`));
-  return m ? m[1] : '';
+  // Match both orderings: id="..." value="..." and value="..." id="..."
+  const m = html.match(new RegExp(`(?:id="${name}"[^>]*value="([^"]*)"|value="([^"]*"[^>]*id="${name}")`));
+  if (m) return m[1] || m[2] || '';
+  // Fallback: match value attribute near the id
+  const m2 = html.match(new RegExp(`id="${name}"[^>]*`));
+  if (m2) {
+    const tag = m2[0];
+    const vm = tag.match(/value="([^"]*)"/);
+    return vm ? vm[1] : '';
+  }
+  return '';
 }
 
 /**
@@ -82,7 +91,7 @@ export async function downloadPdf(source, bidNumber, bidLink, sourceMeta) {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
         Referer: pageUrl,
       },
-      body,
+      body: body.toString(),
     });
 
     if (!docResp.ok) {
