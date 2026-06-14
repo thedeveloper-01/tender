@@ -3,21 +3,27 @@ import TenderLayout from '../layouts/TenderLayout.astro';
 import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
 import { fetchTenders, fetchStats, fetchCities } from '../lib/api.js';
-import { formatRupee, formatDate, daysLeft, viabilityColor, tenderDetailPath } from '../lib/cities.js';
+import { formatRupee, formatDate, daysLeft, tenderDetailPath } from '../lib/cities.js';
 
-let stats = { totalOpenTenders: 0, totalEstimatedValue: 0, bySource: {}, byCategory: {}, lastFetchAt: null };
-let soonest = [];
+let stats = { totalOpenTenders: 0, totalEstimatedValue: 0, bySource: {}, lastFetchAt: null };
+let gemTenders = [];
+let cspgclTenders = [];
 let topCities = [];
 
 try {
-  [stats, { tenders: soonest }, { cities: topCities }] = await Promise.all([
+  [stats, { tenders: gemTenders }, { tenders: cspgclTenders }, { cities: topCities }] = await Promise.all([
     fetchStats(),
-    fetchTenders({ status: 'open', sort: 'endDate_asc', limit: 6 }),
+    fetchTenders({ status: 'open', source: 'GEM',    sort: 'endDate_asc', limit: 6 }),
+    fetchTenders({ status: 'open', source: 'CSPGCL', sort: 'endDate_asc', limit: 6 }),
     fetchCities(),
   ]);
 } catch (e) {
   console.error('[homepage] API error:', e.message);
 }
+
+const lastUpdated = stats.lastFetchAt
+  ? new Date(stats.lastFetchAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+  : null;
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -31,134 +37,163 @@ const jsonLd = {
     'query-input': 'required name=search_term_string',
   },
 };
+
+// Shared card render helper (used in both sections)
+type Tender = {
+  source: string; bidNumber: string; title: string; organization?: string | null;
+  locationCity?: string | null; endDate?: string | null; bidValue?: number | null;
+  emdAmount?: number | null; viabilityScore?: number | null; category?: string[];
+  risks?: string[];
+};
+
+function viabilityBg(score: number | null | undefined) {
+  if (score == null) return 'bg-gray-100 text-gray-500';
+  if (score >= 8) return 'bg-[#057A55] text-white';
+  if (score >= 5) return 'bg-[#C27803] text-white';
+  return 'bg-[#E02424] text-white';
+}
 ---
 
 <TenderLayout
   title="CGTenders.com — Chhattisgarh Government Tender Aggregator"
-  description="Browse open government tenders from GeM and CSPGCL portals, filtered to Chhattisgarh. Search by district, category, bid value, EMD, and closing date."
+  description="Browse open government tenders from GeM and CSPGCL portals in Chhattisgarh — enriched with viability scores, risk analysis, and PDF-extracted details."
   canonical="/"
   jsonLd={jsonLd}
 >
   <Navbar />
 
   <main>
-    <!-- Hero -->
-    <section class="bg-gradient-to-br from-[#1A56DB] via-[#1e40af] to-[#1e3a8a] text-white">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
-        <div class="max-w-3xl">
-          <div class="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 text-sm mb-6">
-            <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-            Updated daily · GeM + CSPGCL
-          </div>
-          <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold leading-tight mb-4 font-['Outfit']">
-            Chhattisgarh Government<br/>Tenders, All in One Place
-          </h1>
-          <p class="text-blue-100 text-base md:text-lg leading-relaxed mb-8 max-w-2xl">
-            Browse open tenders from the GeM portal and CSPGCL, enriched with viability scores, risk analysis,
-            and PDF-extracted details. Filter by any of the 33 CG districts.
-          </p>
-          <div class="flex flex-col sm:flex-row gap-3">
-            <a href="/tenders"
-              class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-[#1A56DB] rounded-xl font-semibold text-sm hover:bg-blue-50 transition shadow">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-              </svg>
-              Browse All Tenders
-            </a>
-            <a href="/districts"
-              class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white/10 border border-white/30 rounded-xl font-semibold text-sm hover:bg-white/20 transition">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-              </svg>
-              Browse by District
-            </a>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Stats Bar -->
-    <section class="bg-white border-b border-gray-200">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          <div class="text-center">
-            <p class="text-2xl md:text-3xl font-extrabold text-[#1A56DB] font-['Outfit']">{stats.totalOpenTenders}</p>
-            <p class="text-xs text-gray-500 mt-0.5">Open Tenders</p>
-          </div>
-          <div class="text-center">
-            <p class="text-2xl md:text-3xl font-extrabold text-gray-900 font-['Outfit']">{formatRupee(stats.totalEstimatedValue)}</p>
-            <p class="text-xs text-gray-500 mt-0.5">Total Estimated Value</p>
-          </div>
-          <div class="text-center">
-            <p class="text-2xl md:text-3xl font-extrabold text-gray-900 font-['Outfit']">{stats.bySource?.GEM || 0}</p>
-            <p class="text-xs text-gray-500 mt-0.5">GeM Tenders</p>
-          </div>
-          <div class="text-center">
-            <p class="text-2xl md:text-3xl font-extrabold text-gray-900 font-['Outfit']">{stats.bySource?.CSPGCL || 0}</p>
-            <p class="text-xs text-gray-500 mt-0.5">CSPGCL Tenders</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
-
-      <!-- Closing Soon -->
-      <section class="mb-14">
-        <div class="flex items-center justify-between mb-6">
+    <!-- Hero strip -->
+    <section class="bg-gradient-to-r from-[#1A56DB] to-[#1e3a8a] text-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
+        <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
           <div>
-            <h2 class="text-xl md:text-2xl font-bold text-gray-900 font-['Outfit']">Closing Soon</h2>
-            <p class="text-sm text-gray-500 mt-0.5">Tenders with the nearest deadline</p>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white/10 border border-white/20 rounded-full text-xs font-medium">
+                <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
+                Updated daily · GeM + CSPGCL
+              </span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl md:text-4xl font-extrabold leading-tight font-['Outfit']">
+              Chhattisgarh Government Tenders
+            </h1>
+            <p class="text-blue-200 text-sm mt-1.5">
+              GeM and CSPGCL open tenders in one place
+              {lastUpdated && <span> · Last updated {lastUpdated}</span>}
+            </p>
           </div>
-          <a href="/tenders" class="text-sm font-medium text-[#1A56DB] hover:underline flex items-center gap-1">
-            View all
+
+          <!-- Stats -->
+          <div class="flex flex-wrap gap-3">
+            <div class="bg-white/10 border border-white/20 rounded-xl px-4 py-2.5 text-center min-w-[80px]">
+              <p class="text-2xl font-extrabold font-['Outfit'] leading-none">{stats.totalOpenTenders}</p>
+              <p class="text-xs text-blue-200 mt-0.5">Open</p>
+            </div>
+            <div class="bg-violet-500/30 border border-violet-400/40 rounded-xl px-4 py-2.5 text-center min-w-[80px]">
+              <p class="text-2xl font-extrabold font-['Outfit'] leading-none">{stats.bySource?.GEM || 0}</p>
+              <p class="text-xs text-violet-200 mt-0.5">GeM</p>
+            </div>
+            <div class="bg-amber-500/20 border border-amber-400/30 rounded-xl px-4 py-2.5 text-center min-w-[80px]">
+              <p class="text-2xl font-extrabold font-['Outfit'] leading-none">{stats.bySource?.CSPGCL || 0}</p>
+              <p class="text-xs text-amber-200 mt-0.5">CSPGCL</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 space-y-12">
+
+      <!-- ── GeM Section ─────────────────────────────────────────────── -->
+      <section>
+        <div class="flex items-center justify-between mb-5">
+          <div class="flex items-center gap-3">
+            <!-- GeM accent bar -->
+            <div class="w-1 h-8 rounded-full bg-violet-500"></div>
+            <div>
+              <h2 class="text-lg md:text-xl font-bold text-gray-900 font-['Outfit']">GeM Portal Tenders</h2>
+              <p class="text-xs text-gray-500">Government e-Marketplace — Chhattisgarh</p>
+            </div>
+            <span class="ml-1 px-2.5 py-0.5 bg-violet-100 text-violet-700 text-xs font-bold rounded-full">
+              {stats.bySource?.GEM || 0} open
+            </span>
+          </div>
+          <a href="/tenders?source=GEM"
+            class="inline-flex items-center gap-1 text-sm font-medium text-violet-600 hover:underline">
+            View all GeM
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
             </svg>
           </a>
         </div>
 
-        {soonest.length === 0 ? (
-          <div class="text-center py-12 bg-white rounded-2xl border border-gray-200 text-gray-400 text-sm">
-            No open tenders found. The pipeline may still be loading data.
+        {gemTenders.length === 0 ? (
+          <div class="text-center py-10 bg-violet-50 rounded-2xl border border-violet-100 text-violet-400 text-sm">
+            No GeM tenders loaded yet.
           </div>
         ) : (
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {soonest.map((t) => {
+            {gemTenders.map((t: Tender) => {
               const dl = daysLeft(t.endDate);
-              const path = tenderDetailPath(t);
               return (
-                <a href={path} class="group bg-white rounded-2xl border border-gray-200 hover:border-[#1A56DB]/40 hover:shadow-md transition p-5 flex flex-col">
-                  <!-- Header -->
-                  <div class="flex items-start justify-between gap-2 mb-3">
-                    <span class={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold ${t.source === 'GEM' ? 'bg-violet-100 text-violet-700' : 'bg-amber-100 text-amber-700'}`}>
-                      {t.source}
-                    </span>
-                    {t.viabilityScore != null && (
-                      <span class={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold ${viabilityColor(t.viabilityScore)}`}>
-                        {t.viabilityScore}/10
+                <a href={tenderDetailPath(t)}
+                  class="group flex flex-col bg-white border border-violet-100 hover:border-violet-400 hover:shadow-md transition rounded-2xl overflow-hidden">
+                  <!-- Violet top bar -->
+                  <div class="h-1 bg-gradient-to-r from-violet-500 to-purple-400"></div>
+                  <div class="p-5 flex flex-col flex-1">
+                    <!-- Header -->
+                    <div class="flex items-center justify-between gap-2 mb-3">
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold bg-violet-100 text-violet-700">
+                        GeM
                       </span>
+                      <div class="flex items-center gap-1.5">
+                        {t.category?.slice(0,1).map((c: string) => (
+                          <span class="text-xs bg-violet-50 text-violet-600 px-2 py-0.5 rounded-md font-medium">{c}</span>
+                        ))}
+                        {dl != null && (
+                          <span class={`text-xs px-2 py-0.5 rounded-full font-medium ${dl <= 0 ? 'bg-gray-100 text-gray-500' : dl <= 2 ? 'bg-red-100 text-red-700' : dl <= 7 ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}>
+                            {dl < 0 ? 'Closed' : dl === 0 ? 'Today' : `${dl}d`}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <!-- Title -->
+                    <h3 class="text-sm font-semibold text-gray-900 line-clamp-2 mb-1.5 group-hover:text-violet-700 transition leading-snug flex-1">
+                      {t.title}
+                    </h3>
+                    {t.organization && (
+                      <p class="text-xs text-gray-400 line-clamp-1 mb-3">{t.organization}</p>
                     )}
-                  </div>
 
-                  <!-- Title -->
-                  <h3 class="text-sm font-semibold text-gray-900 line-clamp-2 mb-2 group-hover:text-[#1A56DB] transition flex-1">
-                    {t.title}
-                  </h3>
+                    <!-- Values -->
+                    <div class="grid grid-cols-2 gap-2 text-xs mt-auto pt-3 border-t border-violet-50">
+                      <div>
+                        <p class="text-gray-400">Bid Value</p>
+                        <p class="font-semibold text-gray-800">{formatRupee(t.bidValue)}</p>
+                      </div>
+                      <div>
+                        <p class="text-gray-400">EMD</p>
+                        <p class="font-semibold text-gray-800">{formatRupee(t.emdAmount)}</p>
+                      </div>
+                      <div>
+                        <p class="text-gray-400">Closing</p>
+                        <p class="font-medium text-gray-700">{formatDate(t.endDate)}</p>
+                      </div>
+                      <div>
+                        <p class="text-gray-400">District</p>
+                        <p class="font-medium text-gray-700">{t.locationCity || 'Unspecified'}</p>
+                      </div>
+                    </div>
 
-                  <!-- Meta -->
-                  <div class="space-y-1 mt-auto pt-3 border-t border-gray-100">
-                    <div class="flex items-center justify-between text-xs">
-                      <span class="text-gray-500">{t.locationCity || 'Unspecified'}</span>
-                      {dl != null && (
-                        <span class={`font-medium ${dl <= 3 ? 'text-red-600' : dl <= 7 ? 'text-amber-600' : 'text-green-600'}`}>
-                          {dl < 0 ? 'Closed' : dl === 0 ? 'Closes today' : `${dl}d left`}
+                    <!-- Footer -->
+                    <div class="flex items-center justify-between mt-3">
+                      {t.viabilityScore != null && (
+                        <span class={`text-xs font-bold px-2 py-0.5 rounded-md ${viabilityBg(t.viabilityScore)}`}>
+                          {t.viabilityScore}/10
                         </span>
                       )}
-                    </div>
-                    <div class="flex items-center justify-between text-xs">
-                      <span class="text-gray-400">Value: {formatRupee(t.bidValue)}</span>
-                      <span class="text-gray-400">EMD: {formatRupee(t.emdAmount)}</span>
+                      <span class="ml-auto text-xs text-violet-600 font-medium group-hover:underline">View details →</span>
                     </div>
                   </div>
                 </a>
@@ -168,27 +203,135 @@ const jsonLd = {
         )}
       </section>
 
-      <!-- Active Districts -->
-      {topCities.filter(c => c.openCount > 0).length > 0 && (
-        <section class="mb-14">
-          <div class="flex items-center justify-between mb-6">
+      <!-- ── CSPGCL Section ───────────────────────────────────────────── -->
+      <section>
+        <div class="flex items-center justify-between mb-5">
+          <div class="flex items-center gap-3">
+            <!-- Amber accent bar -->
+            <div class="w-1 h-8 rounded-full bg-amber-500"></div>
             <div>
-              <h2 class="text-xl md:text-2xl font-bold text-gray-900 font-['Outfit']">Active Districts</h2>
-              <p class="text-sm text-gray-500 mt-0.5">Districts with open tenders right now</p>
+              <h2 class="text-lg md:text-xl font-bold text-gray-900 font-['Outfit']">CSPGCL Tenders</h2>
+              <p class="text-xs text-gray-500">Chhattisgarh State Power Generation Company</p>
             </div>
-            <a href="/districts" class="text-sm font-medium text-[#1A56DB] hover:underline flex items-center gap-1">
-              All 33 districts
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-              </svg>
-            </a>
+            <span class="ml-1 px-2.5 py-0.5 bg-amber-100 text-amber-700 text-xs font-bold rounded-full">
+              {stats.bySource?.CSPGCL || 0} open
+            </span>
+          </div>
+          <a href="/tenders?source=CSPGCL"
+            class="inline-flex items-center gap-1 text-sm font-medium text-amber-600 hover:underline">
+            View all CSPGCL
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </a>
+        </div>
+
+        {cspgclTenders.length === 0 ? (
+          <div class="text-center py-10 bg-amber-50 rounded-2xl border border-amber-100 text-amber-400 text-sm">
+            No CSPGCL tenders loaded yet.
+          </div>
+        ) : (
+          <!-- CSPGCL as table-style rows on md+, cards on mobile -->
+          <div class="bg-white border border-amber-100 rounded-2xl overflow-hidden">
+            <!-- Table header (desktop) -->
+            <div class="hidden md:grid grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] gap-4 px-5 py-3 bg-amber-50 border-b border-amber-100 text-xs font-semibold text-amber-700 uppercase tracking-wide">
+              <span>Tender / Organisation</span>
+              <span>Bid Value</span>
+              <span>EMD</span>
+              <span>Closing</span>
+              <span>District</span>
+              <span></span>
+            </div>
+
+            {cspgclTenders.map((t: Tender, i: number) => {
+              const dl = daysLeft(t.endDate);
+              return (
+                <a href={tenderDetailPath(t)}
+                  class={`group flex flex-col md:grid md:grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] md:items-center gap-3 md:gap-4 px-5 py-4 hover:bg-amber-50/60 transition border-b border-gray-100 last:border-0`}>
+
+                  <!-- Title + org (mobile card style + desktop col) -->
+                  <div>
+                    <div class="flex items-center gap-2 mb-1 md:mb-0.5">
+                      <span class="md:hidden inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold bg-amber-100 text-amber-700">CSPGCL</span>
+                      {t.category?.slice(0,1).map((c: string) => (
+                        <span class="text-xs bg-amber-50 text-amber-600 px-2 py-0.5 rounded-md font-medium">{c}</span>
+                      ))}
+                      {dl != null && (
+                        <span class={`md:hidden text-xs px-2 py-0.5 rounded-full font-medium ${dl <= 0 ? 'bg-gray-100 text-gray-500' : dl <= 2 ? 'bg-red-100 text-red-700' : dl <= 7 ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}>
+                          {dl < 0 ? 'Closed' : dl === 0 ? 'Today' : `${dl}d`}
+                        </span>
+                      )}
+                    </div>
+                    <p class="text-sm font-semibold text-gray-900 line-clamp-2 group-hover:text-amber-700 transition leading-snug">
+                      {t.title}
+                    </p>
+                    {t.organization && (
+                      <p class="text-xs text-gray-400 mt-0.5 line-clamp-1">{t.organization}</p>
+                    )}
+                  </div>
+
+                  <!-- Value -->
+                  <div>
+                    <p class="text-xs text-gray-400 md:hidden">Bid Value</p>
+                    <p class="text-sm font-semibold text-gray-900">{formatRupee(t.bidValue)}</p>
+                  </div>
+
+                  <!-- EMD -->
+                  <div>
+                    <p class="text-xs text-gray-400 md:hidden">EMD</p>
+                    <p class="text-sm font-semibold text-gray-900">{formatRupee(t.emdAmount)}</p>
+                  </div>
+
+                  <!-- Closing -->
+                  <div>
+                    <p class="text-xs text-gray-400 md:hidden">Closing</p>
+                    <div>
+                      <p class="text-sm text-gray-700">{formatDate(t.endDate)}</p>
+                      {dl != null && (
+                        <span class={`hidden md:inline text-xs font-medium ${dl <= 0 ? 'text-gray-400' : dl <= 2 ? 'text-red-600' : dl <= 7 ? 'text-amber-600' : 'text-green-600'}`}>
+                          {dl < 0 ? 'Closed' : dl === 0 ? 'Today' : `${dl}d left`}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <!-- District -->
+                  <div>
+                    <p class="text-xs text-gray-400 md:hidden">District</p>
+                    <p class="text-sm text-gray-700">{t.locationCity || 'Unspecified'}</p>
+                  </div>
+
+                  <!-- Score + arrow -->
+                  <div class="flex items-center gap-2 justify-between md:justify-end">
+                    {t.viabilityScore != null && (
+                      <span class={`text-xs font-bold px-2 py-0.5 rounded-md ${viabilityBg(t.viabilityScore)}`}>
+                        {t.viabilityScore}/10
+                      </span>
+                    )}
+                    <svg class="w-4 h-4 text-amber-400 group-hover:text-amber-600 transition flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                  </div>
+                </a>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      <!-- ── Districts strip ─────────────────────────────────────────── -->
+      {topCities.filter((c: {openCount: number}) => c.openCount > 0).length > 0 && (
+        <section>
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-base font-bold text-gray-900 font-['Outfit']">Active Districts</h2>
+            <a href="/districts" class="text-sm font-medium text-[#1A56DB] hover:underline">All 33 districts →</a>
           </div>
           <div class="flex flex-wrap gap-2">
             {topCities
-              .filter(c => c.openCount > 0)
-              .sort((a, b) => b.openCount - a.openCount)
-              .slice(0, 16)
-              .map(c => (
+              .filter((c: {openCount: number}) => c.openCount > 0)
+              .sort((a: {openCount: number}, b: {openCount: number}) => b.openCount - a.openCount)
+              .slice(0, 18)
+              .map((c: {name: string; slug: string; openCount: number}) => (
                 <a href={`/tenders/${c.slug}`}
                   class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-sm text-gray-700 hover:border-[#1A56DB] hover:text-[#1A56DB] transition">
                   {c.name}
@@ -200,31 +343,6 @@ const jsonLd = {
         </section>
       )}
 
-      <!-- How it works -->
-      <section class="bg-white rounded-2xl border border-gray-200 p-6 md:p-10">
-        <h2 class="text-xl md:text-2xl font-bold text-gray-900 mb-8 font-['Outfit']">How CGTenders.com Works</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[
-            { n:'1', icon:'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z', title:'Daily Fetch', body:'GeM and CSPGCL portals are scraped every morning. New tenders are upserted, closed ones archived.' },
-            { n:'2', icon:'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0121 9.414V19a2 2 0 01-2 2z', title:'PDF Extraction', body:'Bid documents are downloaded and parsed for EMD, bid value, delivery terms, eligibility criteria, and more.' },
-            { n:'3', icon:'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', title:'Analysis & Scoring', body:'Each tender gets a viability score (1–10), risk tags, and category labels from our analysis engine.' },
-            { n:'4', icon:'M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2zM3 16a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2z', title:'Filter & Decide', body:'Search by keyword, district, category, value range, EMD, source, and closing date — then view full details.' },
-          ].map(({ n, icon, title, body }) => (
-            <div class="flex flex-col gap-3">
-              <div class="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
-                <svg class="w-5 h-5 text-[#1A56DB]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d={icon}/>
-                </svg>
-              </div>
-              <div>
-                <span class="text-xs font-bold text-[#1A56DB] mb-0.5 block">Step {n}</span>
-                <h3 class="font-semibold text-gray-900 text-sm mb-1">{title}</h3>
-                <p class="text-xs text-gray-500 leading-relaxed">{body}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
     </div>
   </main>
 

@@ -1,17 +1,22 @@
 ---
 const nav = [
+  { label: 'Home', href: '/' },
   { label: 'All Tenders', href: '/tenders' },
   { label: 'By District', href: '/districts' },
   { label: 'About', href: '/about' },
 ];
 const path = Astro.url.pathname;
+
+function isActive(href: string) {
+  if (href === '/') return path === '/';
+  return path === href || path.startsWith(href + '/');
+}
 ---
 
 <header class="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex items-center justify-between h-14 md:h-16">
 
-      <!-- Logo -->
       <a href="/" class="flex items-center gap-2 flex-shrink-0">
         <div class="w-7 h-7 rounded-md bg-[#1A56DB] flex items-center justify-center">
           <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -22,23 +27,19 @@ const path = Astro.url.pathname;
         <span class="font-bold text-gray-900 text-lg tracking-tight font-['Outfit']">CG<span class="text-[#1A56DB]">Tenders</span></span>
       </a>
 
-      <!-- Desktop Nav -->
       <nav class="hidden md:flex items-center gap-1">
         {nav.map(({ label, href }) => (
-          <a
-            href={href}
+          <a href={href}
             class={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
-              path === href || path.startsWith(href + '/')
+              isActive(href)
                 ? 'bg-blue-50 text-[#1A56DB]'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-            }`}
-          >
+            }`}>
             {label}
           </a>
         ))}
       </nav>
 
-      <!-- Mobile menu toggle -->
       <button id="mobile-menu-btn" aria-label="Open menu"
         class="md:hidden p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition">
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -47,14 +48,12 @@ const path = Astro.url.pathname;
       </button>
     </div>
 
-    <!-- Mobile Nav -->
     <div id="mobile-menu" class="hidden md:hidden border-t border-gray-100 py-2">
       {nav.map(({ label, href }) => (
         <a href={href}
           class={`block px-3 py-2 rounded-md text-sm font-medium transition ${
-            path === href ? 'bg-blue-50 text-[#1A56DB]' : 'text-gray-700 hover:bg-gray-50'
-          }`}
-        >
+            isActive(href) ? 'bg-blue-50 text-[#1A56DB]' : 'text-gray-700 hover:bg-gray-50'
+          }`}>
           {label}
         </a>
       ))}
