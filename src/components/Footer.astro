@@ -1,70 +1,71 @@
 ---
-// Footer component with links to legal pages
 ---
-
 <footer class="bg-white border-t border-gray-200 mt-12 md:mt-16">
-  <div class="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-8 md:py-12">
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-6 mb-8">
-      <!-- Brand Section -->
-      <div class="col-span-1 md:col-span-1">
-        <h3 class="text-lg font-bold text-gray-900 mb-2">CGTenders.com</h3>
-        <p class="text-sm text-gray-600">Chhattisgarh Tender Aggregator</p>
-        <p class="text-xs text-gray-500 mt-2">Aggregated open tenders with AI-powered analysis and smart insights</p>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
+
+      <!-- Brand -->
+      <div class="col-span-2 md:col-span-1">
+        <a href="/" class="flex items-center gap-2 mb-3">
+          <div class="w-7 h-7 rounded-md bg-[#1A56DB] flex items-center justify-center">
+            <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0121 9.414V19a2 2 0 01-2 2z"/>
+            </svg>
+          </div>
+          <span class="font-bold text-gray-900 text-base font-['Outfit']">CG<span class="text-[#1A56DB]">Tenders</span><span class="text-gray-400 font-normal">.com</span></span>
+        </a>
+        <p class="text-xs text-gray-500 leading-relaxed max-w-[200px]">
+          Chhattisgarh government tender aggregator — GeM &amp; CSPGCL in one dashboard.
+        </p>
+        <p class="text-xs text-gray-400 mt-3">Updated daily at 06:00 IST</p>
       </div>
 
-      <!-- Quick Links -->
+      <!-- Explore -->
       <div>
-        <h4 class="text-sm font-semibold text-gray-900 mb-4">Product</h4>
+        <h4 class="text-xs font-semibold text-gray-900 uppercase tracking-wider mb-4">Explore</h4>
         <ul class="space-y-2">
-          <li><a href="/tenders" class="text-sm text-gray-600 hover:text-[#1A56DB] transition">Dashboard</a></li>
-          <li><a href="/about" class="text-sm text-gray-600 hover:text-[#1A56DB] transition">About</a></li>
+          <li><a href="/tenders" class="text-sm text-gray-500 hover:text-[#1A56DB] transition">All Tenders</a></li>
+          <li><a href="/districts" class="text-sm text-gray-500 hover:text-[#1A56DB] transition">By District</a></li>
+          <li><a href="/tenders?source=GEM" class="text-sm text-gray-500 hover:text-[#1A56DB] transition">GeM Tenders</a></li>
+          <li><a href="/tenders?source=CSPGCL" class="text-sm text-gray-500 hover:text-[#1A56DB] transition">CSPGCL Tenders</a></li>
         </ul>
       </div>
 
-      <!-- Legal & Compliance -->
+      <!-- Company -->
       <div>
-        <h4 class="text-sm font-semibold text-gray-900 mb-4">Legal</h4>
+        <h4 class="text-xs font-semibold text-gray-900 uppercase tracking-wider mb-4">Company</h4>
         <ul class="space-y-2">
-          <li><a href="/privacy" class="text-sm text-gray-600 hover:text-[#1A56DB] transition">Privacy Policy</a></li>
-          <li><a href="/terms" class="text-sm text-gray-600 hover:text-[#1A56DB] transition">Terms & Conditions</a></li>
+          <li><a href="/about" class="text-sm text-gray-500 hover:text-[#1A56DB] transition">About</a></li>
+          <li><a href="/contact" class="text-sm text-gray-500 hover:text-[#1A56DB] transition">Contact</a></li>
         </ul>
       </div>
 
-      <!-- Support & Contact -->
+      <!-- Legal -->
       <div>
-        <h4 class="text-sm font-semibold text-gray-900 mb-4">Support</h4>
+        <h4 class="text-xs font-semibold text-gray-900 uppercase tracking-wider mb-4">Legal</h4>
         <ul class="space-y-2">
-          <li><a href="/contact" class="text-sm text-gray-600 hover:text-[#1A56DB] transition">Contact Us</a></li>
-          <li><a href="#" class="text-sm text-gray-600 hover:text-[#1A56DB] transition">Help Center</a></li>
+          <li><a href="/privacy" class="text-sm text-gray-500 hover:text-[#1A56DB] transition">Privacy Policy</a></li>
+          <li><a href="/terms" class="text-sm text-gray-500 hover:text-[#1A56DB] transition">Terms &amp; Conditions</a></li>
         </ul>
       </div>
     </div>
 
-    <!-- Divider -->
-    <div class="border-t border-gray-100 pt-6">
-      <!-- Bottom Footer -->
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <p class="text-xs text-gray-500">
-          © {new Date().getFullYear()} CGTenders.com. All rights reserved.
-        </p>
-        <div class="flex flex-wrap gap-4">
-          <a href="/privacy" class="text-xs text-gray-500 hover:text-gray-700 transition">Privacy</a>
-          <a href="/terms" class="text-xs text-gray-500 hover:text-gray-700 transition">Terms</a>
-          <a href="/contact" class="text-xs text-gray-500 hover:text-gray-700 transition">Contact</a>
-        </div>
+    <div class="border-t border-gray-100 pt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <p class="text-xs text-gray-400">
+        © {new Date().getFullYear()} CGTenders.com. Data sourced from official government portals.
+        Not affiliated with any government body.
+      </p>
+      <div class="flex gap-4">
+        <a href="/privacy" class="text-xs text-gray-400 hover:text-gray-600 transition">Privacy</a>
+        <a href="/terms" class="text-xs text-gray-400 hover:text-gray-600 transition">Terms</a>
+        <a href="/contact" class="text-xs text-gray-400 hover:text-gray-600 transition">Contact</a>
       </div>
     </div>
   </div>
 </footer>
 
 <style is:global>
-  footer a {
-    text-decoration: none;
-  }
-
-  footer a:focus {
-    outline: 2px solid #1A56DB;
-    outline-offset: 2px;
-    border-radius: 2px;
-  }
+  footer a { text-decoration: none; }
+  footer a:focus { outline: 2px solid #1A56DB; outline-offset: 2px; border-radius: 2px; }
 </style>

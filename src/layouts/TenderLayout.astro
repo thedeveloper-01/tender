@@ -1,20 +1,27 @@
 ---
 import '../styles/global.css';
-import '../styles/tenders.css';
 
 export interface Props {
   title?: string;
   description?: string;
-  jsonLd?: string;
+  canonical?: string;
+  ogImage?: string;
+  jsonLd?: object;
+  noindex?: boolean;
 }
 
 const {
-  title = 'CGTenders.com | Chhattisgarh Government Tender Aggregator',
-  description = 'Aggregate, search, and analyze open government tenders relevant to Chhattisgarh from GeM and CSPGCL with smart filters and AI-powered insights.',
+  title = 'CGTenders.com — Chhattisgarh Government Tender Aggregator',
+  description = 'Browse open government tenders from GeM and CSPGCL portals in one place, filtered to Chhattisgarh. Search by district, category, value, EMD, and closing date.',
+  canonical,
+  ogImage,
   jsonLd,
+  noindex = false,
 } = Astro.props;
 
-const canonicalUrl = Astro.url.href;
+const siteUrl = import.meta.env.SITE_URL || 'https://cgtenders.com';
+const canonicalUrl = canonical ? `${siteUrl}${canonical}` : `${siteUrl}${Astro.url.pathname}`;
+const ogImg = ogImage || `${siteUrl}/og-default.png`;
 ---
 
 <!doctype html>
@@ -23,7 +30,7 @@ const canonicalUrl = Astro.url.href;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
-    <meta name="robots" content="index, follow" />
+    <meta name="robots" content={noindex ? 'noindex, nofollow' : 'index, follow'} />
     <link rel="canonical" href={canonicalUrl} />
 
     <!-- Open Graph -->
@@ -32,47 +39,30 @@ const canonicalUrl = Astro.url.href;
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={ogImg} />
+    <meta property="og:locale" content="en_IN" />
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImg} />
 
-    {jsonLd && <script type="application/ld+json" set:html={jsonLd} />}
+    <!-- JSON-LD -->
+    {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" href="/favicon.ico" />
+    <link rel="sitemap" href="/sitemap.xml" />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
 
-    <!-- Google Fonts: Outfit (headings) + DM Sans (body) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap"
       rel="stylesheet"
     />
-
-    <style>
-      html, body {
-        margin: 0;
-        padding: 0;
-        width: 100%;
-        min-height: 100%;
-        font-family: 'DM Sans', system-ui, sans-serif;
-        background: #F8F9FC;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-      }
-
-      h1, h2, h3, h4, h5, h6 {
-        font-family: 'Outfit', system-ui, sans-serif;
-      }
-
-      *, *::before, *::after {
-        box-sizing: border-box;
-      }
-    </style>
   </head>
   <body>
     <slot />

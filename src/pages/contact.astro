@@ -1,12 +1,14 @@
 ---
 import TenderLayout from '../layouts/TenderLayout.astro';
 import Footer from '../components/Footer.astro';
+import Navbar from '../components/Navbar.astro';
 
 const title = 'Contact Us | CGTenders.com';
 const description = 'Get in touch with our team. We are here to help with any questions or support you may need.';
 ---
 
 <TenderLayout {title} {description}>
+  <Navbar />
   <div class="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-8 md:py-12">
     <div class="max-w-3xl mx-auto">
       <!-- Header -->
@@ -31,8 +33,8 @@ const description = 'Get in touch with our team. We are here to help with any qu
           </div>
           <h3 class="font-semibold text-gray-900 mb-2">Email</h3>
           <p class="text-sm text-gray-600 mb-3">For general inquiries</p>
-          <a href="mailto:info@cgtenders.com" class="text-[#1A56DB] hover:text-blue-700 font-medium text-sm transition">
-            info@cgtenders.com
+          <a href="mailto:info@cspgcl-tender.com" class="text-[#1A56DB] hover:text-blue-700 font-medium text-sm transition">
+            info@cspgcl-tender.com
           </a>
         </div>
 
@@ -58,7 +60,7 @@ const description = 'Get in touch with our team. We are here to help with any qu
           </div>
           <h3 class="font-semibold text-gray-900 mb-2">Location</h3>
           <p class="text-sm text-gray-600">
-            Chhattisgarh State<br/>
+            CGTenders Head Office<br/>
             Central India
           </p>
         </div>
@@ -184,7 +186,7 @@ const description = 'Get in touch with our team. We are here to help with any qu
         <div class="space-y-4">
           <div>
             <h3 class="font-semibold text-gray-900 mb-2">How often is the tender data updated?</h3>
-            <p class="text-sm text-gray-700">Our system updates tender data daily at a configurable time (default 06:00 AM) using specialized cron jobs connecting to source portals.</p>
+            <p class="text-sm text-gray-700">Our system updates tender data in real-time from the CGTenders portal, ensuring you always have the latest information.</p>
           </div>
           
           <div>
@@ -194,12 +196,12 @@ const description = 'Get in touch with our team. We are here to help with any qu
           
           <div>
             <h3 class="font-semibold text-gray-900 mb-2">How can I get technical support?</h3>
-            <p class="text-sm text-gray-700">You can reach our support team via email. We also maintain diagnostic tools and fetch logs to audit scraper metrics.</p>
+            <p class="text-sm text-gray-700">You can reach our support team via email or phone. We also have a help center with comprehensive documentation.</p>
           </div>
           
           <div>
             <h3 class="font-semibold text-gray-900 mb-2">Can I export tender data?</h3>
-            <p class="text-sm text-gray-700">Tender data can be accessed via our public JSON API routes. Standard filtering options allow granular programmatic data loading.</p>
+            <p class="text-sm text-gray-700">Yes, you can export tender data in various formats. Contact support for export options and guidelines.</p>
           </div>
         </div>
       </div>

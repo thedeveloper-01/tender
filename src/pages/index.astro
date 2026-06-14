@@ -1,240 +1,232 @@
 ---
 import TenderLayout from '../layouts/TenderLayout.astro';
+import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
-import { CITIES, cityToSlug } from '../lib/cities.js';
+import { fetchTenders, fetchStats, fetchCities } from '../lib/api.js';
+import { formatRupee, formatDate, daysLeft, viabilityColor, tenderDetailPath } from '../lib/cities.js';
 
-const API_URL = process.env.API_URL || 'http://localhost:4000';
-
-let stats = {
-  totalOpen: 0,
-  totalValue: 0,
-  countsBySource: { GEM: 0, CSPGCL: 0 },
-  countsByCategory: {}
-};
-let featuredTenders = [];
+let stats = { totalOpenTenders: 0, totalEstimatedValue: 0, bySource: {}, byCategory: {}, lastFetchAt: null };
+let soonest = [];
+let topCities = [];
 
 try {
-  const statsRes = await fetch(`${API_URL}/api/stats`);
-  if (statsRes.ok) {
-    stats = await statsRes.json();
-  }
+  [stats, { tenders: soonest }, { cities: topCities }] = await Promise.all([
+    fetchStats(),
+    fetchTenders({ status: 'open', sort: 'endDate_asc', limit: 6 }),
+    fetchCities(),
+  ]);
 } catch (e) {
-  console.error('[homepage] Failed to fetch stats:', e.message);
+  console.error('[homepage] API error:', e.message);
 }
 
-try {
-  const tendersRes = await fetch(`${API_URL}/api/tenders?limit=6&status=open`);
-  if (tendersRes.ok) {
-    const data = await tendersRes.json();
-    featuredTenders = data.tenders || [];
-  }
-} catch (e) {
-  console.error('[homepage] Failed to fetch featured tenders:', e.message);
-}
-
-function getTenderSlug(tender) {
-  const safeBid = encodeURIComponent(tender.bidNumber);
-  const safeTitle = tender.title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '')
-    .slice(0, 50);
-  return `${tender.source.toLowerCase()}--${safeBid}--${safeTitle}`;
-}
-
-const formatRupee = (val) => {
-  if (val == null || isNaN(val)) return 'Not specified';
-  if (val >= 10000000) return `₹${(val / 10000000).toFixed(2)} Cr`;
-  if (val >= 100000) return `₹${(val / 100000).toFixed(2)} Lakh`;
-  return '₹' + Number(val).toLocaleString('en-IN');
-};
-
-const getDaysLeft = (dateStr) => {
-  if (!dateStr) return null;
-  const target = new Date(dateStr);
-  if (isNaN(target.getTime())) return null;
-  const now = new Date();
-  const diffMs = target - now;
-  return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'CGTenders.com',
+  url: 'https://cgtenders.com',
+  description: 'Chhattisgarh government tender aggregator — GeM and CSPGCL portals in one place.',
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: { '@type': 'EntryPoint', urlTemplate: 'https://cgtenders.com/tenders?q={search_term_string}' },
+    'query-input': 'required name=search_term_string',
+  },
 };
 ---
 
-<TenderLayout title="CGTenders.com | Chhattisgarh Government Tender Aggregator">
-  <div class="min-h-screen flex flex-col bg-[#F8F9FC]">
-    
-    <!-- Hero Banner -->
-    <section class="relative bg-gradient-to-br from-[#101F42] to-[#1E3A8A] text-white py-16 md:py-24 px-4 overflow-hidden border-b border-blue-900/30">
-      <div class="absolute top-0 right-0 -mt-10 -mr-10 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
-      <div class="absolute bottom-0 left-0 -mb-10 -ml-10 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
-      
-      <div class="max-w-7xl mx-auto text-center relative z-10">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/20 text-blue-200 text-xs font-semibold mb-6">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          Chhattisgarh Government Tender Intelligence Hub
-        </div>
-        <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-6">
-          CGTenders<span class="text-blue-400">.com</span>
-        </h1>
-        <p class="text-base sm:text-lg md:text-xl text-blue-100/90 max-w-3xl mx-auto mb-10 font-normal leading-relaxed">
-          Aggregating and analyzing open government opportunities across Chhattisgarh. Access verified tenders from the GeM portal and CSPGCL with smart AI categorization, viability scoring, and automated PDF value extraction.
-        </p>
-        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <a href="/tenders" class="w-full sm:w-auto px-8 py-4 bg-[#1A56DB] hover:bg-blue-700 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-blue-500/25 flex items-center justify-center gap-2">
-            Browse All Tenders
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-          </a>
-          <a href="#districts" class="w-full sm:w-auto px-8 py-4 bg-white/10 hover:bg-white/15 border border-white/10 hover:border-white/20 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2">
-            Explore Districts
-          </a>
+<TenderLayout
+  title="CGTenders.com — Chhattisgarh Government Tender Aggregator"
+  description="Browse open government tenders from GeM and CSPGCL portals, filtered to Chhattisgarh. Search by district, category, bid value, EMD, and closing date."
+  canonical="/"
+  jsonLd={jsonLd}
+>
+  <Navbar />
+
+  <main>
+    <!-- Hero -->
+    <section class="bg-gradient-to-br from-[#1A56DB] via-[#1e40af] to-[#1e3a8a] text-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+        <div class="max-w-3xl">
+          <div class="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 text-sm mb-6">
+            <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+            Updated daily · GeM + CSPGCL
+          </div>
+          <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold leading-tight mb-4 font-['Outfit']">
+            Chhattisgarh Government<br/>Tenders, All in One Place
+          </h1>
+          <p class="text-blue-100 text-base md:text-lg leading-relaxed mb-8 max-w-2xl">
+            Browse open tenders from the GeM portal and CSPGCL, enriched with viability scores, risk analysis,
+            and PDF-extracted details. Filter by any of the 33 CG districts.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-3">
+            <a href="/tenders"
+              class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-[#1A56DB] rounded-xl font-semibold text-sm hover:bg-blue-50 transition shadow">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+              </svg>
+              Browse All Tenders
+            </a>
+            <a href="/districts"
+              class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white/10 border border-white/30 rounded-xl font-semibold text-sm hover:bg-white/20 transition">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+              </svg>
+              Browse by District
+            </a>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- Stats Grid -->
-    <section class="max-w-7xl mx-auto px-4 -mt-8 relative z-20 w-full">
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        
-        <div class="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-gray-100/80 flex flex-col">
-          <span class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Active Tenders</span>
-          <span class="text-3xl font-extrabold text-gray-900">{stats.totalOpen}</span>
-          <span class="text-xs text-[#057A55] font-semibold mt-2 flex items-center gap-1">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Live Monitoring
-          </span>
+    <!-- Stats Bar -->
+    <section class="bg-white border-b border-gray-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+          <div class="text-center">
+            <p class="text-2xl md:text-3xl font-extrabold text-[#1A56DB] font-['Outfit']">{stats.totalOpenTenders}</p>
+            <p class="text-xs text-gray-500 mt-0.5">Open Tenders</p>
+          </div>
+          <div class="text-center">
+            <p class="text-2xl md:text-3xl font-extrabold text-gray-900 font-['Outfit']">{formatRupee(stats.totalEstimatedValue)}</p>
+            <p class="text-xs text-gray-500 mt-0.5">Total Estimated Value</p>
+          </div>
+          <div class="text-center">
+            <p class="text-2xl md:text-3xl font-extrabold text-gray-900 font-['Outfit']">{stats.bySource?.GEM || 0}</p>
+            <p class="text-xs text-gray-500 mt-0.5">GeM Tenders</p>
+          </div>
+          <div class="text-center">
+            <p class="text-2xl md:text-3xl font-extrabold text-gray-900 font-['Outfit']">{stats.bySource?.CSPGCL || 0}</p>
+            <p class="text-xs text-gray-500 mt-0.5">CSPGCL Tenders</p>
+          </div>
         </div>
-
-        <div class="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-gray-100/80 flex flex-col">
-          <span class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Opportunity Size</span>
-          <span class="text-3xl font-extrabold text-gray-900">{formatRupee(stats.totalValue)}</span>
-          <span class="text-xs text-gray-500 mt-2">Disclosed Estimated Cost</span>
-        </div>
-
-        <div class="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-gray-100/80 flex flex-col">
-          <span class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">GeM Portal Bids</span>
-          <span class="text-3xl font-extrabold text-[#1A56DB]">{stats.countsBySource.GEM || 0}</span>
-          <span class="text-xs text-gray-500 mt-2">Chhattisgarh State-filtered</span>
-        </div>
-
-        <div class="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-gray-100/80 flex flex-col">
-          <span class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">CSPGCL Bids</span>
-          <span class="text-3xl font-extrabold text-emerald-600">{stats.countsBySource.CSPGCL || 0}</span>
-          <span class="text-xs text-gray-500 mt-2">Power plants & Offices</span>
-        </div>
-
       </div>
     </section>
 
-    <!-- Soonest Closing Featured Tenders -->
-    <section class="max-w-7xl mx-auto px-4 py-16 w-full">
-      <div class="flex items-end justify-between mb-8">
-        <div>
-          <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">Closing Soon</h2>
-          <p class="text-sm text-gray-500 mt-1">High-priority tenders nearing their submission deadline.</p>
-        </div>
-        <a href="/tenders" class="text-sm font-semibold text-[#1A56DB] hover:underline flex items-center gap-1">
-          View all
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-        </a>
-      </div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
 
-      {featuredTenders.length === 0 ? (
-        <div class="bg-white border border-gray-150 rounded-2xl p-12 text-center shadow-sm">
-          <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          <h3 class="text-lg font-bold text-gray-900 mb-1">No active tenders found</h3>
-          <p class="text-sm text-gray-500">The database appears to be empty. Use `/api/refresh` or check the scheduler.</p>
+      <!-- Closing Soon -->
+      <section class="mb-14">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h2 class="text-xl md:text-2xl font-bold text-gray-900 font-['Outfit']">Closing Soon</h2>
+            <p class="text-sm text-gray-500 mt-0.5">Tenders with the nearest deadline</p>
+          </div>
+          <a href="/tenders" class="text-sm font-medium text-[#1A56DB] hover:underline flex items-center gap-1">
+            View all
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </a>
         </div>
-      ) : (
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {featuredTenders.map(tender => {
-            const daysLeft = getDaysLeft(tender.endDate);
-            const isUrgent = daysLeft !== null && [0, 1, 2, 3].includes(daysLeft);
-            
-            return (
-              <div class="bg-white rounded-2xl p-6 border border-gray-150/80 shadow-sm flex flex-col justify-between hover:shadow-md transition group">
-                <div>
-                  <div class="flex justify-between items-start mb-4 gap-2">
-                    <span class={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md border ${
-                      tender.source === 'GEM' 
-                        ? 'bg-blue-50 text-blue-700 border-blue-100' 
-                        : 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                    }`}>
-                      {tender.source}
+
+        {soonest.length === 0 ? (
+          <div class="text-center py-12 bg-white rounded-2xl border border-gray-200 text-gray-400 text-sm">
+            No open tenders found. The pipeline may still be loading data.
+          </div>
+        ) : (
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {soonest.map((t) => {
+              const dl = daysLeft(t.endDate);
+              const path = tenderDetailPath(t);
+              return (
+                <a href={path} class="group bg-white rounded-2xl border border-gray-200 hover:border-[#1A56DB]/40 hover:shadow-md transition p-5 flex flex-col">
+                  <!-- Header -->
+                  <div class="flex items-start justify-between gap-2 mb-3">
+                    <span class={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold ${t.source === 'GEM' ? 'bg-violet-100 text-violet-700' : 'bg-amber-100 text-amber-700'}`}>
+                      {t.source}
                     </span>
-                    {tender.viabilityScore && (
-                      <span class={`text-xs font-bold px-2 py-0.5 rounded ${
-                        tender.viabilityScore >= 8 ? 'bg-[#057A55] text-white' : tender.viabilityScore >= 5 ? 'bg-[#C27803] text-white' : 'bg-[#E02424] text-white'
-                      }`}>
-                        Score: {tender.viabilityScore}
+                    {t.viabilityScore != null && (
+                      <span class={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold ${viabilityColor(t.viabilityScore)}`}>
+                        {t.viabilityScore}/10
                       </span>
                     )}
                   </div>
-                  <h3 class="text-sm font-semibold text-[#1A56DB] mb-1 line-clamp-1">
-                    {tender.locationCity || 'Unspecified'}
+
+                  <!-- Title -->
+                  <h3 class="text-sm font-semibold text-gray-900 line-clamp-2 mb-2 group-hover:text-[#1A56DB] transition flex-1">
+                    {t.title}
                   </h3>
-                  <p class="text-xs text-gray-500 mb-3 line-clamp-1">{tender.organization || 'Chhattisgarh State'}</p>
-                  <p class="text-gray-900 text-sm font-medium line-clamp-3 mb-4 min-h-[60px]">
-                    {tender.title}
-                  </p>
-                </div>
 
-                <div class="mt-auto space-y-4">
-                  <div class="grid grid-cols-2 gap-3 bg-gray-50 rounded-xl p-3 border border-gray-100">
-                    <div>
-                      <span class="text-[9px] text-gray-400 uppercase font-bold">Value</span>
-                      <p class="text-xs font-bold text-gray-900 mt-0.5">{formatRupee(tender.bidValue)}</p>
+                  <!-- Meta -->
+                  <div class="space-y-1 mt-auto pt-3 border-t border-gray-100">
+                    <div class="flex items-center justify-between text-xs">
+                      <span class="text-gray-500">{t.locationCity || 'Unspecified'}</span>
+                      {dl != null && (
+                        <span class={`font-medium ${dl <= 3 ? 'text-red-600' : dl <= 7 ? 'text-amber-600' : 'text-green-600'}`}>
+                          {dl < 0 ? 'Closed' : dl === 0 ? 'Closes today' : `${dl}d left`}
+                        </span>
+                      )}
                     </div>
-                    <div>
-                      <span class="text-[9px] text-gray-400 uppercase font-bold">EMD</span>
-                      <p class="text-xs font-bold text-gray-900 mt-0.5">{formatRupee(tender.emdAmount)}</p>
+                    <div class="flex items-center justify-between text-xs">
+                      <span class="text-gray-400">Value: {formatRupee(t.bidValue)}</span>
+                      <span class="text-gray-400">EMD: {formatRupee(t.emdAmount)}</span>
                     </div>
                   </div>
+                </a>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
-                  <div class="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-gray-100">
-                    <div class="flex items-center gap-1.5">
-                      <svg class={`w-4 h-4 ${isUrgent ? 'text-[#C27803]' : 'text-gray-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                      <span class={isUrgent ? 'text-[#C27803] font-bold' : ''}>
-                        {daysLeft === null ? 'No date' : Math.sign(daysLeft) === -1 ? 'Expired' : daysLeft === 0 ? 'Closes today!' : `${daysLeft} days left`}
-                      </span>
-                    </div>
-                    <a href={`/tenders/${getTenderSlug(tender)}`} class="font-semibold text-[#1A56DB] hover:underline group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
-                      Details
-                      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                    </a>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </section>
-
-    <!-- Districts section -->
-    <section id="districts" class="bg-white border-t border-b border-gray-200/60 py-16 px-4 w-full">
-      <div class="max-w-7xl mx-auto">
-        <div class="text-center max-w-2xl mx-auto mb-12">
-          <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">Browse by District</h2>
-          <p class="text-sm text-gray-500 mt-2">Explore active procurement and construction tenders filtered by Chhattisgarh district divisions.</p>
-        </div>
-
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
-          {CITIES.sort().map(city => (
-            <a 
-              href={`/tenders/${cityToSlug(city)}`}
-              class="flex flex-col items-center justify-center p-4 rounded-xl border border-gray-150/80 bg-gray-50 hover:bg-white hover:border-[#1A56DB] hover:shadow-sm transition text-center group"
-            >
-              <span class="text-xs font-semibold text-gray-700 group-hover:text-[#1A56DB] transition-colors">{city}</span>
+      <!-- Active Districts -->
+      {topCities.filter(c => c.openCount > 0).length > 0 && (
+        <section class="mb-14">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h2 class="text-xl md:text-2xl font-bold text-gray-900 font-['Outfit']">Active Districts</h2>
+              <p class="text-sm text-gray-500 mt-0.5">Districts with open tenders right now</p>
+            </div>
+            <a href="/districts" class="text-sm font-medium text-[#1A56DB] hover:underline flex items-center gap-1">
+              All 33 districts
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
             </a>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            {topCities
+              .filter(c => c.openCount > 0)
+              .sort((a, b) => b.openCount - a.openCount)
+              .slice(0, 16)
+              .map(c => (
+                <a href={`/tenders/${c.slug}`}
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-sm text-gray-700 hover:border-[#1A56DB] hover:text-[#1A56DB] transition">
+                  {c.name}
+                  <span class="bg-blue-50 text-[#1A56DB] text-xs font-semibold px-1.5 py-0.5 rounded-full">{c.openCount}</span>
+                </a>
+              ))
+            }
+          </div>
+        </section>
+      )}
+
+      <!-- How it works -->
+      <section class="bg-white rounded-2xl border border-gray-200 p-6 md:p-10">
+        <h2 class="text-xl md:text-2xl font-bold text-gray-900 mb-8 font-['Outfit']">How CGTenders.com Works</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[
+            { n:'1', icon:'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z', title:'Daily Fetch', body:'GeM and CSPGCL portals are scraped every morning. New tenders are upserted, closed ones archived.' },
+            { n:'2', icon:'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0121 9.414V19a2 2 0 01-2 2z', title:'PDF Extraction', body:'Bid documents are downloaded and parsed for EMD, bid value, delivery terms, eligibility criteria, and more.' },
+            { n:'3', icon:'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', title:'Analysis & Scoring', body:'Each tender gets a viability score (1–10), risk tags, and category labels from our analysis engine.' },
+            { n:'4', icon:'M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2zM3 16a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2z', title:'Filter & Decide', body:'Search by keyword, district, category, value range, EMD, source, and closing date — then view full details.' },
+          ].map(({ n, icon, title, body }) => (
+            <div class="flex flex-col gap-3">
+              <div class="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-[#1A56DB]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d={icon}/>
+                </svg>
+              </div>
+              <div>
+                <span class="text-xs font-bold text-[#1A56DB] mb-0.5 block">Step {n}</span>
+                <h3 class="font-semibold text-gray-900 text-sm mb-1">{title}</h3>
+                <p class="text-xs text-gray-500 leading-relaxed">{body}</p>
+              </div>
+            </div>
           ))}
         </div>
-      </div>
-    </section>
+      </section>
+    </div>
+  </main>
 
-    <Footer />
-  </div>
+  <Footer />
 </TenderLayout>
-
-<style>
-  html {
-    scroll-behavior: smooth;
-  }
-</style>

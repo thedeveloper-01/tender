@@ -1,18 +1,9 @@
-const SITE_URL = 'https://cgtenders.com';
-
+const siteUrl = import.meta.env.SITE_URL || 'https://cgtenders.com';
 export async function GET() {
-  const robots = `
-User-agent: *
+  const body = `User-agent: *
 Allow: /
+Disallow: /api/
 
-Sitemap: ${SITE_URL}/sitemap.xml
-`.trim();
-
-  return new Response(robots, {
-    status: 200,
-    headers: {
-      'Content-Type': 'text/plain',
-      'Cache-Control': 'public, max-age=86400',
-    },
-  });
+Sitemap: ${siteUrl}/sitemap.xml`;
+  return new Response(body, { headers: { 'Content-Type': 'text/plain' } });
 }

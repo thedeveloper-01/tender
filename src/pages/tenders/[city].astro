@@ -1,0 +1,44 @@
+---
+import TenderLayout from '../../layouts/TenderLayout.astro';
+import Navbar from '../../components/Navbar.astro';
+import Footer from '../../components/Footer.astro';
+import TenderDashboard from '../../components/TenderDashboard.jsx';
+import { cityFromSlug } from '../../lib/cities.js';
+
+const { city: slug } = Astro.params;
+const city = cityFromSlug(slug) || slug;
+
+const title = `${city} Government Tenders — CGTenders.com`;
+const description = `Browse open government tenders in ${city}, Chhattisgarh from GeM and CSPGCL portals. Updated daily.`;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  name: title,
+  description,
+  url: `https://cgtenders.com/tenders/${slug}`,
+};
+---
+
+<TenderLayout {title} {description} canonical={`/tenders/${slug}`} jsonLd={jsonLd}>
+  <Navbar />
+  <main>
+    <div class="bg-white border-b border-gray-100 py-6">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <nav class="flex items-center gap-2 text-xs text-gray-400 mb-2">
+          <a href="/tenders" class="hover:text-[#1A56DB] transition">All Tenders</a>
+          <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+          <span class="text-gray-600">{city}</span>
+        </nav>
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-900 font-['Outfit']">{city} Tenders</h1>
+        <p class="text-sm text-gray-500 mt-1">
+          Open government tenders in {city} district, Chhattisgarh — sourced from GeM and CSPGCL portals.
+        </p>
+      </div>
+    </div>
+    <TenderDashboard client:load initialCity={city} />
+  </main>
+  <Footer />
+</TenderLayout>

@@ -1,27 +1,23 @@
 ---
 import TenderLayout from '../layouts/TenderLayout.astro';
-import TenderDashboard from '../components/TenderDashboard.jsx';
+import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
+import TenderDashboard from '../components/TenderDashboard.jsx';
 
-const API_URL = process.env.API_URL || 'http://localhost:4000';
-
-let initialTenders = [];
-try {
-  // Fetch a reasonable batch of active tenders to render instantly
-  const res = await fetch(`${API_URL}/api/tenders?limit=200&status=open`);
-  if (res.ok) {
-    const data = await res.json();
-    initialTenders = data.tenders || [];
-  }
-} catch (e) {
-  console.error('[tenders.astro] Failed to fetch server-side tenders:', e.message);
-}
+const title = 'All Chhattisgarh Government Tenders — GeM & CSPGCL | CGTenders.com';
+const description = 'Search and filter all open government tenders from GeM and CSPGCL portals in Chhattisgarh. Filter by district, category, bid value, EMD, and closing date.';
 ---
 
-<TenderLayout 
-  title="Government Tenders Dashboard | CGTenders.com" 
-  description="Search, sort and filter active Chhattisgarh government tenders from GeM and CSPGCL. View estimated costs, EMDs, and AI-powered viability assessment."
->
-  <TenderDashboard client:load initialTenders={initialTenders} />
+<TenderLayout {title} {description} canonical="/tenders">
+  <Navbar />
+  <main>
+    <div class="bg-white border-b border-gray-100 py-6">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-900 font-['Outfit']">All Tenders</h1>
+        <p class="text-sm text-gray-500 mt-1">GeM and CSPGCL open tenders in Chhattisgarh, updated daily</p>
+      </div>
+    </div>
+    <TenderDashboard client:load />
+  </main>
   <Footer />
 </TenderLayout>
