@@ -45,7 +45,7 @@ export function parseCspgclDate(d) {
       if (isPM && hr !== 12) hr += 12;
       if (!isPM && hr === 12) hr = 0;
     }
-    const iso = `${year}-${month}-${day}T${String(hr).padStart(2, '0')}:${min}:00`;
+    const iso = `${year}-${month}-${day}T${String(hr).padStart(2, '0')}:${min}:00+05:30`;
     const date = new Date(iso);
     return isNaN(date.getTime()) ? null : date;
   }

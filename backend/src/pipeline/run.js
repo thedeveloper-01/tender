@@ -38,15 +38,17 @@ export async function runPipeline() {
   try {
     gemRaw = await fetchGemTenders();
   } catch (e) {
-    console.error('[pipeline] GeM fetch failed:', e.message);
-    errors.push(`GEM fetch error: ${e.message}`);
+    const detail = e.cause ? `${e.message} (cause: ${e.cause.message || e.cause})` : e.stack || e.message;
+    console.error('[pipeline] GeM fetch failed:', detail);
+    errors.push(`GEM fetch error: ${detail}`);
   }
 
   try {
     cspgclRaw = await fetchCspgclTenders();
   } catch (e) {
-    console.error('[pipeline] CSPGCL fetch failed:', e.message);
-    errors.push(`CSPGCL fetch error: ${e.message}`);
+    const detail = e.cause ? `${e.message} (cause: ${e.cause.message || e.cause})` : e.stack || e.message;
+    console.error('[pipeline] CSPGCL fetch failed:', detail);
+    errors.push(`CSPGCL fetch error: ${detail}`);
   }
 
   found = gemRaw.length + cspgclRaw.length;

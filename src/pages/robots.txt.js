@@ -1,4 +1,5 @@
-const siteUrl = import.meta.env.SITE_URL || 'https://cgtenders.com';
+const rawSiteUrl = import.meta.env.SITE_URL || 'https://cgtenders.com';
+const siteUrl = rawSiteUrl.endsWith('/') ? rawSiteUrl.slice(0, -1) : rawSiteUrl;
 export async function GET() {
   const body = `User-agent: *
 Allow: /

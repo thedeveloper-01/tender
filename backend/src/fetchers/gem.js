@@ -42,8 +42,16 @@ async function fetchGemTendersLive() {
       },
       signal: AbortSignal.timeout(20000),
     });
-    // Collect Set-Cookie headers
-    const setCookies = init.headers.getSetCookie?.() ?? [];
+    // Collect Set-Cookie headers with fallback for older Node environments
+    let setCookies = [];
+    if (typeof init.headers.getSetCookie === 'function') {
+      setCookies = init.headers.getSetCookie();
+    } else {
+      const rawCookie = init.headers.get('set-cookie');
+      if (rawCookie) {
+        setCookies = rawCookie.split(/,\s*(?=[a-zA-Z0-9_\-]+[=])/);
+      }
+    }
     cookies = setCookies.map((c) => c.split(';')[0]).join('; ');
 
     const html = await init.text();

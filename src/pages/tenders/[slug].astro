@@ -2,15 +2,16 @@
 import TenderLayout from '../../layouts/TenderLayout.astro';
 import Navbar from '../../components/Navbar.astro';
 import Footer from '../../components/Footer.astro';
+import TenderDashboard from '../../components/TenderDashboard.jsx';
 import { fetchTenderDetail, documentUrl } from '../../lib/api.js';
-import { formatRupee, formatDate, daysLeft, viabilityColor } from '../../lib/cities.js';
+import { formatRupee, formatDate, daysLeft, viabilityColor, cityFromSlug } from '../../lib/cities.js';
 
 const { slug } = Astro.params as { slug: string };
-// slug format: <source>-<bidNumber>-<title-slug>
-// We split on the first two dashes to get source + bidNumber, rest is title slug
-const parts = (slug ?? '').match(/^(gem|cspgcl)-(.+?)-[a-z0-9-]+$/i);
-const source = parts?.[1]?.toUpperCase() ?? '';
-const bidNumber = parts?.[2] ?? '';
+
+// Determine if it is a city/district route
+const lowerSlug = (slug ?? '').toLowerCase();
+const city = lowerSlug === 'unspecified' ? 'Unspecified' : cityFromSlug(lowerSlug);
+const isCityRoute = !!city;
 
 type ExtractField = { label: string; value: string };
 type ExtractFields = Record<string, ExtractField>;
@@ -43,44 +44,75 @@ interface Tender {
   } | null;
 }
 
-let tender: Tender | null = null;
+let fetchedTender: Tender | null = null;
 let err: string | null = null;
 
-try {
-  tender = await fetchTenderDetail(source, bidNumber) as Tender;
-} catch (e: unknown) {
-  err = e instanceof Error ? e.message : String(e);
+let dl: number | null = null;
+let deadlineLabel: string | null = null;
+let deadlineCls = '';
+let pdfLink: string | null = null;
+let sourceLink: string | null = null;
+let extractFields: ExtractFields = {};
+let rawText: string | null = null;
+let hasExtraDetails = false;
+let jsonLd: any = null;
+let pageTitle = '';
+let metaDesc = '';
+
+if (isCityRoute) {
+  pageTitle = `${city} Government Tenders — CGTenders.com`;
+  metaDesc = `Browse open government tenders in ${city}, Chhattisgarh from GeM and CSPGCL portals. Updated daily.`;
+  jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: pageTitle,
+    description: metaDesc,
+    url: `https://cgtenders.com/tenders/${slug}`,
+  };
+} else {
+  // slug format: <source>-<bidNumber>-<title-slug>
+  const parts = (slug ?? '').match(/^(gem|cspgcl)-(.+?)-[a-z0-9-]+$/i);
+  const source = parts?.[1]?.toUpperCase() ?? '';
+  const bidNumber = parts?.[2] ?? '';
+
+  try {
+    fetchedTender = await fetchTenderDetail(source, bidNumber) as Tender;
+  } catch (e: unknown) {
+    err = e instanceof Error ? e.message : String(e);
+  }
+
+  if (!fetchedTender) {
+    return Astro.redirect('/404');
+  }
+
+  dl = daysLeft(fetchedTender.endDate);
+  deadlineLabel = dl == null ? null
+    : dl < 0 ? 'Closed'
+    : dl === 0 ? 'Closes today'
+    : `${dl} day${dl === 1 ? '' : 's'} left`;
+
+  deadlineCls = dl == null ? '' : dl <= 0 ? 'text-red-600' : dl <= 7 ? 'text-amber-600' : 'text-green-600';
+
+  pdfLink = fetchedTender.pdfPath ? documentUrl(fetchedTender.source, fetchedTender.bidNumber) : null;
+  sourceLink = fetchedTender.bidLink || null;
+  extractFields = (fetchedTender.sourceMeta?.pdfExtract?.fields as ExtractFields) || {};
+  rawText = fetchedTender.sourceMeta?.pdfExtract?.text || null;
+  hasExtraDetails = Object.keys(extractFields).length > 0 || !!rawText;
+
+  jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'GovernmentService',
+    name: fetchedTender.title,
+    description: `${fetchedTender.organization || fetchedTender.department || ''} — Bid value: ${formatRupee(fetchedTender.bidValue)}, EMD: ${formatRupee(fetchedTender.emdAmount)}, closing ${formatDate(fetchedTender.endDate)}`,
+    areaServed: fetchedTender.locationCity || 'Chhattisgarh',
+    provider: { '@type': 'GovernmentOrganization', name: fetchedTender.organization || fetchedTender.department || 'Government of Chhattisgarh' },
+  };
+
+  pageTitle = `${fetchedTender.title.slice(0, 70)} | CGTenders.com`;
+  metaDesc = `${fetchedTender.source} tender ${fetchedTender.bidNumber} — ${fetchedTender.locationCity || 'Chhattisgarh'} — Bid value: ${formatRupee(fetchedTender.bidValue)}, EMD: ${formatRupee(fetchedTender.emdAmount)}, closing ${formatDate(fetchedTender.endDate)}.`;
 }
 
-if (!tender) {
-  return Astro.redirect('/404');
-}
-
-const dl = daysLeft(tender.endDate);
-const deadlineLabel = dl == null ? null
-  : dl < 0 ? 'Closed'
-  : dl === 0 ? 'Closes today'
-  : `${dl} day${dl === 1 ? '' : 's'} left`;
-
-const deadlineCls = dl == null ? '' : dl <= 0 ? 'text-red-600' : dl <= 7 ? 'text-amber-600' : 'text-green-600';
-
-const pdfLink = tender.pdfPath ? documentUrl(tender.source, tender.bidNumber) : null;
-const sourceLink = tender.bidLink || null;
-const extractFields: ExtractFields = (tender.sourceMeta?.pdfExtract?.fields as ExtractFields) || {};
-const rawText = tender.sourceMeta?.pdfExtract?.text || null;
-const hasExtraDetails = Object.keys(extractFields).length > 0 || rawText;
-
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'GovernmentService',
-  name: tender.title,
-  description: `${tender.organization || tender.department || ''} — Bid value: ${formatRupee(tender.bidValue)}, EMD: ${formatRupee(tender.emdAmount)}, closing ${formatDate(tender.endDate)}`,
-  areaServed: tender.locationCity || 'Chhattisgarh',
-  provider: { '@type': 'GovernmentOrganization', name: tender.organization || tender.department || 'Government of Chhattisgarh' },
-};
-
-const pageTitle = `${tender.title.slice(0, 70)} | CGTenders.com`;
-const metaDesc = `${tender.source} tender ${tender.bidNumber} — ${tender.locationCity || 'Chhattisgarh'} — Bid value: ${formatRupee(tender.bidValue)}, EMD: ${formatRupee(tender.emdAmount)}, closing ${formatDate(tender.endDate)}.`;
+const tender = fetchedTender!;
 ---
 
 <TenderLayout
@@ -90,206 +122,229 @@ const metaDesc = `${tender.source} tender ${tender.bidNumber} — ${tender.locat
   jsonLd={jsonLd}
 >
   <Navbar />
-  <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
 
-    <!-- Breadcrumb -->
-    <nav class="flex items-center gap-2 text-xs text-gray-400 mb-6">
-      <a href="/tenders" class="hover:text-[#1A56DB] transition">All Tenders</a>
-      <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-      </svg>
-      {tender.locationCity && (
-        <>
-          <a href={`/tenders/${tender.locationCity.toLowerCase().replace(/[^a-z0-9]+/g,'-')}`}
-            class="hover:text-[#1A56DB] transition">{tender.locationCity}</a>
-          <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-          </svg>
-        </>
-      )}
-      <span class="text-gray-500 truncate max-w-[180px]">{tender.bidNumber}</span>
-    </nav>
+  {isCityRoute ? (
+    <main>
+      <div class="bg-white border-b border-gray-100 py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <nav class="flex items-center gap-2 text-xs text-gray-400 mb-2">
+            <a href="/tenders" class="hover:text-[#1A56DB] transition">All Tenders</a>
+            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+            <span class="text-gray-600">{city}</span>
+          </nav>
+          <h1 class="text-2xl md:text-3xl font-bold text-gray-900 font-['Outfit']">{city} Tenders</h1>
+          <p class="text-sm text-gray-500 mt-1">
+            Open government tenders in {city} district, Chhattisgarh — sourced from GeM and CSPGCL portals.
+          </p>
+        </div>
+      </div>
+      <TenderDashboard client:load initialCity={city} />
+    </main>
+  ) : (
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
 
-    <!-- Header card -->
-    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 md:p-8 mb-6">
-      <div class="flex flex-wrap gap-2 mb-4">
-        <span class={`px-2.5 py-1 rounded-md text-xs font-bold ${tender.source === 'GEM' ? 'bg-violet-100 text-violet-700' : 'bg-amber-100 text-amber-700'}`}>
-          {tender.source}
-        </span>
-        {tender.status === 'open'
-          ? <span class="px-2.5 py-1 rounded-md text-xs font-bold bg-green-100 text-green-700">Open</span>
-          : <span class="px-2.5 py-1 rounded-md text-xs font-bold bg-gray-100 text-gray-600">Closed</span>
-        }
-        {tender.sourceMeta?.isEbidding && (
-          <span class="px-2.5 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-600">e-Bidding</span>
+      <!-- Breadcrumb -->
+      <nav class="flex items-center gap-2 text-xs text-gray-400 mb-6">
+        <a href="/tenders" class="hover:text-[#1A56DB] transition">All Tenders</a>
+        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+        {tender.locationCity && (
+          <>
+            <a href={`/tenders/${tender.locationCity.toLowerCase().replace(/[^a-z0-9]+/g,'-')}`}
+              class="hover:text-[#1A56DB] transition">{tender.locationCity}</a>
+            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </>
         )}
-        {tender.category?.map((c: string) => (
-          <span class="px-2.5 py-1 rounded-md text-xs bg-blue-50 text-blue-700 font-medium">{c}</span>
+        <span class="text-gray-500 truncate max-w-[180px]">{tender.bidNumber}</span>
+      </nav>
+
+      <!-- Header card -->
+      <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 md:p-8 mb-6">
+        <div class="flex flex-wrap gap-2 mb-4">
+          <span class={`px-2.5 py-1 rounded-md text-xs font-bold ${tender.source === 'GEM' ? 'bg-violet-100 text-violet-700' : 'bg-amber-100 text-amber-700'}`}>
+            {tender.source}
+          </span>
+          {tender.status === 'open'
+            ? <span class="px-2.5 py-1 rounded-md text-xs font-bold bg-green-100 text-green-700">Open</span>
+            : <span class="px-2.5 py-1 rounded-md text-xs font-bold bg-gray-100 text-gray-600">Closed</span>
+          }
+          {tender.sourceMeta?.isEbidding && (
+            <span class="px-2.5 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-600">e-Bidding</span>
+          )}
+          {tender.category?.map((c: string) => (
+            <span class="px-2.5 py-1 rounded-md text-xs bg-blue-50 text-blue-700 font-medium">{c}</span>
+          ))}
+        </div>
+
+        <h1 class="text-xl md:text-2xl font-bold text-gray-900 leading-snug mb-2 font-['Outfit']">
+          {tender.title}
+        </h1>
+        {tender.organization && (
+          <p class="text-sm text-gray-500 mb-1">{tender.organization}</p>
+        )}
+        {tender.department && tender.department !== tender.organization && (
+          <p class="text-xs text-gray-400">{tender.department}</p>
+        )}
+
+        <!-- Deadline -->
+        {deadlineLabel && (
+          <div class={`mt-4 inline-flex items-center gap-1.5 text-sm font-semibold ${deadlineCls}`}>
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            {deadlineLabel}
+          </div>
+        )}
+      </div>
+
+      <!-- Key figures -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        {[
+          { label: 'Bid Value', value: formatRupee(tender.bidValue), sub: tender.valueExtractionStatus === 'not_found' ? 'Not extracted from PDF' : null },
+          { label: 'EMD Amount', value: formatRupee(tender.emdAmount), sub: null },
+          { label: 'Closing Date', value: formatDate(tender.endDate), sub: null },
+          { label: 'Opening Date', value: formatDate(tender.startDate), sub: null },
+        ].map(({ label, value, sub }) => (
+          <div class="bg-white rounded-xl border border-gray-200 p-4">
+            <p class="text-xs text-gray-400 mb-0.5">{label}</p>
+            <p class={`text-base font-bold ${value === 'Not available' ? 'text-gray-400 text-sm' : 'text-gray-900'}`}>
+              {value}
+            </p>
+            {sub && <p class="text-xs text-gray-400 mt-0.5 italic">{sub}</p>}
+          </div>
         ))}
       </div>
 
-      <h1 class="text-xl md:text-2xl font-bold text-gray-900 leading-snug mb-2 font-['Outfit']">
-        {tender.title}
-      </h1>
-      {tender.organization && (
-        <p class="text-sm text-gray-500 mb-1">{tender.organization}</p>
-      )}
-      {tender.department && tender.department !== tender.organization && (
-        <p class="text-xs text-gray-400">{tender.department}</p>
-      )}
-
-      <!-- Deadline -->
-      {deadlineLabel && (
-        <div class={`mt-4 inline-flex items-center gap-1.5 text-sm font-semibold ${deadlineCls}`}>
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-          {deadlineLabel}
-        </div>
-      )}
-    </div>
-
-    <!-- Key figures -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-      {[
-        { label: 'Bid Value', value: formatRupee(tender.bidValue), sub: tender.valueExtractionStatus === 'not_found' ? 'Not extracted from PDF' : null },
-        { label: 'EMD Amount', value: formatRupee(tender.emdAmount), sub: null },
-        { label: 'Closing Date', value: formatDate(tender.endDate), sub: null },
-        { label: 'Opening Date', value: formatDate(tender.startDate), sub: null },
-      ].map(({ label, value, sub }) => (
+      <!-- Location & Bid number row -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
         <div class="bg-white rounded-xl border border-gray-200 p-4">
-          <p class="text-xs text-gray-400 mb-0.5">{label}</p>
-          <p class={`text-base font-bold ${value === 'Not available' ? 'text-gray-400 text-sm' : 'text-gray-900'}`}>
-            {value}
-          </p>
-          {sub && <p class="text-xs text-gray-400 mt-0.5 italic">{sub}</p>}
+          <p class="text-xs text-gray-400 mb-0.5">District</p>
+          <p class="text-sm font-semibold text-gray-900">{tender.locationCity || 'Unspecified'}, Chhattisgarh</p>
         </div>
-      ))}
-    </div>
-
-    <!-- Location & Bid number row -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
-      <div class="bg-white rounded-xl border border-gray-200 p-4">
-        <p class="text-xs text-gray-400 mb-0.5">District</p>
-        <p class="text-sm font-semibold text-gray-900">{tender.locationCity || 'Unspecified'}, Chhattisgarh</p>
-      </div>
-      <div class="bg-white rounded-xl border border-gray-200 p-4">
-        <p class="text-xs text-gray-400 mb-0.5">Bid / Notice Number</p>
-        <p class="text-sm font-semibold text-gray-900 break-all">{tender.bidNumber}</p>
-      </div>
-      {tender.quantity && (
         <div class="bg-white rounded-xl border border-gray-200 p-4">
-          <p class="text-xs text-gray-400 mb-0.5">Quantity</p>
-          <p class="text-sm font-semibold text-gray-900">{tender.quantity}</p>
+          <p class="text-xs text-gray-400 mb-0.5">Bid / Notice Number</p>
+          <p class="text-sm font-semibold text-gray-900 break-all">{tender.bidNumber}</p>
         </div>
-      )}
-    </div>
-
-    <!-- Viability + Risks -->
-    <div class="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
-      <div class="flex flex-col sm:flex-row sm:items-center gap-4">
-        {tender.viabilityScore != null && (
-          <div class="flex items-center gap-3">
-            <span class={`text-2xl font-black px-4 py-2 rounded-xl ${viabilityColor(tender.viabilityScore!)}`}>
-              {tender.viabilityScore}<span class="text-base font-semibold opacity-70">/10</span>
-            </span>
-            <div>
-              <p class="text-xs text-gray-400">Viability Score</p>
-              <p class="text-sm font-medium text-gray-700">
-                {tender.viabilityScore >= 8 ? 'High viability' : tender.viabilityScore >= 5 ? 'Moderate viability' : 'Lower viability'}
-              </p>
-            </div>
-          </div>
-        )}
-        {(tender.risks?.length ?? 0) > 0 && (
-          <div class="flex-1">
-            <p class="text-xs text-gray-400 mb-2">Risk Flags</p>
-            <div class="flex flex-wrap gap-1.5">
-              {tender.risks!.map((r: string) => (
-                <span class="text-xs bg-red-50 text-red-700 border border-red-100 px-2.5 py-1 rounded-full font-medium">{r}</span>
-              ))}
-            </div>
+        {tender.quantity && (
+          <div class="bg-white rounded-xl border border-gray-200 p-4">
+            <p class="text-xs text-gray-400 mb-0.5">Quantity</p>
+            <p class="text-sm font-semibold text-gray-900">{tender.quantity}</p>
           </div>
         )}
       </div>
-    </div>
 
-    <!-- Action buttons -->
-    <div class="flex flex-wrap gap-3 mb-6">
-      {pdfLink && (
-        <a href={pdfLink} target="_blank" rel="noopener noreferrer"
-          class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#1A56DB] text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition shadow">
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0121 9.414V19a2 2 0 01-2 2z"/>
-          </svg>
-          View Bid Document (PDF)
-        </a>
-      )}
-      {!pdfLink && (
-        <span class="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-100 text-gray-400 rounded-xl text-sm font-semibold cursor-not-allowed">
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0121 9.414V19a2 2 0 01-2 2z"/>
-          </svg>
-          PDF Not Available
-        </span>
-      )}
-      {sourceLink && (
-        <a href={sourceLink} target="_blank" rel="noopener noreferrer"
-          class="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-semibold hover:border-[#1A56DB] hover:text-[#1A56DB] transition">
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-          </svg>
-          View on {tender.source === 'GEM' ? 'GeM Portal' : 'CSPGCL Portal'}
-        </a>
-      )}
-    </div>
-
-    <!-- View More Details expander -->
-    {hasExtraDetails && (
-      <details class="bg-white rounded-2xl border border-gray-200 shadow-sm group">
-        <summary class="flex items-center justify-between px-6 py-4 cursor-pointer list-none select-none">
-          <span class="font-semibold text-gray-900 text-sm">View More Details</span>
-          <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-          </svg>
-        </summary>
-
-        <div class="px-6 pb-6 border-t border-gray-100 pt-4 space-y-6">
-
-          <!-- Extracted fields table -->
-          {Object.keys(extractFields).length > 0 && (
-            <div>
-              <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Extracted from Bid Document</h3>
-              <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
-                {Object.entries(extractFields).map(([key, field]: [string, ExtractField]) => (
-                  <div class="border-b border-gray-50 pb-2">
-                    <dt class="text-xs text-gray-400">{field.label}</dt>
-                    <dd class="text-sm font-medium text-gray-800 mt-0.5">{field.value}</dd>
-                  </div>
+      <!-- Viability + Risks -->
+      <div class="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
+        <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+          {tender.viabilityScore != null && (
+            <div class="flex items-center gap-3">
+              <span class={`text-2xl font-black px-4 py-2 rounded-xl ${viabilityColor(tender.viabilityScore!)}`}>
+                {tender.viabilityScore}<span class="text-base font-semibold opacity-70">/10</span>
+              </span>
+              <div>
+                <p class="text-xs text-gray-400">Viability Score</p>
+                <p class="text-sm font-medium text-gray-700">
+                  {tender.viabilityScore >= 8 ? 'High viability' : tender.viabilityScore >= 5 ? 'Moderate viability' : 'Lower viability'}
+                </p>
+              </div>
+            </div>
+          )}
+          {(tender.risks?.length ?? 0) > 0 && (
+            <div class="flex-1">
+              <p class="text-xs text-gray-400 mb-2">Risk Flags</p>
+              <div class="flex flex-wrap gap-1.5">
+                {tender.risks!.map((r: string) => (
+                  <span class="text-xs bg-red-50 text-red-700 border border-red-100 px-2.5 py-1 rounded-full font-medium">{r}</span>
                 ))}
-              </dl>
+              </div>
             </div>
-          )}
-
-          <!-- Raw PDF text excerpt -->
-          {rawText && (
-            <div>
-              <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Raw Document Excerpt</h3>
-              <pre class="text-xs text-gray-600 bg-gray-50 rounded-xl p-4 overflow-x-auto whitespace-pre-wrap leading-relaxed max-h-72 overflow-y-auto">{rawText}</pre>
-            </div>
-          )}
-
-          {!Object.keys(extractFields).length && !rawText && (
-            <p class="text-sm text-gray-400 italic">No additional data could be extracted from the bid document.</p>
           )}
         </div>
-      </details>
-    )}
+      </div>
 
-    <!-- Fetched at -->
-    <p class="text-xs text-gray-400 mt-6 text-center">
-      Last updated: {formatDate(tender.fetchedAt)} · Data sourced from official government portals
-    </p>
-  </main>
+      <!-- Action buttons -->
+      <div class="flex flex-wrap gap-3 mb-6">
+        {pdfLink && (
+          <a href={pdfLink} target="_blank" rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#1A56DB] text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition shadow">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0121 9.414V19a2 2 0 01-2 2z"/>
+            </svg>
+            View Bid Document (PDF)
+          </a>
+        )}
+        {!pdfLink && (
+          <span class="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-100 text-gray-400 rounded-xl text-sm font-semibold cursor-not-allowed">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0121 9.414V19a2 2 0 01-2 2z"/>
+            </svg>
+            PDF Not Available
+          </span>
+        )}
+        {sourceLink && (
+          <a href={sourceLink} target="_blank" rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-semibold hover:border-[#1A56DB] hover:text-[#1A56DB] transition">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+            </svg>
+            View on {tender.source === 'GEM' ? 'GeM Portal' : 'CSPGCL Portal'}
+          </a>
+        )}
+      </div>
+
+      <!-- View More Details expander -->
+      {hasExtraDetails && (
+        <details class="bg-white rounded-2xl border border-gray-200 shadow-sm group">
+          <summary class="flex items-center justify-between px-6 py-4 cursor-pointer list-none select-none">
+            <span class="font-semibold text-gray-900 text-sm">View More Details</span>
+            <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </summary>
+
+          <div class="px-6 pb-6 border-t border-gray-100 pt-4 space-y-6">
+
+            <!-- Extracted fields table -->
+            {Object.keys(extractFields).length > 0 && (
+              <div>
+                <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Extracted from Bid Document</h3>
+                <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
+                  {Object.entries(extractFields).map(([key, field]: [string, ExtractField]) => (
+                    <div class="border-b border-gray-50 pb-2">
+                      <dt class="text-xs text-gray-400">{field.label}</dt>
+                      <dd class="text-sm font-medium text-gray-800 mt-0.5">{field.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            )}
+
+            <!-- Raw PDF text excerpt -->
+            {rawText && (
+              <div>
+                <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Raw Document Excerpt</h3>
+                <pre class="text-xs text-gray-600 bg-gray-50 rounded-xl p-4 overflow-x-auto whitespace-pre-wrap leading-relaxed max-h-72 overflow-y-auto">{rawText}</pre>
+              </div>
+            )}
+
+            {!Object.keys(extractFields).length && !rawText && (
+              <p class="text-sm text-gray-400 italic">No additional data could be extracted from the bid document.</p>
+            )}
+          </div>
+        </details>
+      )}
+
+      <!-- Fetched at -->
+      <p class="text-xs text-gray-400 mt-6 text-center">
+        Last updated: {formatDate(tender.fetchedAt)} · Data sourced from official government portals
+      </p>
+    </main>
+  )}
+
   <Footer />
 </TenderLayout>
