@@ -54,5 +54,7 @@ export function titleSlug(title) {
 }
 
 export function tenderDetailPath(tender) {
-  return `/tenders/${tender.source.toLowerCase()}-${encodeURIComponent(tender.bidNumber)}-${titleSlug(tender.title)}`;
+  // Do NOT encode bidNumber — GEM bids have slashes (GEM/2026/B/…) that must
+  // remain as literal path separators for the [...slug] parser to work.
+  return `/tenders/${tender.source.toLowerCase()}-${tender.bidNumber}-${titleSlug(tender.title)}`;
 }

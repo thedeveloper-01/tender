@@ -61,7 +61,9 @@ function titleSlug(t) {
 }
 
 function detailPath(t) {
-  return `/tenders/${t.source.toLowerCase()}-${encodeURIComponent(t.bidNumber)}-${titleSlug(t.title)}`;
+  // Do NOT encode the bidNumber — GEM bid numbers contain slashes (GEM/2026/B/…)
+  // which must stay as raw path separators for the slug parser to work correctly.
+  return `/tenders/${t.source.toLowerCase()}-${t.bidNumber}-${titleSlug(t.title)}`;
 }
 
 function pdfUrl(t) {
