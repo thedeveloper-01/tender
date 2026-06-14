@@ -14,6 +14,7 @@ export const config = {
   port: Number(process.env.PORT || 4000),
   corsOrigin: process.env.CORS_ORIGIN || '*',
   documentsDir: process.env.DOCUMENTS_DIR || 'documents',
+  skipCspgcl: (process.env.SKIP_CSPGCL ?? 'false') === 'true',
   proxyUrl: process.env.PROXY_URL || null,
 };
 

@@ -1,4 +1,5 @@
 import { prisma } from '../db.js';
+import { config } from '../config.js';
 import { fetchGemTenders } from '../fetchers/gem.js';
 import { fetchCspgclTenders } from '../fetchers/cspgcl.js';
 import { normalizeGem, normalizeCspgcl } from './normalize.js';
@@ -43,12 +44,16 @@ export async function runPipeline() {
     errors.push(`GEM fetch error: ${detail}`);
   }
 
-  try {
-    cspgclRaw = await fetchCspgclTenders();
-  } catch (e) {
-    const detail = e.cause ? `${e.message} (cause: ${e.cause.message || e.cause})` : e.stack || e.message;
-    console.error('[pipeline] CSPGCL fetch failed:', detail);
-    errors.push(`CSPGCL fetch error: ${detail}`);
+  if (!config.skipCspgcl) {
+    try {
+      cspgclRaw = await fetchCspgclTenders();
+    } catch (e) {
+      const detail = e.cause ? `${e.message} (cause: ${e.cause.message || e.cause})` : e.stack || e.message;
+      console.error('[pipeline] CSPGCL fetch failed:', detail);
+      errors.push(`CSPGCL fetch error: ${detail}`);
+    }
+  } else {
+    console.log('[pipeline] skipping CSPGCL fetch stage (SKIP_CSPGCL=true)');
   }
 
   found = gemRaw.length + cspgclRaw.length;
