@@ -59,11 +59,13 @@ export async function runPipeline() {
   found = gemRaw.length + cspgclRaw.length;
 
   // --- 2 & 3. Normalize, analyze, upsert ---------------------------------
+  console.log(`[pipeline] normalizing ${gemRaw.length} GeM and ${cspgclRaw.length} CSPGCL records...`);
   const normalized = [
     ...gemRaw.map((r) => {
       try {
         return normalizeGem(r);
       } catch (e) {
+        console.warn(`[pipeline] GeM normalization failed for bidNumber=${r?.bidNumber}:`, e.message);
         errors.push(`GEM normalize error (${r?.bidNumber}): ${e.message}`);
         return null;
       }
@@ -72,21 +74,24 @@ export async function runPipeline() {
       try {
         return normalizeCspgcl(r);
       } catch (e) {
+        console.warn(`[pipeline] CSPGCL normalization failed for tenderNoticeNo=${r?.tenderNoticeNo}:`, e.message);
         errors.push(`CSPGCL normalize error (${r?.tenderNoticeNo}): ${e.message}`);
         return null;
       }
     }),
   ].filter(Boolean);
+  console.log(`[pipeline] normalization complete. ${normalized.length}/${found} records successfully normalized.`);
 
   const changedTenders = []; // tenders needing PDF/extract pass
 
-  console.log(`[pipeline] normalizing and upserting ${normalized.length} tenders...`);
+  console.log(`[pipeline] starting database upsert for ${normalized.length} tenders...`);
   let upsertCount = 0;
+  let skipCount = 0;
   for (const tender of normalized) {
     try {
       upsertCount++;
       if (upsertCount % 100 === 0 || upsertCount === normalized.length) {
-        console.log(`[pipeline] upsert progress: ${upsertCount}/${normalized.length}`);
+        console.log(`[pipeline] database upsert progress: ${upsertCount}/${normalized.length}`);
       }
       const analyzed = analyzeTender(tender);
       const data = { ...tender, ...analyzed };
@@ -112,33 +117,44 @@ export async function runPipeline() {
           existing.bidValue !== data.bidValue ||
           existing.emdAmount !== data.emdAmount ||
           existing.endDate?.getTime() !== data.endDate?.getTime();
-        if (changed) changedTenders.push(saved);
+        if (changed) {
+          changedTenders.push(saved);
+        } else {
+          skipCount++;
+        }
       }
     } catch (e) {
       console.error(`[pipeline] upsert error for ${tender.source}/${tender.bidNumber}:`, e.message);
       errors.push(`Upsert error (${tender.source}/${tender.bidNumber}): ${e.message}`);
     }
   }
+  console.log(`[pipeline] database upsert complete. New: ${newCount}, Updated: ${updatedCount} (PDF extraction skipped for ${skipCount} unchanged existing tenders)`);
 
   // --- 4. PDF download + value/EMD extraction ----------------------------
   console.log(`[pipeline] processing PDF download and extraction for ${changedTenders.length} tenders...`);
   let pdfCount = 0;
+  let successPdfCount = 0;
+  let failedPdfCount = 0;
   for (const tender of changedTenders) {
     try {
       pdfCount++;
-      console.log(`[pipeline] (${pdfCount}/${changedTenders.length}) downloading PDF for ${tender.source}/${tender.bidNumber}...`);
+      console.log(`[pipeline] [${pdfCount}/${changedTenders.length}] processing PDF for ${tender.source}/${tender.bidNumber}...`);
       const pdfPath = await downloadPdf(tender);
       if (pdfPath) {
-        console.log(`[pipeline] (${pdfCount}/${changedTenders.length}) downloaded PDF successfully`);
+        console.log(`[pipeline] [${pdfCount}/${changedTenders.length}] downloaded PDF successfully: ${pdfPath}`);
         pdfsDownloaded += 1;
+        successPdfCount++;
       } else {
-        console.log(`[pipeline] (${pdfCount}/${changedTenders.length}) PDF download failed / not available`);
+        console.warn(`[pipeline] [${pdfCount}/${changedTenders.length}] PDF download failed / not available`);
+        failedPdfCount++;
       }
 
+      console.log(`[pipeline] [${pdfCount}/${changedTenders.length}] running value/EMD extraction...`);
       const result = await extractValueAndEmd(tender, pdfPath);
       if (!pdfPath) {
         result.status = result.status === 'extracted' ? 'extracted' : 'failed_download';
       }
+      console.log(`[pipeline] [${pdfCount}/${changedTenders.length}] extraction complete. status=${result.status}, bidValue=${result.bidValue}, emdAmount=${result.emdAmount}`);
 
       if (result.status === 'extracted') extractionOk += 1;
       else if (result.status === 'not_found' || result.status === 'failed_download') extractionFail += 1;
@@ -162,39 +178,47 @@ export async function runPipeline() {
         },
       });
     } catch (e) {
-      console.error(`[pipeline] pdf/extract error for ${tender.source}/${tender.bidNumber}:`, e.message);
+      console.error(`[pipeline] [${pdfCount}/${changedTenders.length}] pdf/extract error for ${tender.source}/${tender.bidNumber}:`, e.message);
       errors.push(`PDF/extract error (${tender.source}/${tender.bidNumber}): ${e.message}`);
       extractionFail += 1;
     }
   }
+  console.log(`[pipeline] PDF processing complete. Total attempted: ${changedTenders.length}, Succeeded: ${successPdfCount}, Failed: ${failedPdfCount}`);
 
   // --- 5. Bulk status update ----------------------------------------------
+  console.log(`[pipeline] running bulk status update...`);
   const now = new Date();
   try {
-    await prisma.tender.updateMany({
+    const closedCount = await prisma.tender.updateMany({
       where: { status: 'open', endDate: { lt: now } },
       data: { status: 'closed' },
     });
-    await prisma.tender.updateMany({
+    const openedCount = await prisma.tender.updateMany({
       where: { status: 'closed', endDate: { gte: now } },
       data: { status: 'open' },
     });
+    console.log(`[pipeline] bulk status update complete. Marked ${closedCount.count} open tenders as closed, and ${openedCount.count} closed tenders as open.`);
   } catch (e) {
+    console.error(`[pipeline] bulk status update failed:`, e.message);
     errors.push(`Status update error: ${e.message}`);
   }
 
   // --- 6. Cleanup / archive ------------------------------------------------
+  console.log(`[pipeline] running cleanup and archiving...`);
   let cleanedRecords = 0;
   let cleanedFiles = 0;
   try {
     const result = await runCleanup(prisma);
     cleanedRecords = result.cleanedRecords;
     cleanedFiles = result.cleanedFiles;
+    console.log(`[pipeline] cleanup complete. Cleaned ${cleanedRecords} database records and ${cleanedFiles} PDF files.`);
   } catch (e) {
+    console.error(`[pipeline] cleanup failed:`, e.message);
     errors.push(`Cleanup error: ${e.message}`);
   }
 
   // --- 7. Log ---------------------------------------------------------------
+  console.log(`[pipeline] creating fetch log entry in database...`);
   const log = await prisma.fetchLog.create({
     data: {
       runAt,
