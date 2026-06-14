@@ -7,9 +7,10 @@ import { fetchTenderDetail, documentUrl } from '../../lib/api.js';
 import { formatRupee, formatDate, daysLeft, viabilityColor, cityFromSlug } from '../../lib/cities.js';
 
 const { slug } = Astro.params as { slug: string };
+const decodedSlug = decodeURIComponent(slug ?? '');
 
 // Determine if it is a city/district route
-const lowerSlug = (slug ?? '').toLowerCase();
+const lowerSlug = decodedSlug.toLowerCase();
 const city = lowerSlug === 'unspecified' ? 'Unspecified' : cityFromSlug(lowerSlug);
 const isCityRoute = !!city;
 
@@ -71,9 +72,24 @@ if (isCityRoute) {
   };
 } else {
   // slug format: <source>-<bidNumber>-<title-slug>
-  const parts = (slug ?? '').match(/^(gem|cspgcl)-(.+?)-[a-z0-9-]+$/i);
-  const source = parts?.[1]?.toUpperCase() ?? '';
-  const bidNumber = parts?.[2] ?? '';
+  let source = '';
+  let bidNumber = '';
+  const match = decodedSlug.match(/^(gem|cspgcl)-(.+)$/i);
+  if (match) {
+    source = match[1].toUpperCase();
+    const rest = match[2];
+    const lastSlashIndex = rest.lastIndexOf('/');
+    if (lastSlashIndex !== -1) {
+      const beforeSlash = rest.substring(0, lastSlashIndex);
+      const afterSlash = rest.substring(lastSlashIndex + 1);
+      const hyphenIndex = afterSlash.indexOf('-');
+      const bidNumberSuffix = hyphenIndex === -1 ? afterSlash : afterSlash.substring(0, hyphenIndex);
+      bidNumber = `${beforeSlash}/${bidNumberSuffix}`;
+    } else {
+      const parts = rest.match(/^(.+?)-[a-z0-9-]+$/i) || rest.match(/^(.+?)-.+$/);
+      bidNumber = parts?.[1] || rest;
+    }
+  }
 
   try {
     fetchedTender = await fetchTenderDetail(source, bidNumber) as Tender;
