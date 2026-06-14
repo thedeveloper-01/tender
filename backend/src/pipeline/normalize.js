@@ -20,6 +20,7 @@ function stableKey(parts) {
 /** Map a raw GeM record into the unified Tender shape. */
 export function normalizeGem(raw) {
   const endDate = raw.endDate ? new Date(raw.endDate) : null;
+  const searchStr = `${raw.title || ''} ${raw.department || ''} ${raw.organization || ''} ${raw.locationText || ''}`;
   return {
     source: 'GEM',
     bidNumber: raw.bidNumber,
@@ -28,7 +29,7 @@ export function normalizeGem(raw) {
     organization: raw.organization || null,
     category: [], // filled in by analysis step
     locationState: 'Chhattisgarh',
-    locationCity: resolveCityForGem(raw.locationText),
+    locationCity: resolveCityForGem(searchStr),
     startDate: raw.startDate ? new Date(raw.startDate) : null,
     endDate,
     quantity: raw.quantity || null,

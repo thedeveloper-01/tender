@@ -3,6 +3,7 @@ import { config } from '../config.js';
 import { fetchGemTenders } from '../fetchers/gem.js';
 import { fetchCspgclTenders } from '../fetchers/cspgcl.js';
 import { normalizeGem, normalizeCspgcl } from './normalize.js';
+import { resolveCityForGem } from './locationResolve.js';
 import { analyzeTender } from './analysis.js';
 import { downloadPdf } from './pdf.js';
 import { extractValueAndEmd } from './extract.js';
@@ -119,9 +120,8 @@ export async function runPipeline() {
         updatedCount += 1;
         // Re-run PDF/extract pass if no PDF yet, or core fields changed
         const changed =
-          (!existing.pdfPath && existing.valueExtractionStatus === 'not_attempted') ||
-          existing.bidValue !== data.bidValue ||
-          existing.emdAmount !== data.emdAmount ||
+          existing.valueExtractionStatus === 'not_attempted' ||
+          !existing.valueExtractionStatus ||
           existing.endDate?.getTime() !== data.endDate?.getTime();
         if (changed) {
           changedTenders.push(saved);
@@ -165,6 +165,17 @@ export async function runPipeline() {
       if (result.status === 'extracted') extractionOk += 1;
       else if (result.status === 'not_found' || result.status === 'failed_download') extractionFail += 1;
 
+      let updatedCity = tender.locationCity;
+      if (!updatedCity || updatedCity === 'Unspecified') {
+        const addressText = result.extractedFields?.consigneeAddress?.value || '';
+        const fullText = result.extractedText || '';
+        const resolved = resolveCityForGem(`${addressText} ${fullText}`);
+        if (resolved && resolved !== 'Unspecified') {
+          updatedCity = resolved;
+          console.log(`[pipeline] [${pdfCount}/${changedTenders.length}] resolved city to "${resolved}" for ${tender.bidNumber}`);
+        }
+      }
+
       const sourceMeta = {
         ...(tender.sourceMeta || {}),
         pdfExtract: {
@@ -180,6 +191,7 @@ export async function runPipeline() {
           bidValue: result.bidValue,
           emdAmount: result.emdAmount,
           valueExtractionStatus: result.status,
+          locationCity: updatedCity,
           sourceMeta,
         },
       });

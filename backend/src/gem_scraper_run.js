@@ -35,6 +35,7 @@ import os   from 'os';
 import { prisma }            from './db.js';
 import { config }            from './config.js';
 import { normalizeGem }      from './pipeline/normalize.js';
+import { resolveCityForGem } from './pipeline/locationResolve.js';
 import { analyzeTender }     from './pipeline/analysis.js';
 import { downloadPdf }       from './pipeline/pdf.js';
 import { extractValueAndEmd } from './pipeline/extract.js';
@@ -165,9 +166,8 @@ async function main() {
       } else {
         updatedCount++;
         const needsPdf =
-          (!existing.pdfPath && existing.valueExtractionStatus === 'not_attempted') ||
-          existing.bidValue  !== data.bidValue  ||
-          existing.emdAmount !== data.emdAmount ||
+          existing.valueExtractionStatus === 'not_attempted' ||
+          !existing.valueExtractionStatus ||
           existing.endDate?.getTime() !== data.endDate?.getTime();
         if (needsPdf) changedTenders.push(saved);
       }
@@ -199,6 +199,17 @@ async function main() {
       if (result.status === 'extracted')                      extractionOk++;
       else if (['not_found','failed_download'].includes(result.status)) extractionFail++;
 
+      let updatedCity = tender.locationCity;
+      if (!updatedCity || updatedCity === 'Unspecified') {
+        const addressText = result.extractedFields?.consigneeAddress?.value || '';
+        const fullText = result.extractedText || '';
+        const resolved = resolveCityForGem(`${addressText} ${fullText}`);
+        if (resolved && resolved !== 'Unspecified') {
+          updatedCity = resolved;
+          log(`  [location] resolved city to "${resolved}" for ${tender.bidNumber}`);
+        }
+      }
+
       const sourceMeta = {
         ...(tender.sourceMeta || {}),
         pdfExtract: { text: result.extractedText, fields: result.extractedFields },
@@ -211,6 +222,7 @@ async function main() {
           bidValue:             result.bidValue,
           emdAmount:            result.emdAmount,
           valueExtractionStatus: result.status,
+          locationCity:         updatedCity,
           sourceMeta,
         },
       });

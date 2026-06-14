@@ -9,6 +9,10 @@ function toCronExpr(hhmm) {
 }
 
 export function startScheduler() {
+  if (config.skipScheduler) {
+    console.log('[scheduler] Pipeline scheduler is disabled (running on Render or skipScheduler configured).');
+    return;
+  }
   const cronExpr = toCronExpr(config.fetchTime);
   console.log(`[scheduler] daily pipeline scheduled at ${config.fetchTime} (cron: "${cronExpr}")`);
 
