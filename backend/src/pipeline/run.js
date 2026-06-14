@@ -80,8 +80,14 @@ export async function runPipeline() {
 
   const changedTenders = []; // tenders needing PDF/extract pass
 
+  console.log(`[pipeline] normalizing and upserting ${normalized.length} tenders...`);
+  let upsertCount = 0;
   for (const tender of normalized) {
     try {
+      upsertCount++;
+      if (upsertCount % 100 === 0 || upsertCount === normalized.length) {
+        console.log(`[pipeline] upsert progress: ${upsertCount}/${normalized.length}`);
+      }
       const analyzed = analyzeTender(tender);
       const data = { ...tender, ...analyzed };
 
@@ -102,7 +108,7 @@ export async function runPipeline() {
         updatedCount += 1;
         // Re-run PDF/extract pass if no PDF yet, or core fields changed
         const changed =
-          !existing.pdfPath ||
+          (!existing.pdfPath && existing.valueExtractionStatus === 'not_attempted') ||
           existing.bidValue !== data.bidValue ||
           existing.emdAmount !== data.emdAmount ||
           existing.endDate?.getTime() !== data.endDate?.getTime();
@@ -115,15 +121,27 @@ export async function runPipeline() {
   }
 
   // --- 4. PDF download + value/EMD extraction ----------------------------
+  console.log(`[pipeline] processing PDF download and extraction for ${changedTenders.length} tenders...`);
+  let pdfCount = 0;
   for (const tender of changedTenders) {
     try {
+      pdfCount++;
+      console.log(`[pipeline] (${pdfCount}/${changedTenders.length}) downloading PDF for ${tender.source}/${tender.bidNumber}...`);
       const pdfPath = await downloadPdf(tender);
-      if (pdfPath) pdfsDownloaded += 1;
+      if (pdfPath) {
+        console.log(`[pipeline] (${pdfCount}/${changedTenders.length}) downloaded PDF successfully`);
+        pdfsDownloaded += 1;
+      } else {
+        console.log(`[pipeline] (${pdfCount}/${changedTenders.length}) PDF download failed / not available`);
+      }
 
       const result = await extractValueAndEmd(tender, pdfPath);
+      if (!pdfPath) {
+        result.status = result.status === 'extracted' ? 'extracted' : 'failed_download';
+      }
 
       if (result.status === 'extracted') extractionOk += 1;
-      else if (result.status === 'not_found') extractionFail += 1;
+      else if (result.status === 'not_found' || result.status === 'failed_download') extractionFail += 1;
 
       const sourceMeta = {
         ...(tender.sourceMeta || {}),
