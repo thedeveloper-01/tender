@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import { setGlobalDispatcher, ProxyAgent } from 'undici';
 dotenv.config();
 
 export const config = {
@@ -13,6 +14,7 @@ export const config = {
   port: Number(process.env.PORT || 4000),
   corsOrigin: process.env.CORS_ORIGIN || '*',
   documentsDir: process.env.DOCUMENTS_DIR || 'documents',
+  proxyUrl: process.env.PROXY_URL || null,
 };
 
 // 33 Chhattisgarh districts. "Unspecified" is used as a fallback bucket
@@ -43,3 +45,8 @@ export const CITY_ALIASES = {
   janjgir: 'Janjgir-Champa',
   champa: 'Janjgir-Champa',
 };
+
+if (config.proxyUrl) {
+  setGlobalDispatcher(new ProxyAgent(config.proxyUrl));
+  console.log('[proxy] Global HTTP/HTTPS proxy dispatcher configured:', config.proxyUrl);
+}
