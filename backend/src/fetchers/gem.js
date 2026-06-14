@@ -5,7 +5,13 @@ import { config } from '../config.js';
  * fetchGemTenders() -> raw record array
  *
  * In mock mode (USE_MOCK_GEM=true) returns realistic sample data.
- * In live mode scrapes bidplus.gem.gov.in with full pagination.
+ * In live mode calls the real GeM /search-bids JSON API with full pagination.
+ *
+ * API discovered via network inspection:
+ *   POST https://bidplus.gem.gov.in/search-bids
+ *   Payload: state_name_con=CHHATTISGARH&city_name_con=&page_no=N&csrf_bd_gem_nk=<token>
+ *   Returns Solr-style JSON: { response: { response: { numFound, docs: [...] } } }
+ *   10 records per page.
  */
 export async function fetchGemTenders() {
   if (config.useMockGem) {
@@ -14,6 +20,174 @@ export async function fetchGemTenders() {
   return fetchGemTendersLive();
 }
 
+// ─────────────────────────────────────────────
+// Live fetcher
+// ─────────────────────────────────────────────
+
+const GEM_BASE = 'https://bidplus.gem.gov.in';
+const PER_PAGE = 10;
+const MAX_PAGES = 200; // safety cap (2000 records)
+
+async function fetchGemTendersLive() {
+  // Step 1 — get a session cookie + CSRF token from the advance-search page
+  let cookies = '';
+  let csrf = '';
+  try {
+    const init = await fetch(`${GEM_BASE}/advance-search`, {
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-IN,en;q=0.9',
+      },
+      signal: AbortSignal.timeout(20000),
+    });
+    // Collect Set-Cookie headers
+    const setCookies = init.headers.getSetCookie?.() ?? [];
+    cookies = setCookies.map((c) => c.split(';')[0]).join('; ');
+
+    const html = await init.text();
+    const csrfMatch = html.match(/csrf_bd_gem_nk['"]?\s*:\s*['"]([a-f0-9]+)['"]/);
+    csrf = csrfMatch?.[1] ?? '';
+    console.log('[gem-live] session ready, csrf:', csrf.substring(0, 8) + '...');
+  } catch (e) {
+    console.error('[gem-live] failed to initialise session:', e.message);
+    throw e;
+  }
+
+  if (!csrf) {
+    throw new Error('[gem-live] could not extract CSRF token from GeM page');
+  }
+
+  // Step 2 — paginate through all results
+  const results = [];
+  let totalFound = null;
+  let page = 1;
+
+  while (page <= MAX_PAGES) {
+    try {
+      const payload = new URLSearchParams({
+        searchType: 'location',
+        state_name_con: 'CHHATTISGARH',
+        city_name_con: '',
+        bidEndDateFrom: '',
+        bidEndDateTo: '',
+        page_no: String(page),
+        csrf_bd_gem_nk: csrf,
+      });
+
+      const resp = await fetch(`${GEM_BASE}/search-bids`, {
+        method: 'POST',
+        headers: {
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+          Accept: 'application/json, text/javascript, */*; q=0.01',
+          'Accept-Language': 'en-IN,en;q=0.9',
+          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+          'X-Requested-With': 'XMLHttpRequest',
+          Origin: GEM_BASE,
+          Referer: `${GEM_BASE}/advance-search`,
+          Cookie: cookies,
+        },
+        body: payload.toString(),
+        signal: AbortSignal.timeout(25000),
+      });
+
+      if (!resp.ok) {
+        console.error(`[gem-live] page ${page} -> HTTP ${resp.status}`);
+        break;
+      }
+
+      const json = await resp.json();
+      const solr = json?.response?.response;
+      if (!solr) {
+        console.error('[gem-live] unexpected response shape on page', page);
+        break;
+      }
+
+      // Capture total on first page
+      if (totalFound === null) {
+        totalFound = solr.numFound ?? 0;
+        const maxExpected = Math.min(totalFound, MAX_PAGES * PER_PAGE);
+        console.log(`[gem-live] totalFound=${totalFound}, will fetch up to ${maxExpected} records`);
+      }
+
+      const docs = solr.docs ?? [];
+      if (docs.length === 0) break;
+
+      for (const doc of docs) {
+        const record = normalizeDoc(doc);
+        if (record) results.push(record);
+      }
+
+      console.log(`[gem-live] page ${page}: +${docs.length} → total so far: ${results.length}`);
+
+      // Check if we've fetched everything
+      if (results.length >= Math.min(totalFound, MAX_PAGES * PER_PAGE)) break;
+      if (docs.length < PER_PAGE) break; // last page
+
+      page++;
+      // Polite delay between pages (500 ms)
+      await new Promise((r) => setTimeout(r, 500));
+    } catch (e) {
+      console.error(`[gem-live] error on page ${page}:`, e.message);
+      break;
+    }
+  }
+
+  console.log(`[gem-live] done — fetched ${results.length} records`);
+  return results;
+}
+
+// ─────────────────────────────────────────────
+// Normalise a Solr doc from /search-bids into our standard shape
+// ─────────────────────────────────────────────
+function arr(v) {
+  // Solr wraps values in arrays; unwrap to first element
+  return Array.isArray(v) ? v[0] : v;
+}
+
+function normalizeDoc(doc) {
+  const bidNumber = arr(doc.b_bid_number);
+  if (!bidNumber) return null;
+
+  const title =
+    arr(doc.bd_category_name) || arr(doc.b_category_name) || bidNumber;
+
+  const startDate = arr(doc.final_start_date_sort) ?? null;
+  const endDate = arr(doc.final_end_date_sort) ?? null;
+
+  // b_status: 1 = open/active, 0 = closed (approximate — use endDate for accuracy)
+  const status = arr(doc.b_status);
+
+  const ministry = arr(doc.ba_official_details_minName) ?? null;
+  const department = arr(doc.ba_official_details_deptName) ?? null;
+
+  const bidType = arr(doc.b_bid_type); // 1=Bid, 2=RA
+  const typeLabel = bidType === 2 ? 'Reverse Auction' : 'Bid';
+
+  return {
+    bidNumber,
+    title: title.length > 300 ? title.substring(0, 297) + '...' : title,
+    department: department || ministry || null,
+    organization: ministry || null,
+    category: arr(doc.b_cat_id) ?? 'General',
+    quantity: arr(doc.b_total_quantity) != null ? String(arr(doc.b_total_quantity)) : null,
+    startDate: startDate ? new Date(startDate).toISOString() : null,
+    endDate: endDate ? new Date(endDate).toISOString() : null,
+    locationText: 'Chhattisgarh',
+    bidValue: null, // not in search results; extracted from detail page
+    emdAmount: null, // not in search results
+    bidLink: `${GEM_BASE}/showbidDocument/${encodeURIComponent(bidNumber)}`,
+    isActive: status === 1,
+    bidTypeLabel: typeLabel,
+    gemId: arr(doc.b_id) ?? null,
+  };
+}
+
+// ─────────────────────────────────────────────
+// Mock data (used when USE_MOCK_GEM=true)
+// ─────────────────────────────────────────────
 function daysFromNow(days) {
   const d = new Date();
   d.setDate(d.getDate() + days);
@@ -26,460 +200,86 @@ function getMockGemTenders() {
       bidNumber: 'GEM/2026/B/MOCK0001',
       title: 'Supply and installation of LED street lighting fixtures for municipal roads',
       department: 'Urban Administration and Development Department',
-      organization: 'Raipur Municipal Corporation',
+      organization: 'Ministry of Housing and Urban Affairs',
       category: 'Goods',
-      quantity: '500 Units',
+      quantity: '500',
       startDate: daysFromNow(-5),
       endDate: daysFromNow(10),
       locationText: 'Raipur, Chhattisgarh',
       bidValue: 4500000,
       emdAmount: 90000,
-      bidLink: 'https://bidplus.gem.gov.in/showbidDocument/MOCK0001',
+      bidLink: 'https://bidplus.gem.gov.in/showbidDocument/GEM%2F2026%2FB%2FMOCK0001',
+      isActive: true,
+      bidTypeLabel: 'Bid',
+      gemId: null,
     },
     {
       bidNumber: 'GEM/2026/B/MOCK0002',
       title: 'Annual maintenance contract for HVAC systems at district hospital',
       department: 'Health and Family Welfare Department',
-      organization: 'District Hospital Bilaspur',
+      organization: 'Ministry of Health and Family Welfare',
       category: 'Services',
-      quantity: '1 Job',
+      quantity: '1',
       startDate: daysFromNow(-3),
       endDate: daysFromNow(6),
       locationText: 'Bilaspur, Chhattisgarh',
       bidValue: 1850000,
       emdAmount: 37000,
-      bidLink: 'https://bidplus.gem.gov.in/showbidDocument/MOCK0002',
+      bidLink: 'https://bidplus.gem.gov.in/showbidDocument/GEM%2F2026%2FB%2FMOCK0002',
+      isActive: true,
+      bidTypeLabel: 'Bid',
+      gemId: null,
     },
     {
       bidNumber: 'GEM/2026/B/MOCK0003',
-      title: 'Civil construction of boundary wall and drainage at government polytechnic',
-      department: 'Technical Education Department',
-      organization: 'Government Polytechnic Durg',
-      category: 'Works',
-      quantity: '1 Job',
-      startDate: daysFromNow(-1),
-      endDate: daysFromNow(21),
-      locationText: 'Durg, Chhattisgarh',
-      bidValue: 7800000,
-      emdAmount: 156000,
-      bidLink: 'https://bidplus.gem.gov.in/showbidDocument/MOCK0003',
-    },
-    {
-      bidNumber: 'GEM/2026/B/MOCK0004',
-      title: 'Manpower outsourcing for housekeeping and security services',
-      department: 'General Administration Department',
-      organization: 'Collectorate Office Korba',
-      category: 'Services',
-      quantity: '25 Personnel',
-      startDate: daysFromNow(-7),
-      endDate: daysFromNow(2),
-      locationText: 'Korba, Chhattisgarh',
-      bidValue: 3200000,
-      emdAmount: 64000,
-      bidLink: 'https://bidplus.gem.gov.in/showbidDocument/MOCK0004',
-    },
-    {
-      bidNumber: 'GEM/2026/B/MOCK0005',
       title: 'Supply of computers, printers and networking equipment for e-Governance centre',
       department: 'Electronics and Information Technology Department',
-      organization: 'District e-Governance Society, Raigarh',
+      organization: 'Ministry of Electronics and Information Technology',
       category: 'Goods',
-      quantity: '120 Units',
+      quantity: '120',
       startDate: daysFromNow(0),
       endDate: daysFromNow(15),
       locationText: 'Raigarh, Chhattisgarh',
       bidValue: 5600000,
       emdAmount: 112000,
-      bidLink: 'https://bidplus.gem.gov.in/showbidDocument/MOCK0005',
+      bidLink: 'https://bidplus.gem.gov.in/showbidDocument/GEM%2F2026%2FB%2FMOCK0003',
+      isActive: true,
+      bidTypeLabel: 'Bid',
+      gemId: null,
     },
     {
-      bidNumber: 'GEM/2026/B/MOCK0006',
-      title: 'Hiring of vehicles (SUVs and pickup trucks) for forest department patrolling',
+      bidNumber: 'GEM/2026/B/MOCK0004',
+      title: 'Hiring of vehicles (SUVs) for forest department patrolling',
       department: 'Forest Department',
-      organization: 'Divisional Forest Office, Jagdalpur',
+      organization: 'Ministry of Environment, Forest and Climate Change',
       category: 'Services',
-      quantity: '10 Vehicles',
+      quantity: '10',
       startDate: daysFromNow(-2),
       endDate: daysFromNow(8),
       locationText: 'Jagdalpur, Bastar, Chhattisgarh',
       bidValue: 2400000,
       emdAmount: 48000,
-      bidLink: 'https://bidplus.gem.gov.in/showbidDocument/MOCK0006',
+      bidLink: 'https://bidplus.gem.gov.in/showbidDocument/GEM%2F2026%2FB%2FMOCK0004',
+      isActive: true,
+      bidTypeLabel: 'Bid',
+      gemId: null,
     },
     {
-      bidNumber: 'GEM/2026/B/MOCK0007',
-      title: 'Construction and electrical fitout of rural health sub-centre building',
-      department: 'Health and Family Welfare Department',
-      organization: 'CMHO Office, Ambikapur',
-      category: 'Works',
-      quantity: '1 Job',
-      startDate: daysFromNow(1),
-      endDate: daysFromNow(30),
-      locationText: 'Ambikapur, Surguja, Chhattisgarh',
-      bidValue: 12500000,
-      emdAmount: 250000,
-      bidLink: 'https://bidplus.gem.gov.in/showbidDocument/MOCK0007',
-    },
-    {
-      bidNumber: 'GEM/2026/B/MOCK0008',
-      title: 'Supply of laboratory chemicals and consumables for agriculture testing lab',
-      department: 'Agriculture Department',
-      organization: 'Krishi Vigyan Kendra, Kawardha',
-      category: 'Goods',
-      quantity: '200 Items',
-      startDate: daysFromNow(-4),
-      endDate: daysFromNow(-1),
-      locationText: 'Kawardha, Chhattisgarh',
-      bidValue: 980000,
-      emdAmount: 19600,
-      bidLink: 'https://bidplus.gem.gov.in/showbidDocument/MOCK0008',
+      bidNumber: 'GEM/2026/B/MOCK0005',
+      title: 'Manpower outsourcing for housekeeping and security services at collectorate',
+      department: 'General Administration Department',
+      organization: 'Ministry of Home Affairs',
+      category: 'Services',
+      quantity: '25',
+      startDate: daysFromNow(-7),
+      endDate: daysFromNow(3),
+      locationText: 'Korba, Chhattisgarh',
+      bidValue: 3200000,
+      emdAmount: 64000,
+      bidLink: 'https://bidplus.gem.gov.in/showbidDocument/GEM%2F2026%2FB%2FMOCK0005',
+      isActive: true,
+      bidTypeLabel: 'Bid',
+      gemId: null,
     },
   ];
-}
-
-/**
- * Live fetcher — searches GeM advanced search by consignee state=CHHATTISGARH,
- * paginates through all results pages (10 per page).
- *
- * GeM renders results via AJAX POST to /BidSearch/getBidsBySearchCriteria.
- * If the AJAX endpoint fails or returns no data, falls back to scraping
- * the /all-bids?bidlocation=Chhattisgarh page HTML.
- */
-async function fetchGemTendersLive() {
-  const results = [];
-
-  // Strategy 1: Try the AJAX endpoint used by the GeM SPA
-  try {
-    const ajaxResults = await fetchViaAjaxEndpoint();
-    if (ajaxResults.length > 0) {
-      console.log(`[gem-live] AJAX endpoint returned ${ajaxResults.length} records`);
-      return ajaxResults;
-    }
-  } catch (e) {
-    console.warn('[gem-live] AJAX endpoint failed, falling back to HTML scrape:', e.message);
-  }
-
-  // Strategy 2: Scrape the all-bids HTML page with Chhattisgarh location filter
-  try {
-    const htmlResults = await fetchViaHtmlScrape();
-    console.log(`[gem-live] HTML scrape returned ${htmlResults.length} records`);
-    return htmlResults;
-  } catch (e) {
-    console.error('[gem-live] HTML scrape also failed:', e.message);
-  }
-
-  return results;
-}
-
-/**
- * Try GeM's internal AJAX/JSON API endpoints that the SPA uses.
- * GeM uses POST requests to fetch paginated bid data.
- */
-async function fetchViaAjaxEndpoint() {
-  const results = [];
-  const headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-    'Accept': 'application/json, text/plain, */*',
-    'Accept-Language': 'en-IN,en;q=0.9',
-    'Content-Type': 'application/x-www-form-urlencoded',
-    'Origin': 'https://bidplus.gem.gov.in',
-    'Referer': 'https://bidplus.gem.gov.in/advance-search',
-    'X-Requested-With': 'XMLHttpRequest',
-  };
-
-  // Try known AJAX endpoints
-  const endpoints = [
-    'https://bidplus.gem.gov.in/BidSearch/getBidsByConsigneeLocation',
-    'https://bidplus.gem.gov.in/bidSearch/getBidsByConsigneeLocation',
-  ];
-
-  for (const endpoint of endpoints) {
-    let page = 1;
-    const maxPages = 50;
-
-    while (page <= maxPages) {
-      const body = new URLSearchParams({
-        location_state: 'CHHATTISGARH',
-        location_city: '',
-        bidStartDate: '',
-        bidEndDate: '',
-        page_no: String(page),
-      });
-
-      try {
-        const resp = await fetch(endpoint, {
-          method: 'POST',
-          headers,
-          body: body.toString(),
-          signal: AbortSignal.timeout(20000),
-        });
-
-        if (!resp.ok) {
-          if (page === 1) break; // endpoint doesn't work, try next
-          break;
-        }
-
-        const ct = resp.headers.get('content-type') || '';
-        let data;
-        if (ct.includes('application/json')) {
-          data = await resp.json();
-        } else {
-          const html = await resp.text();
-          // Try parsing as JSON first
-          try {
-            data = JSON.parse(html);
-          } catch {
-            // It's HTML — parse with cheerio
-            const parsed = parseGemHtml(html);
-            if (parsed.length === 0) break;
-            results.push(...parsed);
-            page++;
-            await delay(800);
-            continue;
-          }
-        }
-
-        // Handle JSON response formats
-        const bids = data?.data || data?.bids || data?.result || data?.records || [];
-        if (!Array.isArray(bids) || bids.length === 0) break;
-
-        for (const bid of bids) {
-          const record = normalizeGemJsonRecord(bid);
-          if (record) results.push(record);
-        }
-
-        // Check if more pages
-        const total = data?.total || data?.totalCount || 0;
-        const perPage = 10;
-        if (results.length >= total || bids.length < perPage) break;
-
-        page++;
-        await delay(800);
-      } catch (e) {
-        if (page === 1) throw e; // re-throw to try next strategy
-        break;
-      }
-    }
-
-    if (results.length > 0) return results;
-  }
-
-  return results;
-}
-
-/**
- * Scrape the /all-bids HTML page with pagination.
- * GeM loads bid cards via JavaScript but the server-rendered fallback
- * and the paginated URL ?page_no=N&bidlocation=Chhattisgarh do work for
- * the static HTML skeleton — bid details are in <div class="bid-card"> elements.
- */
-async function fetchViaHtmlScrape() {
-  const results = [];
-  const baseUrl = 'https://bidplus.gem.gov.in/all-bids';
-  const headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-    'Accept-Language': 'en-IN,en;q=0.9',
-    'Referer': 'https://bidplus.gem.gov.in/advance-search',
-    'Cache-Control': 'no-cache',
-  };
-
-  let page = 1;
-  const maxPages = 100; // GeM has ~10 records/page, safety cap at 1000 records
-
-  while (page <= maxPages) {
-    const url = `${baseUrl}?page_no=${page}&bidlocation=Chhattisgarh`;
-
-    try {
-      const resp = await fetch(url, {
-        headers,
-        signal: AbortSignal.timeout(25000),
-      });
-
-      if (!resp.ok) break;
-
-      const html = await resp.text();
-      const pageRecords = parseGemHtml(html);
-
-      if (pageRecords.length === 0) break; // no more results
-      results.push(...pageRecords);
-
-      // Check if there's a "next" page in pagination
-      const $ = cheerio.load(html);
-      const hasNext = $('ul.pagination a, .pagination a').toArray()
-        .some(a => $(a).text().trim().toLowerCase() === 'next' && $(a).attr('href'));
-
-      // Also check total count text like "Showing 1-10 of 84"
-      const totalText = $('*').filter((_, el) => {
-        const t = $(el).text();
-        return /showing\s+\d+\s*-\s*\d+\s+(records\s+)?of\s+\d+/i.test(t);
-      }).first().text();
-
-      const totalMatch = totalText.match(/of\s+(\d+)/i);
-      const totalRecords = totalMatch ? parseInt(totalMatch[1], 10) : null;
-
-      if (totalRecords && results.length >= totalRecords) break;
-      if (!hasNext && !totalRecords) break;
-      if (pageRecords.length < 10) break; // last page
-
-      page++;
-      await delay(1000); // polite delay
-    } catch (e) {
-      console.error(`[gem-live] page ${page} fetch error:`, e.message);
-      break;
-    }
-  }
-
-  return results;
-}
-
-/** Normalize a JSON bid record from GeM's API */
-function normalizeGemJsonRecord(bid) {
-  if (!bid) return null;
-  const bidNumber = bid.bidNumber || bid.bid_number || bid.BidNumber || '';
-  if (!bidNumber) return null;
-
-  return {
-    bidNumber,
-    title: bid.name || bid.title || bid.itemName || bid.boqTitle || bidNumber,
-    department: bid.department || bid.deptName || null,
-    organization: bid.organizationName || bid.org || bid.ministry || null,
-    category: bid.category || bid.categoryName || 'General',
-    quantity: bid.quantity ? String(bid.quantity) : null,
-    startDate: bid.startDate || bid.bidStartDate || null,
-    endDate: bid.endDate || bid.bidEndDate || bid.closingDate || null,
-    locationText: bid.consigneeLocation || bid.location || 'Chhattisgarh',
-    bidValue: parseFloat(bid.bidValue || bid.estimatedValue || bid.amount || 0) || null,
-    emdAmount: parseFloat(bid.emdAmount || bid.emd || 0) || null,
-    bidLink: bid.bidLink || bid.link || `https://bidplus.gem.gov.in/showbidDocument/${bidNumber}`,
-  };
-}
-
-/**
- * Parse GeM HTML page — handles the bid card structure:
- * Each bid is in a <div class="bid-card"> with nested spans/divs.
- * Also tries <div id="pagi_content"> table rows as fallback.
- */
-function parseGemHtml(html) {
-  const $ = cheerio.load(html);
-  const results = [];
-
-  // Primary: bid card divs
-  const bidCards = $('.bid-card, .bidCard, [class*="bid-card"]');
-
-  bidCards.each((_, card) => {
-    const $card = $(card);
-    const text = (sel) => $card.find(sel).first().text().trim().replace(/\s+/g, ' ');
-
-    // Bid number — usually in a link with the bid number pattern
-    let bidNumber = '';
-    $card.find('a').each((_, a) => {
-      const t = $(a).text().trim();
-      if (/^GEM\/\d{4}\/[BR]\//.test(t)) {
-        bidNumber = t;
-        return false; // break
-      }
-    });
-
-    // Also try data attributes or specific classes
-    if (!bidNumber) {
-      bidNumber = text('[class*="bid-no"], [class*="bidNo"], [class*="bid_no"]');
-    }
-    if (!bidNumber) return; // skip cards without a parseable bid number
-
-    const title = text('[class*="title"], [class*="name"], h4, h5, .item-name') || bidNumber;
-    const org = text('[class*="org"], [class*="ministry"], [class*="department"]') || '';
-    const qty = text('[class*="qty"], [class*="quantity"]') || '';
-    const startDate = text('[class*="start"]') || null;
-    const endDate = text('[class*="end"], [class*="closing"]') || null;
-    const location = text('[class*="location"], [class*="city"], [class*="state"]') || 'Chhattisgarh';
-
-    // Bid value
-    let bidValue = null;
-    $card.find('[class*="value"], [class*="amount"]').each((_, el) => {
-      const t = $(el).text().replace(/[₹,\s]/g, '');
-      const n = parseFloat(t);
-      if (!isNaN(n) && n > 0) { bidValue = n; return false; }
-    });
-
-    // Link
-    let bidLink = `https://bidplus.gem.gov.in/showbidDocument/${encodeURIComponent(bidNumber)}`;
-    $card.find('a').each((_, a) => {
-      const href = $(a).attr('href') || '';
-      if (href.includes('showbidDocument') || href.includes(bidNumber)) {
-        bidLink = href.startsWith('http') ? href : `https://bidplus.gem.gov.in${href}`;
-        return false;
-      }
-    });
-
-    results.push({
-      bidNumber,
-      title,
-      department: org || null,
-      organization: org || null,
-      category: 'General',
-      quantity: qty || null,
-      startDate: startDate ? parseGemDate(startDate) : null,
-      endDate: endDate ? parseGemDate(endDate) : null,
-      locationText: location,
-      bidValue,
-      emdAmount: null,
-      bidLink,
-    });
-  });
-
-  if (results.length > 0) return results;
-
-  // Fallback: try table rows with bid data (older GeM page format)
-  $('table tr').each((i, tr) => {
-    if (i === 0) return;
-    const tds = $(tr).find('td');
-    if (tds.length < 4) return;
-
-    const text = (el) => $(el).text().trim().replace(/\s+/g, ' ');
-    const bidNoEl = tds.eq(0).find('a').first();
-    const bidNumber = bidNoEl.text().trim() || text(tds.eq(0));
-    if (!bidNumber || !/GEM\//i.test(bidNumber)) return;
-
-    results.push({
-      bidNumber,
-      title: text(tds.eq(1)) || bidNumber,
-      department: text(tds.eq(2)) || null,
-      organization: text(tds.eq(2)) || null,
-      category: 'General',
-      quantity: text(tds.eq(3)) || null,
-      startDate: tds.length > 4 ? parseGemDate(text(tds.eq(4))) : null,
-      endDate: tds.length > 5 ? parseGemDate(text(tds.eq(5))) : null,
-      locationText: 'Chhattisgarh',
-      bidValue: null,
-      emdAmount: null,
-      bidLink: bidNoEl.attr('href')
-        ? (bidNoEl.attr('href').startsWith('http') ? bidNoEl.attr('href') : `https://bidplus.gem.gov.in${bidNoEl.attr('href')}`)
-        : `https://bidplus.gem.gov.in/showbidDocument/${encodeURIComponent(bidNumber)}`,
-    });
-  });
-
-  return results;
-}
-
-/** Parse GeM date formats like "03 Jun 2026 4:47 PM" or "03/06/2026 04:47 PM" */
-function parseGemDate(s) {
-  if (!s) return null;
-  const cleaned = s.replace(/\s+/g, ' ').trim();
-  const d = new Date(cleaned);
-  if (!isNaN(d.getTime())) return d.toISOString();
-
-  // Try DD/MM/YYYY format
-  const m = cleaned.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
-  if (m) {
-    const iso = `${m[3]}-${m[2]}-${m[1]}`;
-    const d2 = new Date(iso);
-    if (!isNaN(d2.getTime())) return d2.toISOString();
-  }
-
-  return null;
-}
-
-function delay(ms) {
-  return new Promise((r) => setTimeout(r, ms));
 }
