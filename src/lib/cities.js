@@ -36,6 +36,7 @@ export function daysLeft(dateStr) {
   return Math.ceil((target - new Date()) / (1000 * 60 * 60 * 24));
 }
 
+/** @param {number | null | undefined} score */
 export function viabilityColor(score) {
   if (score == null) return 'bg-gray-200 text-gray-700';
   if (score >= 8) return 'bg-[#057A55] text-white';

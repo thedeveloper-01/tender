@@ -3,22 +3,53 @@ import TenderLayout from '../../layouts/TenderLayout.astro';
 import Navbar from '../../components/Navbar.astro';
 import Footer from '../../components/Footer.astro';
 import { fetchTenderDetail, documentUrl } from '../../lib/api.js';
-import { formatRupee, formatDate, daysLeft, viabilityColor, titleSlug } from '../../lib/cities.js';
+import { formatRupee, formatDate, daysLeft, viabilityColor } from '../../lib/cities.js';
 
-const { slug } = Astro.params;
+const { slug } = Astro.params as { slug: string };
 // slug format: <source>-<bidNumber>-<title-slug>
 // We split on the first two dashes to get source + bidNumber, rest is title slug
-const parts = slug.match(/^(gem|cspgcl)-(.+?)-[a-z0-9-]+$/i);
-const source = parts?.[1]?.toUpperCase() || '';
-const bidNumber = parts?.[2] || '';
+const parts = (slug ?? '').match(/^(gem|cspgcl)-(.+?)-[a-z0-9-]+$/i);
+const source = parts?.[1]?.toUpperCase() ?? '';
+const bidNumber = parts?.[2] ?? '';
 
-let tender = null;
-let err = null;
+type ExtractField = { label: string; value: string };
+type ExtractFields = Record<string, ExtractField>;
+
+interface Tender {
+  id: string;
+  source: string;
+  bidNumber: string;
+  title: string;
+  department?: string | null;
+  organization?: string | null;
+  category?: string[];
+  locationCity?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  quantity?: string | null;
+  bidValue?: number | null;
+  emdAmount?: number | null;
+  valueExtractionStatus?: string;
+  viabilityScore?: number | null;
+  risks?: string[];
+  pdfPath?: string | null;
+  bidLink?: string | null;
+  status: string;
+  fetchedAt: string;
+  sourceMeta?: {
+    isEbidding?: boolean;
+    pdfExtract?: { fields?: ExtractFields; text?: string };
+    [key: string]: unknown;
+  } | null;
+}
+
+let tender: Tender | null = null;
+let err: string | null = null;
 
 try {
-  tender = await fetchTenderDetail(source, bidNumber);
-} catch (e) {
-  err = e.message;
+  tender = await fetchTenderDetail(source, bidNumber) as Tender;
+} catch (e: unknown) {
+  err = e instanceof Error ? e.message : String(e);
 }
 
 if (!tender) {
@@ -35,7 +66,7 @@ const deadlineCls = dl == null ? '' : dl <= 0 ? 'text-red-600' : dl <= 7 ? 'text
 
 const pdfLink = tender.pdfPath ? documentUrl(tender.source, tender.bidNumber) : null;
 const sourceLink = tender.bidLink || null;
-const extractFields = tender.sourceMeta?.pdfExtract?.fields || {};
+const extractFields: ExtractFields = (tender.sourceMeta?.pdfExtract?.fields as ExtractFields) || {};
 const rawText = tender.sourceMeta?.pdfExtract?.text || null;
 const hasExtraDetails = Object.keys(extractFields).length > 0 || rawText;
 
@@ -92,7 +123,7 @@ const metaDesc = `${tender.source} tender ${tender.bidNumber} — ${tender.locat
         {tender.sourceMeta?.isEbidding && (
           <span class="px-2.5 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-600">e-Bidding</span>
         )}
-        {tender.category?.map(c => (
+        {tender.category?.map((c: string) => (
           <span class="px-2.5 py-1 rounded-md text-xs bg-blue-50 text-blue-700 font-medium">{c}</span>
         ))}
       </div>
@@ -159,7 +190,7 @@ const metaDesc = `${tender.source} tender ${tender.bidNumber} — ${tender.locat
       <div class="flex flex-col sm:flex-row sm:items-center gap-4">
         {tender.viabilityScore != null && (
           <div class="flex items-center gap-3">
-            <span class={`text-2xl font-black px-4 py-2 rounded-xl ${viabilityColor(tender.viabilityScore)}`}>
+            <span class={`text-2xl font-black px-4 py-2 rounded-xl ${viabilityColor(tender.viabilityScore!)}`}>
               {tender.viabilityScore}<span class="text-base font-semibold opacity-70">/10</span>
             </span>
             <div>
@@ -170,11 +201,11 @@ const metaDesc = `${tender.source} tender ${tender.bidNumber} — ${tender.locat
             </div>
           </div>
         )}
-        {tender.risks?.length > 0 && (
+        {(tender.risks?.length ?? 0) > 0 && (
           <div class="flex-1">
             <p class="text-xs text-gray-400 mb-2">Risk Flags</p>
             <div class="flex flex-wrap gap-1.5">
-              {tender.risks.map(r => (
+              {tender.risks!.map((r: string) => (
                 <span class="text-xs bg-red-50 text-red-700 border border-red-100 px-2.5 py-1 rounded-full font-medium">{r}</span>
               ))}
             </div>
@@ -230,10 +261,10 @@ const metaDesc = `${tender.source} tender ${tender.bidNumber} — ${tender.locat
             <div>
               <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Extracted from Bid Document</h3>
               <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
-                {Object.entries(extractFields).map(([key, { label, value }]) => (
+                {Object.entries(extractFields).map(([key, field]: [string, ExtractField]) => (
                   <div class="border-b border-gray-50 pb-2">
-                    <dt class="text-xs text-gray-400">{label}</dt>
-                    <dd class="text-sm font-medium text-gray-800 mt-0.5">{value}</dd>
+                    <dt class="text-xs text-gray-400">{field.label}</dt>
+                    <dd class="text-sm font-medium text-gray-800 mt-0.5">{field.value}</dd>
                   </div>
                 ))}
               </dl>
