@@ -6,11 +6,11 @@ import TenderDashboard from '../components/TenderDashboard.jsx';
 import { fetchStats } from '../lib/api.js';
 import { formatRupee } from '../lib/cities.js';
 
-let stats = { totalOpenTenders: 0, totalEstimatedValue: 0, bySource: {}, lastFetchAt: null };
+let stats: { totalOpenTenders: number; totalEstimatedValue: number; bySource: Record<string, number>; lastFetchAt: string | null } = { totalOpenTenders: 0, totalEstimatedValue: 0, bySource: {}, lastFetchAt: null };
 try {
   stats = await fetchStats();
 } catch (e) {
-  console.error('[tenders] stats error:', e.message);
+  console.error('[tenders] stats error:', (e as Error).message);
 }
 
 const lastUpdated = stats.lastFetchAt

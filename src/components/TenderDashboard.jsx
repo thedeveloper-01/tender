@@ -134,6 +134,37 @@ function TenderCard({ t }) {
           </div>
         </div>
 
+        {/* GEM extracted fields strip */}
+        {t.source === 'GEM' && t.sourceMeta?.pdfExtract?.fields && (() => {
+          const f = t.sourceMeta.pdfExtract.fields;
+          // Exact keys as stored by backend/src/pipeline/extract.js
+          const FIELDS = [
+            { key: 'bidOfferValidity', label: 'Validity (Days)' },
+            { key: 'mseExemption',     label: 'MSE Exempt' },
+            { key: 'startupExemption', label: 'Startup Exempt' },
+            { key: 'experienceCriteria', label: 'Exp. Criteria' },
+            { key: 'bidType',          label: 'Bid Type' },
+          ];
+          const found = FIELDS.map(({ key, label }) =>
+            f[key]?.value ? { label, value: f[key].value } : null
+          ).filter(Boolean);
+
+          if (!found.length) return null;
+          return (
+            <div className="mb-3 bg-violet-50/60 border border-violet-100 rounded-xl px-3 py-2.5">
+              <p className="text-[10px] font-bold text-violet-500 uppercase tracking-wide mb-1.5">From Bid Document</p>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+                {found.map(({ label, value }) => (
+                  <div key={label}>
+                    <p className="text-[10px] text-gray-400 leading-tight">{label}</p>
+                    <p className="text-xs font-semibold text-gray-800 leading-snug truncate" title={value}>{value}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Risks */}
         {t.risks?.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-3">
