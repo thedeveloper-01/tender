@@ -3,7 +3,7 @@ import { config } from '../config.js';
 import { fetchGemTenders } from '../fetchers/gem.js';
 import { fetchCspgclTenders } from '../fetchers/cspgcl.js';
 import { normalizeGem, normalizeCspgcl } from './normalize.js';
-import { resolveCityForGem } from './locationResolve.js';
+import { resolveCityForGem, resolveCityForCspgcl } from './locationResolve.js';
 import { analyzeTender } from './analysis.js';
 import { downloadPdf } from './pdf.js';
 import { extractValueAndEmd } from './extract.js';
@@ -165,40 +165,151 @@ export async function runPipeline() {
       if (result.status === 'extracted') extractionOk += 1;
       else if (result.status === 'not_found' || result.status === 'failed_download') extractionFail += 1;
 
-      let updatedCity = tender.locationCity;
-      if (!updatedCity || updatedCity === 'Unspecified') {
-        const addressText = result.extractedFields?.consigneeAddress?.value || '';
-        const fullText = result.extractedText || '';
-        const resolved = resolveCityForGem(`${addressText} ${fullText}`);
-        if (resolved && resolved !== 'Unspecified') {
-          updatedCity = resolved;
-          console.log(`[pipeline] [${pdfCount}/${changedTenders.length}] resolved city to "${resolved}" for ${tender.bidNumber}`);
+      if (tender.source === 'CSPGCL' && result.rows && result.rows.length > 0) {
+        console.log(`[pipeline] [${pdfCount}/${changedTenders.length}] found ${result.rows.length} sub-tenders in CSPGCL PDF`);
+        
+        // Row 0 updates the parent tender itself
+        const firstRow = result.rows[0];
+        let updatedCity = tender.locationCity;
+        if (!updatedCity || updatedCity === 'Unspecified') {
+          const resolved = resolveCityForCspgcl({ scopeRaw: firstRow.scope });
+          if (resolved && resolved !== 'Unspecified') {
+            updatedCity = resolved;
+            console.log(`[pipeline] [${pdfCount}/${changedTenders.length}] resolved city to "${resolved}" for ${tender.bidNumber}`);
+          }
         }
-      }
 
-      const sourceMeta = {
-        ...(tender.sourceMeta || {}),
-        pdfExtract: {
-          text: result.extractedText,
-          fields: result.extractedFields,
-        },
-      };
-
-      await prisma.tender.update({
-        where: { id: tender.id },
-        data: {
-          pdfPath: pdfPath || tender.pdfPath,
-          bidValue: result.bidValue,
-          emdAmount: result.emdAmount,
+        const firstSubTender = {
+          ...tender,
+          title: firstRow.scope || tender.title,
+          bidValue: firstRow.nitValueRs ?? tender.bidValue,
+          emdAmount: firstRow.emdAmount ?? tender.emdAmount,
           valueExtractionStatus: result.status,
           locationCity: updatedCity,
-          sourceMeta,
-        },
-      });
+          sourceMeta: {
+            ...(tender.sourceMeta || {}),
+            subTenderSpecNo: firstRow.tenderSpecNo || null,
+            subTenderRfxNos: firstRow.rfxNos || [],
+            pdfExtract: { text: result.extractedText, fields: result.extractedFields },
+          }
+        };
+        const firstAnalyzed = analyzeTender(firstSubTender);
+        
+        await prisma.tender.update({
+          where: { id: tender.id },
+          data: {
+            title: firstSubTender.title,
+            bidValue: firstSubTender.bidValue,
+            emdAmount: firstSubTender.emdAmount,
+            valueExtractionStatus: firstSubTender.valueExtractionStatus,
+            locationCity: firstSubTender.locationCity,
+            category: firstAnalyzed.category,
+            viabilityScore: firstAnalyzed.viabilityScore,
+            risks: firstAnalyzed.risks,
+            pdfPath: pdfPath || tender.pdfPath,
+            sourceMeta: firstSubTender.sourceMeta,
+          }
+        });
+        console.log(`[pipeline] [${pdfCount}/${changedTenders.length}] updated parent tender ${tender.bidNumber} with first sub-tender details`);
+
+        // Rows 1+ are upserted as new independent tenders
+        for (let rIdx = 1; rIdx < result.rows.length; rIdx++) {
+          const row = result.rows[rIdx];
+          const subBidNumber = (row.rfxNos && row.rfxNos[0]) || row.tenderSpecNo || `${tender.bidNumber}-sub-${rIdx}`;
+          
+          let subCity = tender.locationCity;
+          if (!subCity || subCity === 'Unspecified') {
+            const resolved = resolveCityForCspgcl({ scopeRaw: row.scope });
+            if (resolved && resolved !== 'Unspecified') subCity = resolved;
+          }
+
+          const subTender = {
+            source: 'CSPGCL',
+            bidNumber: subBidNumber,
+            title: row.scope || tender.title,
+            department: tender.department,
+            organization: tender.organization,
+            category: [],
+            locationState: tender.locationState,
+            locationCity: subCity,
+            startDate: tender.startDate,
+            endDate: tender.endDate,
+            quantity: null,
+            bidValue: row.nitValueRs ?? null,
+            emdAmount: row.emdAmount ?? null,
+            valueExtractionStatus: (row.nitValueRs != null || row.emdAmount != null) ? 'extracted' : 'not_found',
+            viabilityScore: null,
+            risks: [],
+            pdfPath: pdfPath || tender.pdfPath,
+            bidLink: tender.bidLink,
+            status: tender.status,
+            fetchedAt: new Date(),
+            sourceMeta: {
+              ...tender.sourceMeta,
+              parentNoticeNo: tender.bidNumber,
+              subTenderSpecNo: row.tenderSpecNo || null,
+              subTenderRfxNos: row.rfxNos || [],
+            }
+          };
+
+          const analyzedSub = analyzeTender(subTender);
+          const subData = { ...subTender, ...analyzedSub };
+
+          try {
+            await prisma.tender.upsert({
+              where: { source_bidNumber: { source: 'CSPGCL', bidNumber: subData.bidNumber } },
+              create: subData,
+              update: subData,
+            });
+            console.log(`[pipeline] [${pdfCount}/${changedTenders.length}] upserted sub-tender ${subData.bidNumber}: value=${subData.bidValue}, emd=${subData.emdAmount}`);
+          } catch (err) {
+            console.error(`[pipeline] [${pdfCount}/${changedTenders.length}] failed to upsert sub-tender ${subData.bidNumber}:`, err.message);
+          }
+        }
+      } else {
+        let updatedCity = tender.locationCity;
+        if (!updatedCity || updatedCity === 'Unspecified') {
+          const addressText = result.extractedFields?.consigneeAddress?.value || '';
+          const fullText = result.extractedText || '';
+          const resolved = resolveCityForGem(`${addressText} ${fullText}`);
+          if (resolved && resolved !== 'Unspecified') {
+            updatedCity = resolved;
+            console.log(`[pipeline] [${pdfCount}/${changedTenders.length}] resolved city to "${resolved}" for ${tender.bidNumber}`);
+          }
+        }
+
+        const sourceMeta = {
+          ...(tender.sourceMeta || {}),
+          pdfExtract: {
+            text: result.extractedText,
+            fields: result.extractedFields,
+          },
+        };
+
+        await prisma.tender.update({
+          where: { id: tender.id },
+          data: {
+            pdfPath: pdfPath || tender.pdfPath,
+            bidValue: result.bidValue,
+            emdAmount: result.emdAmount,
+            valueExtractionStatus: result.status,
+            locationCity: updatedCity,
+            sourceMeta,
+          },
+        });
+      }
     } catch (e) {
       console.error(`[pipeline] [${pdfCount}/${changedTenders.length}] pdf/extract error for ${tender.source}/${tender.bidNumber}:`, e.message);
       errors.push(`PDF/extract error (${tender.source}/${tender.bidNumber}): ${e.message}`);
       extractionFail += 1;
+      // Stamp failed_download so the tender stays visible in DB and won't be
+      // re-queued for PDF retry on every future pipeline run.
+      try {
+        await prisma.tender.update({
+          where: { id: tender.id },
+          data: { valueExtractionStatus: 'failed_download' },
+        });
+      } catch (_) { /* ignore secondary DB error */ }
     }
   }
   console.log(`[pipeline] PDF processing complete. Total attempted: ${changedTenders.length}, Succeeded: ${successPdfCount}, Failed: ${failedPdfCount}`);

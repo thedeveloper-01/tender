@@ -1,5 +1,6 @@
 import fs from 'fs';
 import pdfParse from 'pdf-parse/lib/pdf-parse.js';
+import { extractCspgclPdf } from './cspgcl_extract.js';
 
 const NUM = '([\\d,]+(?:\\.\\d+)?)';
 
@@ -95,7 +96,24 @@ export async function extractValueAndEmd(tender, pdfPath) {
   let extractedFields = {};
 
   if (!pdfPath || !fs.existsSync(pdfPath)) {
-    return { bidValue, emdAmount, status: status || 'not_attempted', extractedText, extractedFields };
+    return { bidValue, emdAmount, status: status || 'not_attempted', extractedText, extractedFields, rows: [] };
+  }
+
+  if (tender.source === 'CSPGCL') {
+    try {
+      const result = await extractCspgclPdf(pdfPath);
+      return {
+        bidValue: result.bidValue ?? bidValue,
+        emdAmount: result.emdAmount ?? emdAmount,
+        status: (result.bidValue ?? bidValue) != null || (result.emdAmount ?? emdAmount) != null ? 'extracted' : 'not_found',
+        extractedText: result.rawText,
+        extractedFields: result.extractedFields,
+        rows: result.rows,
+      };
+    } catch (e) {
+      console.error('[extract] CSPGCL pdf-parse failed:', e.message);
+      return { bidValue, emdAmount, status: 'not_found', extractedText: null, extractedFields: {}, rows: [] };
+    }
   }
 
   try {

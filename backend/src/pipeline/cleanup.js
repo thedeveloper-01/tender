@@ -27,8 +27,16 @@ export async function runCleanup(prisma) {
 
   for (const tender of stale) {
     if (tender.pdfPath) {
-      deletePdf(tender.pdfPath);
-      cleanedFiles += 1;
+      const others = await prisma.tender.count({
+        where: {
+          pdfPath: tender.pdfPath,
+          id: { not: tender.id },
+        },
+      });
+      if (others === 0) {
+        deletePdf(tender.pdfPath);
+        cleanedFiles += 1;
+      }
     }
 
     if (config.archiveMode) {

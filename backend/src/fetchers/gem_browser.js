@@ -175,10 +175,12 @@ export async function fetchGemTendersBrowser() {
       }
       console.log(`[gem-browser] page 1 (form submit): +${docs.length} → total ${results.length}/${totalFound}`);
 
-      if (docs.length === 0 || docs.length < PER_PAGE) {
-        console.log('[gem-browser] single-page result — done');
+      if (docs.length === 0) {
+        console.log('[gem-browser] page 1 returned 0 docs — done');
         return results;
       }
+      // Note: if page 1 is partial (<PER_PAGE), continue pagination — don't
+      // exit early, there may be more pages (partial pages can occur mid-run).
     } else {
       // Fallback: no intercepted response — start pagination from page 1
       console.warn('[gem-browser] no intercepted response from form submit — starting from page 1');
@@ -271,8 +273,17 @@ export async function fetchGemTendersBrowser() {
 
       console.log(`[gem-browser] page ${pageNo}: +${docs.length} → total ${results.length}/${totalFound}`);
 
-      if (results.length >= Math.min(totalFound ?? Infinity, MAX_PAGES * PER_PAGE)) break;
-      if (docs.length < PER_PAGE) break; // last partial page
+      // Stop when we have collected all expected records
+      if (totalFound !== null && results.length >= totalFound) {
+        console.log('[gem-browser] collected all expected records — done');
+        break;
+      }
+      // Hard cap safety
+      if (results.length >= MAX_PAGES * PER_PAGE) break;
+
+      // NOTE: Do NOT break on docs.length < PER_PAGE — a partial page can
+      // occur mid-run (transient / rate-limit) and still have more pages after.
+      // Only break on a truly empty page (handled above).
 
       await delay(BETWEEN_MS);
     }

@@ -239,6 +239,14 @@ async function main() {
       log(`  WARN: ${msg}`);
       errors.push(msg);
       extractionFail++;
+      // Still mark as failed_download in DB so the tender is visible and
+      // won't be re-queued for PDF retry on every future run.
+      try {
+        await prisma.tender.update({
+          where: { id: tender.id },
+          data: { valueExtractionStatus: 'failed_download' },
+        });
+      } catch (_) { /* ignore secondary DB error */ }
     }
   }
   log(`PDF pass done. Downloaded: ${pdfsDownloaded}  OK: ${extractionOk}  Fail: ${extractionFail}`);

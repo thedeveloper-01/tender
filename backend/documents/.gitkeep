@@ -1,3 +1,0 @@
-This directory stores downloaded tender PDFs (gitignored).
-On Railway, mount a persistent volume here (or set DOCUMENTS_DIR to the
-volume's mount path) so PDFs survive redeploys.
