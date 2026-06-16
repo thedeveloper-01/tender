@@ -5,7 +5,7 @@ import Footer from '../components/Footer.astro';
 import { fetchTenders, fetchStats, fetchCities } from '../lib/api.js';
 import { formatRupee, formatDate, daysLeft, tenderDetailPath } from '../lib/cities.js';
 
-let stats = { totalOpenTenders: 0, totalEstimatedValue: 0, bySource: {}, lastFetchAt: null };
+let stats: { totalOpenTenders: number; totalEstimatedValue: number; bySource: Record<string,number>; lastFetchAt: string | null } = { totalOpenTenders: 0, totalEstimatedValue: 0, bySource: {}, lastFetchAt: null };
 let gemTenders = [];
 let cspgclTenders = [];
 let topCities = [];
@@ -18,7 +18,7 @@ try {
     fetchCities(),
   ]);
 } catch (e) {
-  console.error('[homepage] API error:', e.message);
+  console.error('[homepage] API error:', (e as Error).message);
 }
 
 const lastUpdated = stats.lastFetchAt

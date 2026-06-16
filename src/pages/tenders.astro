@@ -63,14 +63,14 @@ const lastUpdated = stats.lastFetchAt
         <!-- Sidebar skeleton -->
         <aside class="hidden lg:block w-64 xl:w-72 flex-shrink-0">
           <div class="bg-white border border-gray-200 rounded-2xl p-5 space-y-4">
-            {[56, 44, 32, 44, 56].map(w => (
+            {[56, 44, 32, 44, 56].map((w, i) => (
               <div class={`h-4 bg-gray-100 rounded animate-pulse`} style={`width:${w}%`}></div>
             ))}
           </div>
         </aside>
         <!-- Cards skeleton -->
         <div class="flex-1 grid grid-cols-1 xl:grid-cols-2 gap-4">
-          {Array.from({length: 6}).map(() => (
+          {Array.from({length: 6}).map((_, i) => (
             <div class="bg-white rounded-2xl border border-gray-200 p-5 h-40 animate-pulse space-y-3">
               <div class="flex gap-2">
                 <div class="h-5 w-10 bg-gray-100 rounded-md"></div>
@@ -95,16 +95,15 @@ const lastUpdated = stats.lastFetchAt
         const shell = document.getElementById('dashboard-shell');
         if (!shell) return;
         const observer = new MutationObserver(() => {
-          // TenderDashboard renders into the sibling node after the skeleton
-          const sibling = shell.nextElementSibling;
-          if (sibling && sibling.querySelector('article, [class*="rounded-2xl"]')) {
+          // Only hide when TenderCard <article> elements appear — not the skeleton divs
+          if (document.body.querySelector('article')) {
             shell.style.display = 'none';
             observer.disconnect();
           }
         });
         observer.observe(document.body, { childList: true, subtree: true });
-        // Safety: hide after 5s regardless
-        setTimeout(() => { shell.style.display = 'none'; observer.disconnect(); }, 5000);
+        // Safety: hide after 6s regardless
+        setTimeout(() => { shell.style.display = 'none'; observer.disconnect(); }, 6000);
       })();
     </script>
   </main>

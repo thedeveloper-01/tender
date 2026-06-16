@@ -30,13 +30,13 @@ function fmt(val) {
 function fmtDate(s) {
   if (!s) return '—';
   const d = new Date(s);
-  return isNaN(d) ? '—' : d.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+  return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
 }
 
 function daysLeft(s) {
   if (!s) return null;
   const d = new Date(s);
-  if (isNaN(d)) return null;
+  if (isNaN(d.getTime())) return null;
   return Math.ceil((d - new Date()) / 86400000);
 }
 
