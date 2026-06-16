@@ -3,10 +3,12 @@ import react from '@astrojs/react';
 import vercel from '@astrojs/vercel';
 import tailwindcss from '@tailwindcss/vite';
 
+import cloudflare from '@astrojs/cloudflare';
+
 export default defineConfig({
   site: process.env.SITE_URL || 'https://cgtenders.com',
   output: 'server',
-  adapter: vercel(),
+  adapter: cloudflare(),
   integrations: [react()],
   vite: {
     plugins: [tailwindcss()],
