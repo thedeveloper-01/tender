@@ -27,9 +27,18 @@
  */
 
 import 'dotenv/config';
-import path from 'path';
-import fs   from 'fs';
-import os   from 'os';
+import path    from 'path';
+import fs      from 'fs';
+import os      from 'os';
+import { fileURLToPath } from 'url';
+
+// ESM-compatible __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname  = path.dirname(__filename);
+// Project root is two levels above backend/src/
+const PROJECT_ROOT     = path.resolve(__dirname, '../../');
+const SCRAPE_LOG_PATH  = path.join(PROJECT_ROOT, 'scrape_log.jsonl');
+const GEM_DATA_PATH    = path.join(PROJECT_ROOT, 'gem_tenders.json');
 
 // ── Re-use ALL existing pipeline modules ─────────────────────────────────────
 import { prisma }            from './db.js';
@@ -138,7 +147,15 @@ async function main() {
   log(`Normalised: ${normalized.length}/${found}`);
 
   // ── 3. Analyse + Upsert ───────────────────────────────────────────────────
-  // Deduplicate normalized array by bidNumber to avoid duplicate processing
+  // Diagnose before dedup: count nulls and true unique bid numbers
+  const nullBidCount = normalized.filter(t => !t?.bidNumber).length;
+  const rawUniqueBidNos = new Set(normalized.filter(t => t?.bidNumber).map(t => t.bidNumber));
+  log(`Before dedup: ${normalized.length} records | ${rawUniqueBidNos.size} unique bidNumbers | ${nullBidCount} with null/empty bidNumber`);
+  if (normalized.length !== rawUniqueBidNos.size) {
+    const dupCount = normalized.length - rawUniqueBidNos.size - nullBidCount;
+    log(`  ⚠ ${dupCount} records are GeM pagination duplicates (same bidNumber on multiple pages) — will be collapsed`);
+  }
+
   const uniqueNormalizedMap = new Map();
   for (const tender of normalized) {
     if (tender && tender.bidNumber) {
@@ -290,6 +307,26 @@ async function main() {
     extractionOk, extractionFail, cleanedRecords, cleanedFiles, errors,
   );
 
+  // ── 8. Write data log + full tender data to project root ────────────────
+  writeDataLog(
+    {
+      runId:          fetchLog.id,
+      runAt:          runAt.toISOString(),
+      source:         'GEM',
+      rawFetched:     found,
+      uniqueUpserted: newCount + updatedCount,
+      newTenders:     newCount,
+      updated:        updatedCount,
+      pdfsDownloaded,
+      extractionOk,
+      extractionFail,
+      archived:       cleanedRecords,
+      errorCount:     errors.length,
+      errors,
+    },
+    uniqueNormalized,
+  );
+
   // ── Summary ───────────────────────────────────────────────────────────────
   console.log('');
   console.log('══════════════════════════════════════════════');
@@ -319,6 +356,37 @@ async function main() {
 function log(msg) {
   const ts = new Date().toISOString().replace('T', ' ').replace('Z', '');
   console.log(`[${ts}] ${msg}`);
+}
+
+/**
+ * 1. Appends one JSON stats line to scrape_log.jsonl (run history).
+ * 2. Overwrites gem_tenders.json with the full latest tender dataset.
+ * Never throws — log failure must not crash the scraper.
+ */
+function writeDataLog(entry, tenders = []) {
+  // ── run-stats history log (append) ──────────────────────────────────────
+  try {
+    const line = JSON.stringify(entry) + '\n';
+    fs.appendFileSync(SCRAPE_LOG_PATH, line, 'utf8');
+    log(`Run stats appended → ${SCRAPE_LOG_PATH}`);
+  } catch (e) {
+    console.warn('[data-log] Failed to write scrape_log.jsonl:', e.message);
+  }
+
+  // ── full tender data (overwrite each run) ────────────────────────────────
+  try {
+    // Strip heavy rawJson field to keep file lean
+    const lean = tenders.map(({ rawJson, ...rest }) => rest);
+    const payload = JSON.stringify(
+      { generatedAt: entry.runAt, runId: entry.runId, count: lean.length, tenders: lean },
+      null,
+      2,
+    );
+    fs.writeFileSync(GEM_DATA_PATH, payload, 'utf8');
+    log(`Full data written  → ${GEM_DATA_PATH} (${lean.length} tenders)`);
+  } catch (e) {
+    console.warn('[data-log] Failed to write gem_tenders.json:', e.message);
+  }
 }
 
 function banner(title) {
