@@ -4,13 +4,22 @@
 export const API_BASE_URL =
   import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:4000';
 
-async function getJson(path) {
+async function getJson(path, { timeout = 5000 } = {}) {
   const url = `${API_BASE_URL}${path}`;
-  const resp = await fetch(url, { headers: { Accept: 'application/json' } });
-  if (!resp.ok) {
-    throw new Error(`API error ${resp.status} for ${path}`);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeout);
+  try {
+    const resp = await fetch(url, {
+      headers: { Accept: 'application/json' },
+      signal: controller.signal,
+    });
+    if (!resp.ok) {
+      throw new Error(`API error ${resp.status} for ${path}`);
+    }
+    return resp.json();
+  } finally {
+    clearTimeout(timer);
   }
-  return resp.json();
 }
 
 /** GET /api/tenders with query params */

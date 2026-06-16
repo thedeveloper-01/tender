@@ -337,6 +337,7 @@ export default function TenderDashboard({ initialCity = '', initialSource = 'all
     return { ...DEFAULT_FILTERS, source, city };
   });
   const debounceRef = useRef(null);
+  const isFirstLoad = useRef(true);
 
   const loadTenders = useCallback(async (currentFilters, currentQ, currentSort, currentPage) => {
     setLoading(true);
@@ -370,9 +371,15 @@ export default function TenderDashboard({ initialCity = '', initialSource = 'all
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
+    // Fire immediately on first load — no debounce wait
+    if (isFirstLoad.current) {
+      isFirstLoad.current = false;
+      loadTenders(filters, q, sort, page);
+      return;
+    }
     debounceRef.current = setTimeout(() => {
       loadTenders(filters, q, sort, page);
-    }, 300);
+    }, 400);
     return () => clearTimeout(debounceRef.current);
   }, [filters, q, sort, page, loadTenders]);
 
