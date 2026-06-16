@@ -138,13 +138,21 @@ async function main() {
   log(`Normalised: ${normalized.length}/${found}`);
 
   // ── 3. Analyse + Upsert ───────────────────────────────────────────────────
-  log(`STEP 3/7 — Analysing & upserting ${normalized.length} tenders...`);
+  // Deduplicate normalized array by bidNumber to avoid duplicate processing
+  const uniqueNormalizedMap = new Map();
+  for (const tender of normalized) {
+    if (tender && tender.bidNumber) {
+      uniqueNormalizedMap.set(tender.bidNumber, tender);
+    }
+  }
+  const uniqueNormalized = Array.from(uniqueNormalizedMap.values());
+  log(`STEP 3/7 — Analysing & upserting ${uniqueNormalized.length} unique tenders (from ${normalized.length} total)...`);
   const changedTenders = []; // needs PDF / extract pass
 
-  for (let i = 0; i < normalized.length; i++) {
-    const tender = normalized[i];
-    if ((i + 1) % 50 === 0 || i === normalized.length - 1) {
-      log(`  upsert progress: ${i + 1}/${normalized.length}`);
+  for (let i = 0; i < uniqueNormalized.length; i++) {
+    const tender = uniqueNormalized[i];
+    if ((i + 1) % 50 === 0 || i === uniqueNormalized.length - 1) {
+      log(`  upsert progress: ${i + 1}/${uniqueNormalized.length}`);
     }
     try {
       const analyzed = analyzeTender(tender);

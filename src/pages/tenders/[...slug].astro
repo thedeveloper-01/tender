@@ -90,26 +90,44 @@ if (isCityRoute) {
 
     if (source === 'GEM') {
       // GEM bid numbers contain slashes: GEM/2026/B/7179248
-      // rest = "GEM/2026/B/7179248-title-slug-here"
-      // Find the last slash, then grab digits/alphanumerics until the next '-'
-      const lastSlash = rest.lastIndexOf('/');
-      if (lastSlash !== -1) {
-        const prefix   = rest.substring(0, lastSlash);   // e.g. "GEM/2026/B"
-        const afterSlash = rest.substring(lastSlash + 1); // e.g. "7179248-title-slug"
-        // The bid number ends at the first '-' that follows the last path segment
-        const dashIdx  = afterSlash.search(/-[a-z]/i);   // first dash before a letter = title slug start
-        const numPart  = dashIdx === -1 ? afterSlash : afterSlash.substring(0, dashIdx);
-        bidNumber = `${prefix}/${numPart}`;
+      // rest = "GEM/2026/B/7179248-title-slug-here" or "GEM/2026/B/7179248-2-year-amc"
+      const gemMatch = rest.match(/^(GEM\/\d{4}\/[A-Z]\/\d+)/i);
+      if (gemMatch) {
+        bidNumber = gemMatch[1];
       } else {
-        // Fallback: no slash found — treat everything as bid number
-        bidNumber = rest.split('-')[0];
+        // Fallback: parse using last slash heuristic
+        const lastSlash = rest.lastIndexOf('/');
+        if (lastSlash !== -1) {
+          const prefix   = rest.substring(0, lastSlash);
+          const afterSlash = rest.substring(lastSlash + 1);
+          const dashIdx  = afterSlash.indexOf('-');
+          const numPart  = dashIdx === -1 ? afterSlash : afterSlash.substring(0, dashIdx);
+          bidNumber = `${prefix}/${numPart}`;
+        } else {
+          bidNumber = rest.split('-')[0];
+        }
       }
     } else {
-      // CSPGCL bid numbers: no slashes, uppercase prefix + digits
-      // rest = "CSPGCL-GEN-123456789-scope-of-work" or "NOTICE/2025/01-title"
-      // Heuristic: the bid number ends when we hit a '-' followed by a lowercase letter
-      const dashLower = rest.search(/-[a-z]/);
-      bidNumber = dashLower === -1 ? rest : rest.substring(0, dashLower);
+      // CSPGCL bid numbers:
+      // rest = "CSPGCL-GEN-123456789-scope-of-work" or "2024-25/HTPS/001-overhauling"
+      const genMatch = rest.match(/^(CSPGCL-GEN-\d+)/i);
+      if (genMatch) {
+        bidNumber = genMatch[1];
+      } else {
+        // Check if there is a slash (e.g., 2024-25/HTPS/001)
+        const lastSlash = rest.lastIndexOf('/');
+        if (lastSlash !== -1) {
+          const prefix   = rest.substring(0, lastSlash);
+          const afterSlash = rest.substring(lastSlash + 1);
+          const dashIdx  = afterSlash.indexOf('-');
+          const numPart  = dashIdx === -1 ? afterSlash : afterSlash.substring(0, dashIdx);
+          bidNumber = `${prefix}/${numPart}`;
+        } else {
+          // Heuristic: ends at the first dash followed by a lowercase letter
+          const dashLower = rest.search(/-[a-z]/);
+          bidNumber = dashLower === -1 ? rest : rest.substring(0, dashLower);
+        }
+      }
     }
   }
 

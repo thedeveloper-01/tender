@@ -28,6 +28,11 @@ export async function downloadPdf(tender) {
   const filename = `${tender.source}-${sanitize(tender.bidNumber)}.pdf`;
   const filePath = path.join(config.documentsDir, filename);
 
+  if (fs.existsSync(filePath)) {
+    console.log(`[pdf] file already exists, skipping download: ${filename}`);
+    return filePath;
+  }
+
   try {
     if (tender.source === 'GEM') {
       return await downloadGemPdf(tender, filePath);

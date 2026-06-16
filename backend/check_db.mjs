@@ -1,22 +1,9 @@
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
-
 async function main() {
-  const gemTenders = await prisma.tender.findMany({
-    where: { source: 'GEM' },
-    select: { bidNumber: true, title: true, organization: true, department: true, locationCity: true, rawJson: true },
-    take: 10,
-  });
-  console.log('Sample GeM Tenders in DB:');
-  for (const t of gemTenders) {
-    console.log(`- Bid: ${t.bidNumber}`);
-    console.log(`  Title: ${t.title}`);
-    console.log(`  Org: ${t.organization}`);
-    console.log(`  Dept: ${t.department}`);
-    console.log(`  Raw Location text: ${t.rawJson?.locationText}`);
-  }
+  const c = await prisma.tender.count({ where: { source: 'GEM' } });
+  console.log('Total GEM tenders in DB:', c);
+  const c2 = await prisma.tender.count({ where: { source: 'GEM', locationCity: { not: null } } });
+  console.log('Total GEM tenders with location:', c2);
 }
-
-main()
-  .catch(e => console.error(e))
-  .finally(() => prisma.$disconnect());
+main().finally(() => prisma.$disconnect());
