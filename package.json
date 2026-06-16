@@ -10,6 +10,7 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/cloudflare": "^13.7.0",
     "@astrojs/react": "^5.0.0",
     "@astrojs/vercel": "^10.0.0",
     "@prisma/client": "^6.0.0",
