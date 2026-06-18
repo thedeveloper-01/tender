@@ -3,6 +3,19 @@ import TenderLayout from '../layouts/TenderLayout.astro';
 import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
 import TenderDashboard from '../components/TenderDashboard.jsx';
+import { fetchStats } from '../lib/api.js';
+import { formatRupee } from '../lib/cities.js';
+
+let stats: { totalOpenTenders: number; totalEstimatedValue: number; bySource: Record<string, number>; lastFetchAt: string | null } = { totalOpenTenders: 0, totalEstimatedValue: 0, bySource: {}, lastFetchAt: null };
+try {
+  stats = await fetchStats();
+} catch (e) {
+  console.error('[tenders] stats error:', (e as Error).message);
+}
+
+const lastUpdated = stats.lastFetchAt
+  ? new Date(stats.lastFetchAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+  : null;
 ---
 
 <TenderLayout
@@ -19,20 +32,20 @@ import TenderDashboard from '../components/TenderDashboard.jsx';
             <h1 class="text-2xl md:text-3xl font-bold text-gray-900 font-['Outfit']">All Tenders</h1>
             <p class="text-sm text-gray-500 mt-0.5">
               GeM and CSPGCL open tenders in Chhattisgarh
-              <span id="stats-updated" class="text-gray-400"></span>
+              {lastUpdated && <span class="text-gray-400"> · Updated {lastUpdated}</span>}
             </p>
           </div>
           <div class="flex items-center gap-3 flex-wrap">
             <div class="flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-xl px-3 py-2">
-              <span id="stat-total" class="text-xl font-extrabold text-[#1A56DB] font-['Outfit'] leading-none">...</span>
+              <span class="text-xl font-extrabold text-[#1A56DB] font-['Outfit'] leading-none">{stats.totalOpenTenders}</span>
               <span class="text-xs text-blue-600 font-medium leading-tight">Open<br/>Tenders</span>
             </div>
             <div class="flex items-center gap-2 bg-violet-50 border border-violet-100 rounded-xl px-3 py-2">
-              <span id="stat-gem" class="text-xl font-extrabold text-violet-700 font-['Outfit'] leading-none">...</span>
+              <span class="text-xl font-extrabold text-violet-700 font-['Outfit'] leading-none">{stats.bySource?.GEM || 0}</span>
               <span class="text-xs text-violet-600 font-medium leading-tight">GeM</span>
             </div>
             <div class="flex items-center gap-2 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2">
-              <span id="stat-cspgcl" class="text-xl font-extrabold text-amber-700 font-['Outfit'] leading-none">...</span>
+              <span class="text-xl font-extrabold text-amber-700 font-['Outfit'] leading-none">{stats.bySource?.CSPGCL || 0}</span>
               <span class="text-xs text-amber-600 font-medium leading-tight">CSPGCL</span>
             </div>
           </div>
@@ -96,25 +109,3 @@ import TenderDashboard from '../components/TenderDashboard.jsx';
   </main>
   <Footer />
 </TenderLayout>
-
-<script define:vars={{ apiBase: import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:4000' }}>
-  async function loadStats() {
-    try {
-      const res = await fetch(`${apiBase}/api/stats`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const stats = await res.json();
-      
-      document.getElementById('stat-total').textContent = stats.totalOpenTenders || 0;
-      document.getElementById('stat-gem').textContent = stats.bySource?.GEM || 0;
-      document.getElementById('stat-cspgcl').textContent = stats.bySource?.CSPGCL || 0;
-      
-      if (stats.lastFetchAt) {
-        const lastUpdated = new Date(stats.lastFetchAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-        document.getElementById('stats-updated').textContent = ` · Updated ${lastUpdated}`;
-      }
-    } catch (e) {
-      console.error('[tenders] stats fetch error:', e);
-    }
-  }
-  loadStats();
-</script>

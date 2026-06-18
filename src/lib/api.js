@@ -1,8 +1,7 @@
 // Shared API client for the CGTenders backend (Express + Prisma on Railway).
 // Used by both server-rendered Astro pages and the client-side React island.
 
-export const API_BASE_URL =
-  import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:4000';
+export const API_BASE_URL = 'https://cgtenders-com.onrender.com';
 
 async function getJson(path, { timeout = 5000 } = {}) {
   const url = `${API_BASE_URL}${path}`;
