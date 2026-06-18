@@ -241,8 +241,8 @@ function FilterPanel({ filters, onChange, onReset, totalResults, loading }) {
 
       {/* District */}
       <div>
-        <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">District</label>
-        <select value={filters.city} onChange={e => onChange('city', e.target.value)}
+        <label htmlFor="filter-district" className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">District</label>
+        <select id="filter-district" value={filters.city} onChange={e => onChange('city', e.target.value)}
           className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#1A56DB]/30 focus:border-[#1A56DB]">
           <option value="all">All Chhattisgarh</option>
           {CG_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
@@ -273,12 +273,12 @@ function FilterPanel({ filters, onChange, onReset, totalResults, loading }) {
 
       {/* Bid Value Range */}
       <div>
-        <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">Bid Value (₹)</label>
+        <label id="filter-bid-value-label" className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">Bid Value (₹)</label>
         <div className="flex gap-2">
-          <input type="number" placeholder="Min" value={filters.minValue || ''}
+          <input type="number" id="filter-min-bid-value" aria-labelledby="filter-bid-value-label" aria-label="Minimum Bid Value" placeholder="Min" value={filters.minValue || ''}
             onChange={e => onChange('minValue', e.target.value)}
             className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-[#1A56DB]/30 focus:border-[#1A56DB]"/>
-          <input type="number" placeholder="Max" value={filters.maxValue || ''}
+          <input type="number" id="filter-max-bid-value" aria-labelledby="filter-bid-value-label" aria-label="Maximum Bid Value" placeholder="Max" value={filters.maxValue || ''}
             onChange={e => onChange('maxValue', e.target.value)}
             className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-[#1A56DB]/30 focus:border-[#1A56DB]"/>
         </div>
@@ -286,12 +286,12 @@ function FilterPanel({ filters, onChange, onReset, totalResults, loading }) {
 
       {/* EMD Range */}
       <div>
-        <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">EMD Amount (₹)</label>
+        <label id="filter-emd-label" className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">EMD Amount (₹)</label>
         <div className="flex gap-2">
-          <input type="number" placeholder="Min" value={filters.minEmd || ''}
+          <input type="number" id="filter-min-emd" aria-labelledby="filter-emd-label" aria-label="Minimum EMD" placeholder="Min" value={filters.minEmd || ''}
             onChange={e => onChange('minEmd', e.target.value)}
             className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-[#1A56DB]/30 focus:border-[#1A56DB]"/>
-          <input type="number" placeholder="Max" value={filters.maxEmd || ''}
+          <input type="number" id="filter-max-emd" aria-labelledby="filter-emd-label" aria-label="Maximum EMD" placeholder="Max" value={filters.maxEmd || ''}
             onChange={e => onChange('maxEmd', e.target.value)}
             className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-[#1A56DB]/30 focus:border-[#1A56DB]"/>
         </div>
@@ -439,6 +439,8 @@ export default function TenderDashboard({ initialCity = '', initialSource = 'all
           </svg>
           <input
             type="search"
+            id="search-tenders-input"
+            aria-label="Search tenders by keyword, number, or organisation"
             placeholder="Search tenders by keyword, number, organisation…"
             value={q}
             onChange={e => { setQ(e.target.value); setPage(1); }}
@@ -447,8 +449,13 @@ export default function TenderDashboard({ initialCity = '', initialSource = 'all
         </div>
 
         {/* Sort */}
-        <select value={sort} onChange={e => { setSort(e.target.value); setPage(1); }}
-          className="px-3 py-2.5 rounded-xl border border-gray-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#1A56DB]/30 focus:border-[#1A56DB] shadow-sm">
+        <select
+          id="sort-tenders-select"
+          aria-label="Sort tenders by criteria"
+          value={sort}
+          onChange={e => { setSort(e.target.value); setPage(1); }}
+          className="px-3 py-2.5 rounded-xl border border-gray-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#1A56DB]/30 focus:border-[#1A56DB] shadow-sm"
+        >
           <option value="endDate_asc">Closing: Soonest first</option>
           <option value="endDate_desc">Closing: Latest first</option>
           <option value="bidValue_desc">Value: High to low</option>
