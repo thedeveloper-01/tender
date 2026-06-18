@@ -13,12 +13,8 @@
   "dependencies": {
     "@astrojs/cloudflare": "^13.7.0",
     "@astrojs/react": "^5.0.0",
-    "@astrojs/vercel": "^10.0.0",
-    "@prisma/client": "^6.0.0",
     "@tailwindcss/vite": "^4.0.0",
     "astro": "^6.4.0",
-    "cheerio": "^1.2.0",
-    "pdf-parse": "^1.1.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwindcss": "^4.0.0",
@@ -26,8 +22,7 @@
   },
   "devDependencies": {
     "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "prisma": "^6.0.0"
+    "@types/react-dom": "^19.0.0"
   },
   "overrides": {
     "vite": "^7"
