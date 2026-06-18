@@ -1,6 +1,8 @@
 {
 	"compatibility_date": "2026-06-18",
-	"compatibility_flags": ["global_fetch_strictly_public"],
+	"compatibility_flags": [
+		"global_fetch_strictly_public"
+	],
 	"name": "cgtenders-frontend",
 	"main": "@astrojs/cloudflare/entrypoints/server",
 	"assets": {
