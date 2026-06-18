@@ -10,16 +10,7 @@ import adminRouter from './routes/admin.js';
 
 const app = express();
 
-// Support comma-separated origins: CORS_ORIGIN="https://a.com,https://b.com"
-const allowedOrigins = config.corsOrigin === '*'
-  ? '*'
-  : config.corsOrigin.split(',').map(o => o.trim()).filter(Boolean);
-
-app.use(cors({
-  origin: allowedOrigins,
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
+app.use(cors({ origin: config.corsOrigin }));
 app.use(express.json());
 
 app.get('/', (_req, res) => {

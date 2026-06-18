@@ -2,6 +2,18 @@
 import TenderLayout from '../layouts/TenderLayout.astro';
 import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
+import { fetchCities } from '../lib/api.js';
+
+let cities = [];
+try {
+  const data = await fetchCities();
+  cities = data.cities || [];
+} catch (e) {
+  console.error('[districts] API error:', e.message);
+}
+
+const withTenders = cities.filter(c => c.openCount > 0).sort((a,b) => b.openCount - a.openCount);
+const withoutTenders = cities.filter(c => c.openCount === 0);
 ---
 
 <TenderLayout
@@ -14,68 +26,33 @@ import Footer from '../components/Footer.astro';
     <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-1 font-['Outfit']">Browse by District</h1>
     <p class="text-sm text-gray-500 mb-8">All 33 Chhattisgarh districts — click to see open tenders</p>
 
-    <!-- Loading spinner shown during fetch -->
-    <div id="loading-spinner" class="text-center py-12">
-      <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#1A56DB]"></div>
-    </div>
-
-    <!-- Client-side populated content container -->
-    <div id="districts-content" style="display: none;">
-      <section id="section-with-tenders" class="mb-10" style="display: none;">
+    {withTenders.length > 0 && (
+      <section class="mb-10">
         <h2 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Districts with Open Tenders</h2>
-        <div id="grid-with-tenders" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3"></div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+          {withTenders.map(c => (
+            <a href={`/tenders/${c.slug}`}
+              class="flex flex-col items-center justify-center gap-1 bg-white border border-gray-200 rounded-xl p-4 hover:border-[#1A56DB] hover:shadow-sm transition text-center group">
+              <span class="text-2xl font-extrabold text-[#1A56DB] font-['Outfit'] group-hover:scale-110 transition-transform">{c.openCount}</span>
+              <span class="text-xs font-medium text-gray-700 leading-tight">{c.name}</span>
+              <span class="text-xs text-gray-400">open tender{c.openCount !== 1 ? 's' : ''}</span>
+            </a>
+          ))}
+        </div>
       </section>
+    )}
 
-      <section>
-        <h2 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">All Other Districts</h2>
-        <div id="flex-without-tenders" class="flex flex-wrap gap-2"></div>
-      </section>
-    </div>
+    <section>
+      <h2 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">All Other Districts</h2>
+      <div class="flex flex-wrap gap-2">
+        {withoutTenders.map(c => (
+          <a href={`/tenders/${c.slug}`}
+            class="inline-flex items-center px-3 py-1.5 bg-white border border-gray-200 rounded-full text-sm text-gray-500 hover:border-[#1A56DB] hover:text-[#1A56DB] transition">
+            {c.name}
+          </a>
+        ))}
+      </div>
+    </section>
   </main>
   <Footer />
 </TenderLayout>
-
-<script define:vars={{ apiBase: import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:4000' }}>
-  async function loadDistricts() {
-    try {
-      const res = await fetch(`${apiBase}/api/cities`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      const cities = data.cities || [];
-
-      const withTenders = cities.filter(c => c.openCount > 0).sort((a,b) => b.openCount - a.openCount);
-      const withoutTenders = cities.filter(c => c.openCount === 0);
-
-      const gridWithTenders = document.getElementById('grid-with-tenders');
-      const flexWithoutTenders = document.getElementById('flex-without-tenders');
-      const sectionWithTenders = document.getElementById('section-with-tenders');
-
-      if (withTenders.length > 0) {
-        sectionWithTenders.style.display = 'block';
-        gridWithTenders.innerHTML = withTenders.map(c => `
-          <a href="/tenders/${c.slug}"
-            class="flex flex-col items-center justify-center gap-1 bg-white border border-gray-200 rounded-xl p-4 hover:border-[#1A56DB] hover:shadow-sm transition text-center group">
-            <span class="text-2xl font-extrabold text-[#1A56DB] font-['Outfit'] group-hover:scale-110 transition-transform">${c.openCount}</span>
-            <span class="text-xs font-medium text-gray-700 leading-tight">${c.name}</span>
-            <span class="text-xs text-gray-400">open tender${c.openCount !== 1 ? 's' : ''}</span>
-          </a>
-        `).join('');
-      }
-
-      flexWithoutTenders.innerHTML = withoutTenders.map(c => `
-        <a href="/tenders/${c.slug}"
-          class="inline-flex items-center px-3 py-1.5 bg-white border border-gray-200 rounded-full text-sm text-gray-500 hover:border-[#1A56DB] hover:text-[#1A56DB] transition">
-          ${c.name}
-        </a>
-      `).join('');
-
-      document.getElementById('loading-spinner').style.display = 'none';
-      document.getElementById('districts-content').style.display = 'block';
-    } catch (e) {
-      console.error('[districts] fetch error:', e);
-      document.getElementById('loading-spinner').innerHTML = `<p class="text-red-500 text-sm">Failed to load districts. Please try reloading the page.</p>`;
-    }
-  }
-
-  loadDistricts();
-</script>

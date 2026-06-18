@@ -1,12 +1,12 @@
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
-import cloudflare from '@astrojs/cloudflare';
+import vercel from '@astrojs/vercel';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
-  site: process.env.SITE_URL || 'https://tender.ramandroyenterprises.workers.dev',
+  site: process.env.SITE_URL || 'https://cgtenders.com',
   output: 'server',
-  adapter: cloudflare(),
+  adapter: vercel(),
   integrations: [react()],
   vite: {
     plugins: [tailwindcss()],
