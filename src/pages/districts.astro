@@ -4,11 +4,11 @@ import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
 import { fetchCities } from '../lib/api.js';
 
-let cities = [];
+let cities: any[] = [];
 try {
   const data = await fetchCities();
   cities = data.cities || [];
-} catch (e) {
+} catch (e: any) {
   console.error('[districts] API error:', e.message);
 }
 
