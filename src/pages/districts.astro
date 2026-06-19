@@ -2,11 +2,11 @@
 import TenderLayout from '../layouts/TenderLayout.astro';
 import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
-import { fetchCities } from '../lib/api.js';
+import { fetchCitiesCached } from '../lib/api.js';
 
 let cities: any[] = [];
 try {
-  const data = await fetchCities();
+  const data = await fetchCitiesCached(Astro.locals.runtime);
   cities = data.cities || [];
 } catch (e: any) {
   console.error('[districts] API error:', e.message);

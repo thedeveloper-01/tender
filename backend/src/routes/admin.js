@@ -2,6 +2,7 @@ import express from 'express';
 import { prisma } from '../db.js';
 import { config } from '../config.js';
 import { runPipeline } from '../pipeline/run.js';
+import { clear as clearCache } from '../cache.js';
 
 const router = express.Router();
 
@@ -28,6 +29,17 @@ router.post('/refresh', (_req, res) => {
       runInProgress = false;
     });
   res.status(202).json({ started: true, message: 'Pipeline run started. Check /api/fetch-logs for status.' });
+});
+
+/** POST /api/clear-cache — clear Express in-memory cache */
+router.post('/clear-cache', (_req, res) => {
+  try {
+    clearCache();
+    res.json({ success: true, message: 'Express cache cleared' });
+  } catch (e) {
+    console.error('[api] POST /clear-cache error:', e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 /** GET /api/fetch-logs — most recent N FetchLog rows, newest first */

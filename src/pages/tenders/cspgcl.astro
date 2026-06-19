@@ -3,11 +3,11 @@ import TenderLayout from '../../layouts/TenderLayout.astro';
 import Navbar from '../../components/Navbar.astro';
 import Footer from '../../components/Footer.astro';
 import TenderDashboard from '../../components/TenderDashboard.jsx';
-import { fetchStats } from '../../lib/api.js';
+import { fetchStatsCached } from '../../lib/api.js';
 
 let stats: { totalOpenTenders: number; totalEstimatedValue: number; bySource: Record<string, number>; lastFetchAt: string | null } = { totalOpenTenders: 0, totalEstimatedValue: 0, bySource: {}, lastFetchAt: null };
 try {
-  stats = await fetchStats();
+  stats = await fetchStatsCached(Astro.locals.runtime);
 } catch (e: any) {
   console.error('[tenders-cspgcl] stats error:', e.message);
 }

@@ -1,0 +1,18 @@
+name: Daily CSPGCL Fetch
+
+on:
+  schedule:
+    # Run daily at 06:00 UTC (11:30 AM IST)
+    - cron: '0 6 * * *'
+  workflow_dispatch: # Allows manual run from GitHub actions tab
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger CSPGCL Pipeline
+        run: |
+          curl -X POST https://cgtenders-com.onrender.com/api/refresh \
+            -H "Authorization: Bearer ${{ secrets.ADMIN_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{}'

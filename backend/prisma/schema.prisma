@@ -34,6 +34,9 @@ model Tender {
 
   @@unique([source, bidNumber])
   @@index([locationCity, status, endDate])
+  @@index([status, endDate])
+  @@index([source, status, endDate])
+  @@index([fetchedAt])
 }
 
 model FetchLog {

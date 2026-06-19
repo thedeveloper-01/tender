@@ -3,7 +3,7 @@ import TenderLayout from '../../layouts/TenderLayout.astro';
 import Navbar from '../../components/Navbar.astro';
 import Footer from '../../components/Footer.astro';
 import TenderDashboard from '../../components/TenderDashboard.jsx';
-import { fetchTenderDetail, documentUrl } from '../../lib/api.js';
+import { fetchTenderDetailCached, documentUrl } from '../../lib/api.js';
 import { formatRupee, formatDate, daysLeft, viabilityColor, cityFromSlug } from '../../lib/cities.js';
 
 const { slug } = Astro.params as { slug: string };
@@ -132,7 +132,7 @@ if (isCityRoute) {
   }
 
   try {
-    fetchedTender = await fetchTenderDetail(source, bidNumber) as Tender;
+    fetchedTender = await fetchTenderDetailCached(source, bidNumber, Astro.locals.runtime) as Tender;
   } catch (e: unknown) {
     err = e instanceof Error ? e.message : String(e);
   }

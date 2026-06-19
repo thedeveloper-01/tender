@@ -1,6 +1,7 @@
 import express from 'express';
 import fs from 'fs';
 import { prisma } from '../db.js';
+import { get as cacheGet, set as cacheSet } from '../cache.js';
 
 const router = express.Router();
 
@@ -22,6 +23,12 @@ const SORT_MAP = {
  */
 router.get('/', async (req, res) => {
   try {
+    const cacheKey = 'tenders:' + JSON.stringify(req.query);
+    const cached = cacheGet(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+
     const {
       city,
       q,
@@ -111,7 +118,10 @@ router.get('/', async (req, res) => {
       });
     }
 
-    res.json({ tenders, total, page: pageNum, limit: limitNum });
+    const result = { tenders, total, page: pageNum, limit: limitNum };
+    cacheSet(cacheKey, result, 3600000); // 1 hour
+
+    res.json(result);
   } catch (e) {
     console.error('[api] GET /tenders error:', e);
     res.status(500).json({ error: 'Internal server error' });

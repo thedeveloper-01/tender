@@ -1,11 +1,17 @@
 import express from 'express';
 import { prisma } from '../db.js';
+import { get as cacheGet, set as cacheSet } from '../cache.js';
 
 const router = express.Router();
 
 /** GET /api/stats — totals, sums, breakdowns, last fetch time */
 router.get('/', async (_req, res) => {
   try {
+    const cached = cacheGet('stats');
+    if (cached) {
+      return res.json(cached);
+    }
+
     const openWhere = { status: 'open' };
 
     const [totalOpen, valueAgg, bySource, byCategoryRaw, lastLog] = await Promise.all([
@@ -23,13 +29,17 @@ router.get('/', async (_req, res) => {
       }
     }
 
-    res.json({
+    const result = {
       totalOpenTenders: totalOpen,
       totalEstimatedValue: valueAgg._sum.bidValue || 0,
       bySource: Object.fromEntries(bySource.map((s) => [s.source, s._count._all])),
       byCategory: categoryCounts,
       lastFetchAt: lastLog?.runAt || null,
-    });
+    };
+
+    cacheSet('stats', result, 3600000); // 1 hour
+
+    res.json(result);
   } catch (e) {
     console.error('[api] GET /stats error:', e);
     res.status(500).json({ error: 'Internal server error' });

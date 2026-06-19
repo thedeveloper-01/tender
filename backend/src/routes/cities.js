@@ -1,12 +1,18 @@
 import express from 'express';
 import { prisma } from '../db.js';
 import { CG_CITIES } from '../config.js';
+import { get as cacheGet, set as cacheSet } from '../cache.js';
 
 const router = express.Router();
 
 /** GET /api/cities — 33 CG districts + open-tender counts, plus "Unspecified" */
 router.get('/', async (_req, res) => {
   try {
+    const cached = cacheGet('cities');
+    if (cached) {
+      return res.json(cached);
+    }
+
     const grouped = await prisma.tender.groupBy({
       by: ['locationCity'],
       where: { status: 'open' },
@@ -27,7 +33,10 @@ router.get('/', async (_req, res) => {
       openCount: countMap['Unspecified'] || 0,
     });
 
-    res.json({ cities });
+    const result = { cities };
+    cacheSet('cities', result, 43200000); // 12 hours
+
+    res.json(result);
   } catch (e) {
     console.error('[api] GET /cities error:', e);
     res.status(500).json({ error: 'Internal server error' });

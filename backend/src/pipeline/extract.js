@@ -2,7 +2,7 @@ import fs from 'fs';
 import pdfParse from 'pdf-parse/lib/pdf-parse.js';
 import { extractCspgclPdf } from './cspgcl_extract.js';
 
-const NUM = '([\\d,]+(?:\\.\\d+)?)';
+const NUM = '(\\d[\\d,]*(?:\\.\\d+)?)';
 
 /**
  * GeM PDFs are bilingual (Hindi + English) — the English label and its value
@@ -15,6 +15,8 @@ const VALUE_PATTERNS = [
   // Direct concatenation: "Bid Value4024302.68" or "Bid Value: 4024302.68"
   new RegExp(`Bid\\s*Value[^\\d\\n]{0,10}${NUM}`, 'i'),
   new RegExp(`Estimated\\s*(?:Bid\\s*)?Value[^\\d\\n]{0,10}${NUM}`, 'i'),
+  // Multiline/labeled: "Estimated Bid Value in INR (Inclusive of all taxes)\n350400"
+  new RegExp(`Estimated\\s*(?:Bid\\s*)?Value[^\\d]{0,80}${NUM}`, 'i'),
   // "Total value wise evaluation" is a false match — skip lines containing 'wise'
   // Match "Total Value" only when followed by a number (not text)
   new RegExp(`Total\\s*Value[^\\d\\n\\w]{0,5}${NUM}`, 'i'),
@@ -25,7 +27,10 @@ const VALUE_PATTERNS = [
 const EMD_PATTERNS = [
   // "EMD Amount800000" — value directly after label (no separator)
   new RegExp(`EMD\\s*(?:रािश\/)?Amount[^\\d\\n]{0,5}${NUM}`, 'i'),
+  // Multiline/labeled: "EMD Amount (INR) :\n50000"
+  new RegExp(`EMD\\s*(?:रािश\/)?Amount[^\\d]{0,80}${NUM}`, 'i'),
   new RegExp(`Earnest\\s*Money\\s*(?:Deposit)?[^\\d\\n]{0,15}${NUM}`, 'i'),
+  new RegExp(`Earnest\\s*Money\\s*(?:Deposit)?[^\\d]{0,80}${NUM}`, 'i'),
 ];
 
 /**
@@ -35,7 +40,7 @@ const EMD_PATTERNS = [
  */
 const DETAIL_FIELD_PATTERNS = [
   // ePBG Percentage: "ePBG Percentage(%)3.00" — value directly after label
-  { key: 'epbgPercentage', label: 'ePBG Percentage', regex: /ePBG\s*(?:Percentage)?[^\d\n]{0,10}([\d.]+)\s*%?/i },
+  { key: 'epbgPercentage', label: 'ePBG Percentage', regex: /ePBG\s*(?:Percentage)?[^\d\n]{0,10}?([\d.]+)\s*%?/i },
   // Bid Offer Validity: "Validity (From End Date)\n180 (Days)" — value on next line
   { key: 'bidOfferValidity', label: 'Bid Offer Validity (Days)', regex: /Bid\s*Offer\s*Validity[\s\S]{0,40}?\n(\d+)\s*(?:\(Days?\)|Days?)?/i },
   // Delivery Days: "Delivery\nDays\n49Person..." — number on 3rd line, directly before name
@@ -46,19 +51,18 @@ const DETAIL_FIELD_PATTERNS = [
   { key: 'mseExemption', label: 'MSE Exemption', regex: /MSE\s*(?:Relaxation|Exemption) for Years[\s\S]{0,60}?\n(Yes(?:\s*\|[^\n]{0,30})?|No)\b/i },
   // Startup Relaxation: "Startup Exemption for Years Of\nExperience and  Turnover\nYes | Complete"
   { key: 'startupExemption', label: 'Startup Exemption', regex: /Startup\s*(?:Relaxation|Exemption) for Y[\s\S]{0,80}?\n(Yes(?:\s*\|[^\n]{0,30})?|No)\b/i },
-  // Consignee delivery address — the address is on lines after the officer name
-  // "Delivery\nDays\n1PersonName\nPinCode,AddressLine" — grab the line with comma or pincode
-  { key: 'consigneeAddress', label: 'Consignee / Delivery Address', regex: /Delivery\nDays\n\d+[^\n]*\n([^\n]{8,150})/i },
+  // Consignee delivery address — match 6-digit pincode (starting with 49 for CG) and grab address line, or fallback
+  { key: 'consigneeAddress', label: 'Consignee / Delivery Address', regex: /(49\d{4}[^\n]{1,150})/i },
   // Payment Terms
-  { key: 'paymentTerms', label: 'Payment Terms', regex: /Payment\s*Terms?[^\n]{0,10}([^\n]{1,100})/i },
-  // Experience Criteria
-  { key: 'experienceCriteria', label: 'Experience Criteria', regex: /Experience\s*Criteria[^\n]{0,20}([^\n]{1,80})/i },
+  { key: 'paymentTerms', label: 'Payment Terms', regex: /Payment\s*Terms?[^\n]{0,10}?([^\n]{1,100})/i },
+  // Experience Criteria - require a colon to match actual description instead of required documents list
+  { key: 'experienceCriteria', label: 'Experience Criteria', regex: /Experience\s*Criteria\s*:\s*([^\n]{5,100})/i },
   // Bid type: "Type of BidTwo Packet Bid" — directly concatenated
-  { key: 'bidType', label: 'Bid Type', regex: /Type\s*of\s*Bid([A-Z][^\n]{1,50})/i },
+  { key: 'bidType', label: 'Bid Type', regex: /Type\s*of\s*Bid\s*([A-Z][^\n]{1,50})/i },
   // EMD Required flag: "Required\nNo" or "Required\nYes" after EMD Detail section
-  { key: 'emdRequired', label: 'EMD Required', regex: /EMD\s*Detail[\s\S]{0,60}?\bRequired\n(Yes|No)\b/i },
+  { key: 'emdRequired', label: 'EMD Required', regex: /EMD\s*Detail[\s\S]{0,150}?\bRequired\s*(Yes|No)\b/i },
   // Min bids
-  { key: 'minBidsRequired', label: 'Min. Bids Required', regex: /Minimum\s*number\s*of\s*bids[^\d\n]{0,30}(\d+)/i },
+  { key: 'minBidsRequired', label: 'Min. Bids Required', regex: /Minimum\s*number\s*of\s*bids[^\d\n]{0,30}?(\d+)/i },
 ];
 
 function parseNumber(str) {

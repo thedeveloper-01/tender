@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const API_BASE = 'https://cgtenders-com.onrender.com';
+const API_BASE = '';
 
 const CATEGORIES = [
   'Civil Works','Mechanical','Electrical','Manpower','Procurement',

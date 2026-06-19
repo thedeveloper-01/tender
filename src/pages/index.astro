@@ -2,7 +2,7 @@
 import TenderLayout from '../layouts/TenderLayout.astro';
 import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
-import { fetchTenders, fetchStats, fetchCities } from '../lib/api.js';
+import { fetchTendersCached, fetchStatsCached, fetchCitiesCached } from '../lib/api.js';
 import { formatRupee, formatDate, daysLeft, tenderDetailPath } from '../lib/cities.js';
 
 let stats: { totalOpenTenders: number; totalEstimatedValue: number; bySource: Record<string,number>; lastFetchAt: string | null } = { totalOpenTenders: 0, totalEstimatedValue: 0, bySource: {}, lastFetchAt: null };
@@ -10,12 +10,14 @@ let gemTenders = [];
 let cspgclTenders = [];
 let topCities = [];
 
+const runtime = Astro.locals.runtime;
+
 try {
   [stats, { tenders: gemTenders }, { tenders: cspgclTenders }, { cities: topCities }] = await Promise.all([
-    fetchStats(),
-    fetchTenders({ status: 'open', source: 'GEM',    sort: 'endDate_asc', limit: 6 }),
-    fetchTenders({ status: 'open', source: 'CSPGCL', sort: 'endDate_asc', limit: 6 }),
-    fetchCities(),
+    fetchStatsCached(runtime),
+    fetchTendersCached({ status: 'open', source: 'GEM',    sort: 'endDate_asc', limit: 6 }, runtime),
+    fetchTendersCached({ status: 'open', source: 'CSPGCL', sort: 'endDate_asc', limit: 6 }, runtime),
+    fetchCitiesCached(runtime),
   ]);
 } catch (e) {
   console.error('[homepage] API error:', (e as Error).message);

@@ -54,3 +54,54 @@ export async function fetchStats() {
 export function documentUrl(source, bidNumber) {
   return `${API_BASE_URL}/api/tenders/${source}/${encodeURIComponent(bidNumber)}/document`;
 }
+
+/** Helper to fetch with Cloudflare KV cache */
+async function getCachedJson(key, fetchFn, runtime, ttlSeconds = 3600) {
+  if (runtime?.env?.SESSION) {
+    try {
+      const cached = await runtime.env.SESSION.get(key);
+      if (cached) {
+        console.log(`[KV Cache] Hit for ${key}`);
+        return JSON.parse(cached);
+      }
+      console.log(`[KV Cache] Miss for ${key}. Fetching...`);
+    } catch (e) {
+      console.error(`[KV Cache] Error reading key ${key}:`, e);
+    }
+  }
+
+  const data = await fetchFn();
+
+  if (runtime?.env?.SESSION && data) {
+    try {
+      await runtime.env.SESSION.put(key, JSON.stringify(data), { expirationTtl: ttlSeconds });
+    } catch (e) {
+      console.error(`[KV Cache] Error writing key ${key}:`, e);
+    }
+  }
+
+  return data;
+}
+
+export async function fetchStatsCached(runtime) {
+  return getCachedJson('api:stats', () => fetchStats(), runtime, 3600); // 1 hour
+}
+
+export async function fetchCitiesCached(runtime) {
+  return getCachedJson('api:cities', () => fetchCities(), runtime, 43200); // 12 hours
+}
+
+export async function fetchTendersCached(params = {}, runtime) {
+  // Sort params key to ensure stable cache key regardless of param ordering
+  const sortedParams = Object.keys(params)
+    .sort()
+    .reduce((acc, key) => {
+      acc[key] = params[key];
+      return acc;
+    }, {});
+  return getCachedJson(`api:tenders:${JSON.stringify(sortedParams)}`, () => fetchTenders(params), runtime, 3600); // 1 hour
+}
+
+export async function fetchTenderDetailCached(source, bidNumber, runtime) {
+  return getCachedJson(`api:tender:${source}:${bidNumber}`, () => fetchTenderDetail(source, bidNumber), runtime, 43200); // 12 hours
+}

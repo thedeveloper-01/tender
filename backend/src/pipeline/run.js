@@ -8,6 +8,7 @@ import { analyzeTender } from './analysis.js';
 import { downloadPdf } from './pdf.js';
 import { extractValueAndEmd } from './extract.js';
 import { runCleanup } from './cleanup.js';
+import { clear as clearCache } from '../cache.js';
 
 /**
  * runPipeline() -> FetchLog row
@@ -115,16 +116,22 @@ export async function runPipeline() {
 
       if (!existing) {
         newCount += 1;
-        changedTenders.push(saved);
+        if (data.source === 'GEM') {
+          changedTenders.push(saved);
+        }
       } else {
         updatedCount += 1;
-        // Re-run PDF/extract pass if no PDF yet, or core fields changed
-        const changed =
-          existing.valueExtractionStatus === 'not_attempted' ||
-          !existing.valueExtractionStatus ||
-          existing.endDate?.getTime() !== data.endDate?.getTime();
-        if (changed) {
-          changedTenders.push(saved);
+        if (data.source === 'GEM') {
+          // Re-run PDF/extract pass if no PDF yet, or core fields changed
+          const changed =
+            existing.valueExtractionStatus === 'not_attempted' ||
+            !existing.valueExtractionStatus ||
+            existing.endDate?.getTime() !== data.endDate?.getTime();
+          if (changed) {
+            changedTenders.push(saved);
+          } else {
+            skipCount++;
+          }
         } else {
           skipCount++;
         }
@@ -371,6 +378,31 @@ export async function runPipeline() {
     `[pipeline] run complete: found=${found} new=${newCount} updated=${updatedCount} pdfs=${pdfsDownloaded} ` +
     `extractedOk=${extractionOk} extractFail=${extractionFail} cleaned=${cleanedRecords} errors=${errors.length}`
   );
+
+  clearCache();
+
+  // Clear frontend KV cache on Cloudflare Pages
+  try {
+    const adminToken = config.adminToken;
+    const frontendBase = process.env.FRONTEND_URL || 'https://cgtenders.com';
+    const frontendUrl = `${frontendBase.replace(/\/$/, '')}/api/clear-cache`;
+    console.log(`[pipeline] Triggering remote frontend cache clear at ${frontendUrl}...`);
+    const res = await fetch(frontendUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${adminToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      console.log(`[pipeline] Frontend cache clear success:`, data);
+    } else {
+      console.warn(`[pipeline] Frontend cache clear failed. Status: ${res.status}`);
+    }
+  } catch (e) {
+    console.warn(`[pipeline] Error triggering frontend cache clear:`, e.message);
+  }
 
   return log;
 }

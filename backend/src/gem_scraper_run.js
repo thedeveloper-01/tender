@@ -307,6 +307,9 @@ async function main() {
     extractionOk, extractionFail, cleanedRecords, cleanedFiles, errors,
   );
 
+  // Trigger cache clear on Render server
+  await triggerRemoteCacheClear();
+
   // ── 8. Write data log + full tender data to project root ────────────────
   writeDataLog(
     {
@@ -356,6 +359,54 @@ async function main() {
 function log(msg) {
   const ts = new Date().toISOString().replace('T', ' ').replace('Z', '');
   console.log(`[${ts}] ${msg}`);
+}
+
+async function triggerRemoteCacheClear() {
+  const adminToken = config.adminToken;
+  
+  // 1. Clear backend cache
+  const base = config.siteUrl || 'https://cgtenders-com.onrender.com';
+  const url = `${base.replace(/\/$/, '')}/api/clear-cache`;
+  log(`[cache] Triggering remote backend cache clear at ${url}...`);
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${adminToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      log(`[cache] Remote backend cache clear success: ${JSON.stringify(data)}`);
+    } else {
+      log(`[cache] Failed to clear remote backend cache. Status: ${res.status}`);
+    }
+  } catch (e) {
+    log(`[cache] Error triggering remote backend cache clear: ${e.message}`);
+  }
+
+  // 2. Clear frontend KV cache
+  const frontendBase = process.env.FRONTEND_URL || 'https://cgtenders.com';
+  const frontendUrl = `${frontendBase.replace(/\/$/, '')}/api/clear-cache`;
+  log(`[cache] Triggering remote frontend cache clear at ${frontendUrl}...`);
+  try {
+    const res = await fetch(frontendUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${adminToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      log(`[cache] Remote frontend cache clear success: ${JSON.stringify(data)}`);
+    } else {
+      log(`[cache] Failed to clear remote frontend cache. Status: ${res.status}`);
+    }
+  } catch (e) {
+    log(`[cache] Error triggering remote frontend cache clear: ${e.message}`);
+  }
 }
 
 /**
