@@ -10,14 +10,12 @@ let gemTenders = [];
 let cspgclTenders = [];
 let topCities = [];
 
-const runtime = Astro.locals.runtime;
-
 try {
   [stats, { tenders: gemTenders }, { tenders: cspgclTenders }, { cities: topCities }] = await Promise.all([
-    fetchStatsCached(runtime),
-    fetchTendersCached({ status: 'open', source: 'GEM',    sort: 'endDate_asc', limit: 6 }, runtime),
-    fetchTendersCached({ status: 'open', source: 'CSPGCL', sort: 'endDate_asc', limit: 6 }, runtime),
-    fetchCitiesCached(runtime),
+    fetchStatsCached(),
+    fetchTendersCached({ status: 'open', source: 'GEM',    sort: 'endDate_asc', limit: 6 }),
+    fetchTendersCached({ status: 'open', source: 'CSPGCL', sort: 'endDate_asc', limit: 6 }),
+    fetchCitiesCached(),
   ]);
 } catch (e) {
   console.error('[homepage] API error:', (e as Error).message);

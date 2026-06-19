@@ -132,7 +132,7 @@ if (isCityRoute) {
   }
 
   try {
-    fetchedTender = await fetchTenderDetailCached(source, bidNumber, Astro.locals.runtime) as Tender;
+    fetchedTender = await fetchTenderDetailCached(source, bidNumber) as Tender;
   } catch (e: unknown) {
     err = e instanceof Error ? e.message : String(e);
   }

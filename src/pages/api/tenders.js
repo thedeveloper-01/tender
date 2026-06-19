@@ -1,7 +1,7 @@
 import { fetchTenders } from '../../lib/api.js';
+import { env } from 'cloudflare:workers';
 
-export async function GET({ request, locals }) {
-  const runtime = locals.runtime;
+export async function GET({ request }) {
   const url = new URL(request.url);
   const params = Object.fromEntries(url.searchParams.entries());
 
@@ -16,8 +16,9 @@ export async function GET({ request, locals }) {
 
   try {
     let data;
-    if (runtime?.env?.SESSION) {
-      const cached = await runtime.env.SESSION.get(cacheKey);
+    const SESSION = env?.SESSION;
+    if (SESSION) {
+      const cached = await SESSION.get(cacheKey);
       if (cached) {
         return new Response(cached, {
           status: 200,
@@ -25,7 +26,7 @@ export async function GET({ request, locals }) {
         });
       }
       data = await fetchTenders(params);
-      await runtime.env.SESSION.put(cacheKey, JSON.stringify(data), { expirationTtl: 3600 }); // 1 hour
+      await SESSION.put(cacheKey, JSON.stringify(data), { expirationTtl: 3600 }); // 1 hour
     } else {
       data = await fetchTenders(params);
     }

@@ -1,13 +1,13 @@
-export async function POST({ request, locals }) {
-  const runtime = locals.runtime;
-  
+import { env } from 'cloudflare:workers';
+
+export async function POST({ request }) {
   // Verify token
   const auth = request.headers.get('authorization') || '';
   const token = auth.startsWith('Bearer ') ? auth.slice(7) : null;
   
   // Try to read ADMIN_TOKEN from various potential sources
   const adminToken = 
-    (runtime?.env && runtime.env.ADMIN_TOKEN) || 
+    (env && env.ADMIN_TOKEN) || 
     process.env.ADMIN_TOKEN || 
     import.meta.env.ADMIN_TOKEN;
   
@@ -18,13 +18,14 @@ export async function POST({ request, locals }) {
     });
   }
 
-  if (runtime?.env?.SESSION) {
+  const SESSION = env?.SESSION;
+  if (SESSION) {
     try {
       // List all keys with prefix "api:"
-      const listed = await runtime.env.SESSION.list({ prefix: 'api:' });
+      const listed = await SESSION.list({ prefix: 'api:' });
       let deletedCount = 0;
       for (const key of listed.keys) {
-        await runtime.env.SESSION.delete(key.name);
+        await SESSION.delete(key.name);
         deletedCount++;
       }
       return new Response(JSON.stringify({ 

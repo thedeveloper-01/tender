@@ -1,11 +1,12 @@
 import { fetchCities } from '../../lib/api.js';
+import { env } from 'cloudflare:workers';
 
-export async function GET({ locals }) {
-  const runtime = locals.runtime;
+export async function GET() {
   try {
     let data;
-    if (runtime?.env?.SESSION) {
-      const cached = await runtime.env.SESSION.get('api:cities');
+    const SESSION = env?.SESSION;
+    if (SESSION) {
+      const cached = await SESSION.get('api:cities');
       if (cached) {
         return new Response(cached, {
           status: 200,
@@ -13,7 +14,7 @@ export async function GET({ locals }) {
         });
       }
       data = await fetchCities();
-      await runtime.env.SESSION.put('api:cities', JSON.stringify(data), { expirationTtl: 43200 }); // 12 hours
+      await SESSION.put('api:cities', JSON.stringify(data), { expirationTtl: 43200 }); // 12 hours
     } else {
       data = await fetchCities();
     }

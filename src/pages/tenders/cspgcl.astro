@@ -7,7 +7,7 @@ import { fetchStatsCached } from '../../lib/api.js';
 
 let stats: { totalOpenTenders: number; totalEstimatedValue: number; bySource: Record<string, number>; lastFetchAt: string | null } = { totalOpenTenders: 0, totalEstimatedValue: 0, bySource: {}, lastFetchAt: null };
 try {
-  stats = await fetchStatsCached(Astro.locals.runtime);
+  stats = await fetchStatsCached();
 } catch (e: any) {
   console.error('[tenders-cspgcl] stats error:', e.message);
 }

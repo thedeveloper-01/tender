@@ -6,7 +6,7 @@ import { fetchCitiesCached } from '../lib/api.js';
 
 let cities: any[] = [];
 try {
-  const data = await fetchCitiesCached(Astro.locals.runtime);
+  const data = await fetchCitiesCached();
   cities = data.cities || [];
 } catch (e: any) {
   console.error('[districts] API error:', e.message);

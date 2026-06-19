@@ -1,11 +1,12 @@
 import { fetchStats } from '../../lib/api.js';
+import { env } from 'cloudflare:workers';
 
-export async function GET({ locals }) {
-  const runtime = locals.runtime;
+export async function GET() {
   try {
     let data;
-    if (runtime?.env?.SESSION) {
-      const cached = await runtime.env.SESSION.get('api:stats');
+    const SESSION = env?.SESSION;
+    if (SESSION) {
+      const cached = await SESSION.get('api:stats');
       if (cached) {
         return new Response(cached, {
           status: 200,
@@ -13,7 +14,7 @@ export async function GET({ locals }) {
         });
       }
       data = await fetchStats();
-      await runtime.env.SESSION.put('api:stats', JSON.stringify(data), { expirationTtl: 3600 }); // 1 hour
+      await SESSION.put('api:stats', JSON.stringify(data), { expirationTtl: 3600 }); // 1 hour
     } else {
       data = await fetchStats();
     }

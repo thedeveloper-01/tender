@@ -55,11 +55,14 @@ export function documentUrl(source, bidNumber) {
   return `${API_BASE_URL}/api/tenders/${source}/${encodeURIComponent(bidNumber)}/document`;
 }
 
+import { env } from 'cloudflare:workers';
+
 /** Helper to fetch with Cloudflare KV cache */
 async function getCachedJson(key, fetchFn, runtime, ttlSeconds = 3600) {
-  if (runtime?.env?.SESSION) {
+  const SESSION = env?.SESSION;
+  if (SESSION) {
     try {
-      const cached = await runtime.env.SESSION.get(key);
+      const cached = await SESSION.get(key);
       if (cached) {
         console.log(`[KV Cache] Hit for ${key}`);
         return JSON.parse(cached);
@@ -72,9 +75,9 @@ async function getCachedJson(key, fetchFn, runtime, ttlSeconds = 3600) {
 
   const data = await fetchFn();
 
-  if (runtime?.env?.SESSION && data) {
+  if (SESSION && data) {
     try {
-      await runtime.env.SESSION.put(key, JSON.stringify(data), { expirationTtl: ttlSeconds });
+      await SESSION.put(key, JSON.stringify(data), { expirationTtl: ttlSeconds });
     } catch (e) {
       console.error(`[KV Cache] Error writing key ${key}:`, e);
     }

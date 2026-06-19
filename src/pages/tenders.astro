@@ -8,7 +8,7 @@ import { formatRupee } from '../lib/cities.js';
 
 let stats: { totalOpenTenders: number; totalEstimatedValue: number; bySource: Record<string, number>; lastFetchAt: string | null } = { totalOpenTenders: 0, totalEstimatedValue: 0, bySource: {}, lastFetchAt: null };
 try {
-  stats = await fetchStatsCached(Astro.locals.runtime);
+  stats = await fetchStatsCached();
 } catch (e) {
   console.error('[tenders] stats error:', (e as Error).message);
 }
