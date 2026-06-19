@@ -55,42 +55,34 @@ const jsonLd = {
       'mainEntity': [
         {
           '@type': 'Question',
-          'name': 'What is e-tendering?',
+          'name': 'How often is the tender data updated?',
           'acceptedAnswer': {
             '@type': 'Answer',
-            'text': 'E-tendering (electronic tendering) is the process of publishing, managing, and bidding for procurement contracts online through an electronic tendering system. This increases efficiency, transparency, and access to public procurement contracts.'
+            'text': 'Our system updates tender data daily from both the GeM and CSPGCL portals, ensuring you always have the latest information.'
           }
         },
         {
           '@type': 'Question',
-          'name': 'How do I find CG government tenders?',
+          'name': 'Is my data secure?',
           'acceptedAnswer': {
             '@type': 'Answer',
-            'text': 'You can easily search, filter, and track CG government tenders from portals like GeM and CSPGCL directly on CGTenders.com. You can filter by district, department, category, estimated bid value, and EMD.'
+            'text': 'Yes, we implement enterprise-grade security measures. Please review our Privacy Policy for detailed information.'
           }
         },
         {
           '@type': 'Question',
-          'name': 'Is CGTenders.com free to use?',
+          'name': 'How can I get technical support?',
           'acceptedAnswer': {
             '@type': 'Answer',
-            'text': 'Yes, CGTenders.com is a free procurement aggregator platform allowing businesses to discover and analyze open bidding opportunities and tender notices across Chhattisgarh and India.'
+            'text': 'You can reach our support team via email. We also have a help center with comprehensive documentation.'
           }
         },
         {
           '@type': 'Question',
-          'name': 'What is the difference between e-procurement and e-tendering?',
+          'name': 'Can I export tender data?',
           'acceptedAnswer': {
             '@type': 'Answer',
-            'text': 'E-procurement covers the entire online procurement process, including procurement planning, management, and purchasing. E-tendering specifically refers to the initial bidding stage where suppliers submit bid responses electronically.'
-          }
-        },
-        {
-          '@type': 'Question',
-          'name': 'How do I register as a bidder?',
-          'acceptedAnswer': {
-            '@type': 'Answer',
-            'text': 'Bidders can register on official government portals (such as the GeM portal or state e-procurement boards) to submit formal bids. CGTenders.com lists notices and documents to help you identify active bidding opportunities.'
+            'text': 'Yes, you can export tender data in various formats. Contact support for export options and guidelines.'
           }
         }
       ]
@@ -586,61 +578,49 @@ function viabilityBg(score: number | null | undefined) {
           <!-- FAQ 1 -->
           <details class="group bg-white border border-gray-200 rounded-2xl overflow-hidden transition shadow-sm">
             <summary class="flex justify-between items-center px-6 py-4 font-semibold text-sm md:text-base text-gray-800 cursor-pointer list-none select-none font-['Outfit']">
-              <span>What is e-tendering?</span>
+              <span>How often is the tender data updated?</span>
               <svg class="w-4 h-4 text-gray-400 group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
               </svg>
             </summary>
             <div class="px-6 pb-5 text-xs md:text-sm text-gray-600 leading-relaxed border-t border-gray-100 pt-4 font-['DM_Sans']">
-              E-tendering (electronic tendering) is the process of publishing, managing, and bidding for procurement contracts online through an electronic tendering system. This increases efficiency, transparency, and access to public procurement contracts.
+              Our system updates tender data daily from both the GeM and CSPGCL portals, ensuring you always have the latest information.
             </div>
           </details>
           <!-- FAQ 2 -->
           <details class="group bg-white border border-gray-200 rounded-2xl overflow-hidden transition shadow-sm">
             <summary class="flex justify-between items-center px-6 py-4 font-semibold text-sm md:text-base text-gray-800 cursor-pointer list-none select-none font-['Outfit']">
-              <span>How do I find CG government tenders?</span>
+              <span>Is my data secure?</span>
               <svg class="w-4 h-4 text-gray-400 group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
               </svg>
             </summary>
             <div class="px-6 pb-5 text-xs md:text-sm text-gray-600 leading-relaxed border-t border-gray-100 pt-4 font-['DM_Sans']">
-              You can easily search, filter, and track CG government tenders from portals like GeM and CSPGCL directly on CGTenders.com. You can filter by district, department, category, estimated bid value, and EMD.
+              Yes, we implement enterprise-grade security measures. Please review our Privacy Policy for detailed information.
             </div>
           </details>
           <!-- FAQ 3 -->
           <details class="group bg-white border border-gray-200 rounded-2xl overflow-hidden transition shadow-sm">
             <summary class="flex justify-between items-center px-6 py-4 font-semibold text-sm md:text-base text-gray-800 cursor-pointer list-none select-none font-['Outfit']">
-              <span>Is CGTenders.com free to use?</span>
+              <span>How can I get technical support?</span>
               <svg class="w-4 h-4 text-gray-400 group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
               </svg>
             </summary>
             <div class="px-6 pb-5 text-xs md:text-sm text-gray-600 leading-relaxed border-t border-gray-100 pt-4 font-['DM_Sans']">
-              Yes, CGTenders.com is a free procurement aggregator platform allowing businesses to discover and analyze open bidding opportunities and tender notices across Chhattisgarh and India.
+              You can reach our support team via email. We also have a help center with comprehensive documentation.
             </div>
           </details>
           <!-- FAQ 4 -->
           <details class="group bg-white border border-gray-200 rounded-2xl overflow-hidden transition shadow-sm">
             <summary class="flex justify-between items-center px-6 py-4 font-semibold text-sm md:text-base text-gray-800 cursor-pointer list-none select-none font-['Outfit']">
-              <span>What is the difference between e-procurement and e-tendering?</span>
+              <span>Can I export tender data?</span>
               <svg class="w-4 h-4 text-gray-400 group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
               </svg>
             </summary>
             <div class="px-6 pb-5 text-xs md:text-sm text-gray-600 leading-relaxed border-t border-gray-100 pt-4 font-['DM_Sans']">
-              E-procurement covers the entire online procurement process, including procurement planning, management, and purchasing. E-tendering specifically refers to the initial bidding stage where suppliers submit bid responses electronically.
-            </div>
-          </details>
-          <!-- FAQ 5 -->
-          <details class="group bg-white border border-gray-200 rounded-2xl overflow-hidden transition shadow-sm">
-            <summary class="flex justify-between items-center px-6 py-4 font-semibold text-sm md:text-base text-gray-800 cursor-pointer list-none select-none font-['Outfit']">
-              <span>How do I register as a bidder?</span>
-              <svg class="w-4 h-4 text-gray-400 group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-              </svg>
-            </summary>
-            <div class="px-6 pb-5 text-xs md:text-sm text-gray-600 leading-relaxed border-t border-gray-100 pt-4 font-['DM_Sans']">
-              Bidders can register on official government portals (such as the GeM portal or state e-procurement boards) to submit formal bids. CGTenders.com lists notices and documents to help you identify active bidding opportunities.
+              Yes, you can export tender data in various formats. Contact support for export options and guidelines.
             </div>
           </details>
         </div>
