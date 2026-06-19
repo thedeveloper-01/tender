@@ -10,7 +10,7 @@ export const config = {
   archiveMode: (process.env.ARCHIVE_MODE ?? 'true') === 'true',
   useMockGem: (process.env.USE_MOCK_GEM ?? 'false') === 'true',
   adminToken: process.env.ADMIN_TOKEN || 'changeme',
-  siteUrl: 'https://cgtenders.com',
+  siteUrl: 'https://cgtenders.com/',
   port: Number(process.env.PORT || 4000),
   corsOrigin: process.env.CORS_ORIGIN || '*',
   documentsDir: process.env.DOCUMENTS_DIR || 'documents',
