@@ -51,5 +51,17 @@ export const CITY_ALIASES = {
 
 if (config.proxyUrl) {
   setGlobalDispatcher(new ProxyAgent(config.proxyUrl));
-  console.log('[proxy] Global HTTP/HTTPS proxy dispatcher configured:', config.proxyUrl);
+  let sanitizedProxy = config.proxyUrl;
+  try {
+    const url = new URL(config.proxyUrl);
+    if (url.password) {
+      url.password = '******';
+    }
+    sanitizedProxy = url.toString();
+  } catch (e) {
+    // Fallback regex masking if parsing throws
+    sanitizedProxy = config.proxyUrl.replace(/\/\/([^:]+):([^@]+)@/, '//hl_user:******@');
+  }
+  console.log('[proxy] Global HTTP/HTTPS proxy dispatcher configured:', sanitizedProxy);
 }
+
