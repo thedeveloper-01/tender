@@ -3,7 +3,7 @@
 
 export const API_BASE_URL = 'https://cgtenders-com.onrender.com';
 
-async function getJson(path, { timeout = 5000 } = {}) {
+async function getJson(path, { timeout = 30000 } = {}) {
   const url = `${API_BASE_URL}${path}`;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);

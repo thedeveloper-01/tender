@@ -5,7 +5,7 @@ import tailwindcss from '@tailwindcss/vite';
 import cloudflare from '@astrojs/cloudflare';
 
 export default defineConfig({
-  site: 'https://cgtenders.com',
+  site: 'https://cgtenders.com/',
   output: 'server',
   adapter: cloudflare(),
   integrations: [react()],
