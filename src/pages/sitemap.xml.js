@@ -3,9 +3,22 @@ import { tenderDetailPath, citySlug } from '../lib/cities.js';
 
 const siteUrl = 'https://cgtenders.com';
 
+function escapeXml(unsafe) {
+  return unsafe.replace(/[<>&'"]/g, (c) => {
+    switch (c) {
+      case '<': return '&lt;';
+      case '>': return '&gt;';
+      case '&': return '&amp;';
+      case '\'': return '&apos;';
+      case '"': return '&quot;';
+      default: return c;
+    }
+  });
+}
+
 function url(path, priority = '0.7', freq = 'daily') {
   return `  <url>
-    <loc>${siteUrl}${path}</loc>
+    <loc>${escapeXml(siteUrl + path)}</loc>
     <changefreq>${freq}</changefreq>
     <priority>${priority}</priority>
   </url>`;
