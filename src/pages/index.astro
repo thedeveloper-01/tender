@@ -24,18 +24,78 @@ try {
 const lastUpdated = stats.lastFetchAt
   ? new Date(stats.lastFetchAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
   : null;
-
 const jsonLd = {
   '@context': 'https://schema.org',
-  '@type': 'WebSite',
-  name: 'CGTenders.com',
-  url: 'https://cgtenders.com',
-  description: 'Chhattisgarh government tender aggregator — GeM and CSPGCL portals in one place.',
-  potentialAction: {
-    '@type': 'SearchAction',
-    target: { '@type': 'EntryPoint', urlTemplate: 'https://cgtenders.com/tenders?q={search_term_string}' },
-    'query-input': 'required name=search_term_string',
-  },
+  '@graph': [
+    {
+      '@type': 'WebSite',
+      '@id': 'https://cgtenders.com/#website',
+      'name': 'CGTenders.com',
+      'url': 'https://cgtenders.com',
+      'description': 'Chhattisgarh government tender aggregator — GeM and CSPGCL portals in one place.',
+      'potentialAction': {
+        '@type': 'SearchAction',
+        'target': { '@type': 'EntryPoint', 'urlTemplate': 'https://cgtenders.com/tenders?q={search_term_string}' },
+        'query-input': 'required name=search_term_string'
+      }
+    },
+    {
+      '@type': 'Organization',
+      '@id': 'https://cgtenders.com/#organization',
+      'name': 'CGTenders.com',
+      'url': 'https://cgtenders.com',
+      'logo': {
+        '@type': 'ImageObject',
+        'url': 'https://cgtenders.com/favicon.svg',
+        'caption': 'CGTenders.com Logo'
+      }
+    },
+    {
+      '@type': 'FAQPage',
+      'mainEntity': [
+        {
+          '@type': 'Question',
+          'name': 'What is e-tendering?',
+          'acceptedAnswer': {
+            '@type': 'Answer',
+            'text': 'E-tendering (electronic tendering) is the process of publishing, managing, and bidding for procurement contracts online through an electronic tendering system. This increases efficiency, transparency, and access to public procurement contracts.'
+          }
+        },
+        {
+          '@type': 'Question',
+          'name': 'How do I find CG government tenders?',
+          'acceptedAnswer': {
+            '@type': 'Answer',
+            'text': 'You can easily search, filter, and track CG government tenders from portals like GeM and CSPGCL directly on CGTenders.com. You can filter by district, department, category, estimated bid value, and EMD.'
+          }
+        },
+        {
+          '@type': 'Question',
+          'name': 'Is CGTenders.com free to use?',
+          'acceptedAnswer': {
+            '@type': 'Answer',
+            'text': 'Yes, CGTenders.com is a free procurement aggregator platform allowing businesses to discover and analyze open bidding opportunities and tender notices across Chhattisgarh and India.'
+          }
+        },
+        {
+          '@type': 'Question',
+          'name': 'What is the difference between e-procurement and e-tendering?',
+          'acceptedAnswer': {
+            '@type': 'Answer',
+            'text': 'E-procurement covers the entire online procurement process, including procurement planning, management, and purchasing. E-tendering specifically refers to the initial bidding stage where suppliers submit bid responses electronically.'
+          }
+        },
+        {
+          '@type': 'Question',
+          'name': 'How do I register as a bidder?',
+          'acceptedAnswer': {
+            '@type': 'Answer',
+            'text': 'Bidders can register on official government portals (such as the GeM portal or state e-procurement boards) to submit formal bids. CGTenders.com lists notices and documents to help you identify active bidding opportunities.'
+          }
+        }
+      ]
+    }
+  ]
 };
 
 // Shared card render helper (used in both sections)
@@ -55,48 +115,70 @@ function viabilityBg(score: number | null | undefined) {
 ---
 
 <TenderLayout
-  title="CGTenders.com — Chhattisgarh Government Tender Aggregator"
-  description="Browse open government tenders from GeM and CSPGCL portals in Chhattisgarh — enriched with viability scores, risk analysis, and PDF-extracted details."
+  title="CGTenders.com | Chhattisgarh Government Tenders, E-Tendering & Procurement Notices"
+  description="Find latest CG tenders, government e-tenders, procurement notices, public tenders, and bidding opportunities in Chhattisgarh and India on CGTenders.com."
   canonical="/"
   jsonLd={jsonLd}
 >
   <Navbar />
 
   <main>
-    <!-- Hero strip -->
-    <section class="bg-gradient-to-r from-[#1A56DB] to-[#1e3a8a] text-white">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
-        <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
-          <div>
-            <div class="flex items-center gap-2 mb-2">
-              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white/10 border border-white/20 rounded-full text-xs font-medium">
-                <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
-                Updated daily · GeM + CSPGCL
-              </span>
-            </div>
-            <h1 class="text-2xl sm:text-3xl md:text-4xl font-extrabold leading-tight font-['Outfit']">
-              Chhattisgarh Government Tenders
-            </h1>
-            <p class="text-blue-200 text-sm mt-1.5">
-              GeM and CSPGCL open tenders in one place
-              {lastUpdated && <span> · Last updated {lastUpdated}</span>}
-            </p>
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-br from-[#1a3c6e] via-[#102b54] to-[#0f1d33] text-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 flex flex-col lg:flex-row items-center gap-10">
+        <div class="flex-1 space-y-6">
+          <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-white/10 border border-white/20 rounded-full text-xs font-semibold tracking-wide text-blue-200">
+            <span class="w-2 h-2 rounded-full bg-[#f5820d] animate-pulse"></span>
+            Daily Aggregated e-Procurement Notices
           </div>
+          <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold leading-tight tracking-tight font-['Outfit']">
+            Chhattisgarh's Most Complete <span class="text-[#f5820d]">Tender &amp; Procurement</span> Portal
+          </h1>
+          <p class="text-gray-300 text-sm md:text-base max-w-2xl font-['DM_Sans']">
+            Discover government e-tenders, procurement notices, supply tenders, and bidding opportunities across CG and India — all in one place.
+          </p>
 
-          <!-- Stats -->
-          <div class="flex flex-wrap gap-3">
-            <div class="bg-white/10 border border-white/20 rounded-xl px-4 py-2.5 text-center min-w-[80px]">
-              <p class="text-2xl font-extrabold font-['Outfit'] leading-none">{stats.totalOpenTenders}</p>
-              <p class="text-xs text-blue-200 mt-0.5">Open</p>
+          <!-- Search Bar -->
+          <form action="/tenders" method="GET" class="relative max-w-xl w-full flex items-center bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden p-1.5">
+            <div class="pl-3 text-gray-400">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
             </div>
-            <div class="bg-violet-500/30 border border-violet-400/40 rounded-xl px-4 py-2.5 text-center min-w-[80px]">
-              <p class="text-2xl font-extrabold font-['Outfit'] leading-none">{stats.bySource?.GEM || 0}</p>
-              <p class="text-xs text-violet-200 mt-0.5">GeM</p>
-            </div>
-            <div class="bg-amber-500/20 border border-amber-400/30 rounded-xl px-4 py-2.5 text-center min-w-[80px]">
-              <p class="text-2xl font-extrabold font-['Outfit'] leading-none">{stats.bySource?.CSPGCL || 0}</p>
-              <p class="text-xs text-amber-200 mt-0.5">CSPGCL</p>
-            </div>
+            <input type="text" name="q" placeholder="Search by keyword, department, or tender ID..." class="w-full pl-3 pr-24 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none border-none" />
+            <button type="submit" class="bg-[#f5820d] hover:bg-[#e07204] text-white px-5 py-2.5 rounded-lg text-sm font-bold tracking-wide transition shadow-sm">
+              Search
+            </button>
+          </form>
+
+          <!-- CTA Buttons -->
+          <div class="flex flex-wrap gap-4 pt-2">
+            <a href="/tenders" class="px-6 py-3 bg-[#f5820d] hover:bg-[#e07204] text-white font-bold rounded-xl transition shadow-md hover:shadow-lg">
+              Browse Tenders
+            </a>
+            <a href="/contact" class="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/30 text-white font-bold rounded-xl transition">
+              Post a Tender
+            </a>
+          </div>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="w-full lg:w-80 xl:w-96 flex-shrink-0 grid grid-cols-2 gap-4">
+          <div class="bg-white/5 border border-white/10 rounded-2xl p-5 hover:bg-white/10 transition">
+            <p class="text-2xl md:text-3xl font-extrabold text-[#f5820d] font-['Outfit']">{stats.totalOpenTenders}+</p>
+            <p class="text-xs text-gray-300 font-medium mt-1">Active Tenders</p>
+          </div>
+          <div class="bg-white/5 border border-white/10 rounded-2xl p-5 hover:bg-white/10 transition">
+            <p class="text-2xl md:text-3xl font-extrabold text-[#f5820d] font-['Outfit']">180+</p>
+            <p class="text-xs text-gray-300 font-medium mt-1">Departments Listed</p>
+          </div>
+          <div class="bg-white/5 border border-white/10 rounded-2xl p-5 hover:bg-white/10 transition">
+            <p class="text-2xl md:text-3xl font-extrabold text-[#f5820d] font-['Outfit']">28</p>
+            <p class="text-xs text-gray-300 font-medium mt-1">States Covered</p>
+          </div>
+          <div class="bg-white/5 border border-white/10 rounded-2xl p-5 hover:bg-white/10 transition">
+            <p class="text-2xl md:text-3xl font-extrabold text-[#f5820d] font-['Outfit']">5,000+</p>
+            <p class="text-xs text-gray-300 font-medium mt-1">Registered Bidders</p>
           </div>
         </div>
       </div>
@@ -342,6 +424,227 @@ function viabilityBg(score: number | null | undefined) {
           </div>
         </section>
       )}
+
+      <!-- Featured Tender Categories -->
+      <section class="mt-16">
+        <div class="text-center max-w-2xl mx-auto mb-10">
+          <h2 class="text-xl md:text-2xl font-bold text-gray-900 font-['Outfit']">Featured Tender Categories</h2>
+          <p class="text-xs md:text-sm text-gray-500 mt-1.5 font-['DM_Sans']">Explore open bidding contracts across major industries and sectors in Chhattisgarh</p>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <!-- 1 -->
+          <a href="/tenders?category=Civil Works" class="group flex flex-col items-center text-center p-6 bg-white border border-gray-200 hover:border-[#f5820d]/40 rounded-2xl shadow-sm hover:shadow-md transition">
+            <div class="w-12 h-12 rounded-xl bg-orange-50 text-[#f5820d] flex items-center justify-center mb-3 group-hover:bg-[#f5820d] group-hover:text-white transition">
+              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
+            <span class="text-sm font-semibold text-gray-800 leading-snug group-hover:text-[#f5820d] font-['Outfit']">Construction &amp; Civil Works</span>
+          </a>
+          <!-- 2 -->
+          <a href="/tenders?category=Electrical" class="group flex flex-col items-center text-center p-6 bg-white border border-gray-200 hover:border-[#f5820d]/40 rounded-2xl shadow-sm hover:shadow-md transition">
+            <div class="w-12 h-12 rounded-xl bg-orange-50 text-[#f5820d] flex items-center justify-center mb-3 group-hover:bg-[#f5820d] group-hover:text-white transition">
+              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <span class="text-sm font-semibold text-gray-800 leading-snug group-hover:text-[#f5820d] font-['Outfit']">Electrical &amp; Power</span>
+          </a>
+          <!-- 3 -->
+          <a href="/tenders?category=IT %26 Software" class="group flex flex-col items-center text-center p-6 bg-white border border-gray-200 hover:border-[#f5820d]/40 rounded-2xl shadow-sm hover:shadow-md transition">
+            <div class="w-12 h-12 rounded-xl bg-orange-50 text-[#f5820d] flex items-center justify-center mb-3 group-hover:bg-[#f5820d] group-hover:text-white transition">
+              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <span class="text-sm font-semibold text-gray-800 leading-snug group-hover:text-[#f5820d] font-['Outfit']">IT &amp; Software</span>
+          </a>
+          <!-- 4 -->
+          <a href="/tenders?category=General" class="group flex flex-col items-center text-center p-6 bg-white border border-gray-200 hover:border-[#f5820d]/40 rounded-2xl shadow-sm hover:shadow-md transition">
+            <div class="w-12 h-12 rounded-xl bg-orange-50 text-[#f5820d] flex items-center justify-center mb-3 group-hover:bg-[#f5820d] group-hover:text-white transition">
+              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+              </svg>
+            </div>
+            <span class="text-sm font-semibold text-gray-800 leading-snug group-hover:text-[#f5820d] font-['Outfit']">Health &amp; Medical Supplies</span>
+          </a>
+          <!-- 5 -->
+          <a href="/tenders?category=General" class="group flex flex-col items-center text-center p-6 bg-white border border-gray-200 hover:border-[#f5820d]/40 rounded-2xl shadow-sm hover:shadow-md transition">
+            <div class="w-12 h-12 rounded-xl bg-orange-50 text-[#f5820d] flex items-center justify-center mb-3 group-hover:bg-[#f5820d] group-hover:text-white transition">
+              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </div>
+            <span class="text-sm font-semibold text-gray-800 leading-snug group-hover:text-[#f5820d] font-['Outfit']">Education &amp; Training</span>
+          </a>
+          <!-- 6 -->
+          <a href="/tenders?category=Transport" class="group flex flex-col items-center text-center p-6 bg-white border border-gray-200 hover:border-[#f5820d]/40 rounded-2xl shadow-sm hover:shadow-md transition">
+            <div class="w-12 h-12 rounded-xl bg-orange-50 text-[#f5820d] flex items-center justify-center mb-3 group-hover:bg-[#f5820d] group-hover:text-white transition">
+              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
+              </svg>
+            </div>
+            <span class="text-sm font-semibold text-gray-800 leading-snug group-hover:text-[#f5820d] font-['Outfit']">Logistics &amp; Transport</span>
+          </a>
+          <!-- 7 -->
+          <a href="/tenders?category=Procurement" class="group flex flex-col items-center text-center p-6 bg-white border border-gray-200 hover:border-[#f5820d]/40 rounded-2xl shadow-sm hover:shadow-md transition">
+            <div class="w-12 h-12 rounded-xl bg-orange-50 text-[#f5820d] flex items-center justify-center mb-3 group-hover:bg-[#f5820d] group-hover:text-white transition">
+              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+            </div>
+            <span class="text-sm font-semibold text-gray-800 leading-snug group-hover:text-[#f5820d] font-['Outfit']">Supply &amp; Delivery</span>
+          </a>
+          <!-- 8 -->
+          <a href="/tenders?category=General" class="group flex flex-col items-center text-center p-6 bg-white border border-gray-200 hover:border-[#f5820d]/40 rounded-2xl shadow-sm hover:shadow-md transition">
+            <div class="w-12 h-12 rounded-xl bg-orange-50 text-[#f5820d] flex items-center justify-center mb-3 group-hover:bg-[#f5820d] group-hover:text-white transition">
+              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+            </div>
+            <span class="text-sm font-semibold text-gray-800 leading-snug group-hover:text-[#f5820d] font-['Outfit']">Consultancy Services</span>
+          </a>
+        </div>
+      </section>
+
+      <!-- How It Works -->
+      <section class="mt-16 py-10 bg-gray-50 rounded-2xl border border-gray-200 px-6">
+        <div class="text-center max-w-2xl mx-auto mb-10">
+          <h2 class="text-xl md:text-2xl font-bold text-gray-900 font-['Outfit']">How It Works</h2>
+          <p class="text-xs md:text-sm text-gray-500 mt-1 font-['DM_Sans']">Get started with e-tendering in Chhattisgarh in three simple steps</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <!-- Step 1 -->
+          <div class="flex flex-col items-center text-center space-y-3">
+            <div class="w-10 h-10 rounded-full bg-[#1a3c6e] text-white flex items-center justify-center text-base font-bold font-['Outfit'] shadow-sm">1</div>
+            <h3 class="text-base font-bold text-gray-800 font-['Outfit']">Register Free</h3>
+            <p class="text-xs text-gray-500 leading-relaxed max-w-xs font-['DM_Sans']">
+              Create a free profile to receive matching procurement services and daily alerts tailored to your business profile.
+            </p>
+          </div>
+          <!-- Step 2 -->
+          <div class="flex flex-col items-center text-center space-y-3">
+            <div class="w-10 h-10 rounded-full bg-[#f5820d] text-white flex items-center justify-center text-base font-bold font-['Outfit'] shadow-sm">2</div>
+            <h3 class="text-base font-bold text-gray-800 font-['Outfit']">Search &amp; Filter Tenders</h3>
+            <p class="text-xs text-gray-500 leading-relaxed max-w-xs font-['DM_Sans']">
+              Search our repository of public tenders using filters like bid value, EMD amount, department, and district.
+            </p>
+          </div>
+          <!-- Step 3 -->
+          <div class="flex flex-col items-center text-center space-y-3">
+            <div class="w-10 h-10 rounded-full bg-[#1a3c6e] text-white flex items-center justify-center text-base font-bold font-['Outfit'] shadow-sm">3</div>
+            <h3 class="text-base font-bold text-gray-800 font-['Outfit']">Bid &amp; Win</h3>
+            <p class="text-xs text-gray-500 leading-relaxed max-w-xs font-['DM_Sans']">
+              Download bid documents, prepare your response utilizing our planning helpers, and submit your bid to win contracts.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SEO Content Block -->
+      <article class="prose max-w-none mt-16 bg-white border border-gray-200 rounded-2xl p-6 md:p-10 shadow-sm">
+        <h2 class="text-xl md:text-2xl font-bold text-gray-900 font-['Outfit'] mb-5">What is CGTenders.com?</h2>
+        <div class="text-xs md:text-sm text-gray-600 space-y-4 leading-relaxed font-['DM_Sans']">
+          <p>
+            CGTenders.com is a premier electronic tendering aggregator designed specifically to streamline the procurement planning and online procurement lifecycle. The platform serves as a unified tender board and procurement website, consolidating thousands of <strong>cg tenders</strong>, <strong>chhattisgarh tenders</strong>, and public procurement contracts into a singular, easily navigable interface. By integrating data feeds from the major e-tendering system networks—such as the Government e-Marketplace (GeM) portal and the Chhattisgarh State Power Generation Company (CSPGCL) online portal—we simplify how businesses identify, evaluate, and track active <strong>government tenders</strong>, <strong>e tendering</strong>, and <strong>e procurement</strong> opportunities.
+          </p>
+
+          <h3 class="text-base md:text-lg font-bold text-gray-800 mt-6 mb-2 font-['Outfit']">What Are CG Government Tenders?</h3>
+          <p>
+            CG government tenders represent public contracts issued by various state departments, municipal corporations, and public sector undertakings (PSUs) in Chhattisgarh. These notices invite bid submissions for various categories, including <strong>construction &amp; civil works</strong>, <strong>logistics tenders</strong>, and <strong>supply tenders</strong>. Historically, sourcing these notices required navigation across dozens of fragmented websites, but CGTenders.com aggregates all active <strong>procurement notices</strong> and <strong>public tenders</strong> into a single database. This aggregation enables vendors to search and filter opportunities efficiently, ensuring they never miss critical bidding timelines.
+          </p>
+
+          <h3 class="text-base md:text-lg font-bold text-gray-800 mt-6 mb-2 font-['Outfit']">How E-Tendering Works on CGTenders.com</h3>
+          <p>
+            The <strong>electronic tendering system</strong> has revolutionized public sector buying. Under the traditional procurement process, bidding required paper submissions, but modern <strong>e tendering system</strong> implementations require digital uploads. CGTenders.com acts as a search and screening layer before you commit to bidding: you can search by parameters, download official bid documents, and view AI-driven viability analysis. When you are ready to place a bid, the platform routes you to the respective <strong>online procurement</strong> or official state board where the formal submission is processed.
+          </p>
+
+          <h3 class="text-base md:text-lg font-bold text-gray-800 mt-6 mb-2 font-['Outfit']">Who Can Use CGTenders.com?</h3>
+          <p>
+            Whether you are an established contractor seeking large <strong>procurement contracts</strong>, a logistics operator looking for transport routes, or a medical supplier seeking local government orders, our platform fits your needs. Startups, small businesses, and multinational corporations use our structured indexing to filter by estimated cost and EMD. By bringing transparency to the <strong>tender board</strong> and offering direct links to download official PDF files, we empower businesses of all sizes to engage in public bidding.
+          </p>
+
+          <h3 class="text-base md:text-lg font-bold text-gray-800 mt-6 mb-2 font-['Outfit']">Benefits of Using an Online Procurement Portal</h3>
+          <p>
+            Using a specialized <strong>procurement management</strong> and search portal like CGTenders.com offers numerous operational advantages. Rather than allocating manual hours to scan state newspapers and e-procurement websites, businesses can set up automated alerts. This ensures your <strong>procurement planning</strong> is proactive, allowing teams to analyze specifications, check viability scores, assess potential delivery risks, and draft competitive bids with ample time.
+          </p>
+
+          <p class="font-semibold text-gray-800 pt-4 border-t border-gray-100">
+            Ready to take your business to the next level? Register for a free account today to browse our complete catalog of open government bidding notices and start winning public sector contracts in Chhattisgarh!
+          </p>
+        </div>
+      </article>
+
+      <!-- FAQ Section -->
+      <section class="mt-16">
+        <div class="text-center max-w-2xl mx-auto mb-10">
+          <h2 class="text-xl md:text-2xl font-bold text-gray-900 font-['Outfit']">Frequently Asked Questions</h2>
+          <p class="text-xs md:text-sm text-gray-500 mt-1.5 font-['DM_Sans']">Get quick answers to common questions about e-procurement and e-tendering in CG</p>
+        </div>
+        <div class="max-w-3xl mx-auto space-y-3">
+          <!-- FAQ 1 -->
+          <details class="group bg-white border border-gray-200 rounded-2xl overflow-hidden transition shadow-sm">
+            <summary class="flex justify-between items-center px-6 py-4 font-semibold text-sm md:text-base text-gray-800 cursor-pointer list-none select-none font-['Outfit']">
+              <span>What is e-tendering?</span>
+              <svg class="w-4 h-4 text-gray-400 group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </summary>
+            <div class="px-6 pb-5 text-xs md:text-sm text-gray-600 leading-relaxed border-t border-gray-100 pt-4 font-['DM_Sans']">
+              E-tendering (electronic tendering) is the process of publishing, managing, and bidding for procurement contracts online through an electronic tendering system. This increases efficiency, transparency, and access to public procurement contracts.
+            </div>
+          </details>
+          <!-- FAQ 2 -->
+          <details class="group bg-white border border-gray-200 rounded-2xl overflow-hidden transition shadow-sm">
+            <summary class="flex justify-between items-center px-6 py-4 font-semibold text-sm md:text-base text-gray-800 cursor-pointer list-none select-none font-['Outfit']">
+              <span>How do I find CG government tenders?</span>
+              <svg class="w-4 h-4 text-gray-400 group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </summary>
+            <div class="px-6 pb-5 text-xs md:text-sm text-gray-600 leading-relaxed border-t border-gray-100 pt-4 font-['DM_Sans']">
+              You can easily search, filter, and track CG government tenders from portals like GeM and CSPGCL directly on CGTenders.com. You can filter by district, department, category, estimated bid value, and EMD.
+            </div>
+          </details>
+          <!-- FAQ 3 -->
+          <details class="group bg-white border border-gray-200 rounded-2xl overflow-hidden transition shadow-sm">
+            <summary class="flex justify-between items-center px-6 py-4 font-semibold text-sm md:text-base text-gray-800 cursor-pointer list-none select-none font-['Outfit']">
+              <span>Is CGTenders.com free to use?</span>
+              <svg class="w-4 h-4 text-gray-400 group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </summary>
+            <div class="px-6 pb-5 text-xs md:text-sm text-gray-600 leading-relaxed border-t border-gray-100 pt-4 font-['DM_Sans']">
+              Yes, CGTenders.com is a free procurement aggregator platform allowing businesses to discover and analyze open bidding opportunities and tender notices across Chhattisgarh and India.
+            </div>
+          </details>
+          <!-- FAQ 4 -->
+          <details class="group bg-white border border-gray-200 rounded-2xl overflow-hidden transition shadow-sm">
+            <summary class="flex justify-between items-center px-6 py-4 font-semibold text-sm md:text-base text-gray-800 cursor-pointer list-none select-none font-['Outfit']">
+              <span>What is the difference between e-procurement and e-tendering?</span>
+              <svg class="w-4 h-4 text-gray-400 group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </summary>
+            <div class="px-6 pb-5 text-xs md:text-sm text-gray-600 leading-relaxed border-t border-gray-100 pt-4 font-['DM_Sans']">
+              E-procurement covers the entire online procurement process, including procurement planning, management, and purchasing. E-tendering specifically refers to the initial bidding stage where suppliers submit bid responses electronically.
+            </div>
+          </details>
+          <!-- FAQ 5 -->
+          <details class="group bg-white border border-gray-200 rounded-2xl overflow-hidden transition shadow-sm">
+            <summary class="flex justify-between items-center px-6 py-4 font-semibold text-sm md:text-base text-gray-800 cursor-pointer list-none select-none font-['Outfit']">
+              <span>How do I register as a bidder?</span>
+              <svg class="w-4 h-4 text-gray-400 group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </summary>
+            <div class="px-6 pb-5 text-xs md:text-sm text-gray-600 leading-relaxed border-t border-gray-100 pt-4 font-['DM_Sans']">
+              Bidders can register on official government portals (such as the GeM portal or state e-procurement boards) to submit formal bids. CGTenders.com lists notices and documents to help you identify active bidding opportunities.
+            </div>
+          </details>
+        </div>
+      </section>
 
     </div>
   </main>

@@ -4,6 +4,7 @@ import '../styles/global.css';
 export interface Props {
   title?: string;
   description?: string;
+  keywords?: string;
   canonical?: string;
   ogImage?: string;
   jsonLd?: object;
@@ -13,6 +14,7 @@ export interface Props {
 const {
   title = 'CGTenders.com — Chhattisgarh Government Tender Aggregator',
   description = 'Browse open government tenders from GeM and CSPGCL portals in one place, filtered to Chhattisgarh. Search by district, category, value, EMD, and closing date.',
+  keywords = 'cg tenders, chhattisgarh tenders, government tenders, e tendering, e procurement, online tenders, procurement tenders, public tenders, e bidding, tender notice, procurement notice, bidassist alternative, procurement contracts, logistics tenders, supply tenders',
   canonical,
   ogImage,
   jsonLd,
@@ -30,6 +32,8 @@ const ogImg = ogImage || `${siteUrl}/og-default.png`;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
+    <meta name="keywords" content={keywords} />
+    <meta name="author" content="CGTenders.com" />
     <meta name="robots" content={noindex ? 'noindex, nofollow' : 'index, follow'} />
     <link rel="canonical" href={canonicalUrl} />
 
