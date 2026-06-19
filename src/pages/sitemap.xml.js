@@ -1,8 +1,7 @@
 import { fetchTenders, fetchCities } from '../lib/api.js';
 import { tenderDetailPath, citySlug } from '../lib/cities.js';
 
-const rawSiteUrl = import.meta.env.SITE_URL || 'https://cgtenders.com';
-const siteUrl = rawSiteUrl.endsWith('/') ? rawSiteUrl.slice(0, -1) : rawSiteUrl;
+const siteUrl = 'https://cgtenders.com';
 
 function url(path, priority = '0.7', freq = 'daily') {
   return `  <url>
