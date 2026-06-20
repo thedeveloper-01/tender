@@ -365,8 +365,8 @@ async function triggerRemoteCacheClear() {
   const adminToken = config.adminToken;
   
   // 1. Clear backend cache
-  const base = config.siteUrl || 'https://cgtenders-com.onrender.com';
-  const url = `${base.replace(/\/$/, '')}/api/clear-cache`;
+  const backendBase = process.env.BACKEND_URL || 'https://cgtenders-com.onrender.com';
+  const url = `${backendBase.replace(/\/$/, '')}/api/clear-cache`;
   log(`[cache] Triggering remote backend cache clear at ${url}...`);
   try {
     const res = await fetch(url, {
