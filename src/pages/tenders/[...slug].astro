@@ -4,7 +4,7 @@ import Navbar from '../../components/Navbar.astro';
 import Footer from '../../components/Footer.astro';
 import TenderDashboard from '../../components/TenderDashboard.jsx';
 import { fetchTenderDetailCached, documentUrl } from '../../lib/api.js';
-import { formatRupee, formatDate, daysLeft, viabilityColor, cityFromSlug } from '../../lib/cities.js';
+import { formatRupee, formatDate, daysLeft, cityFromSlug } from '../../lib/cities.js';
 
 const { slug } = Astro.params as { slug: string };
 const decodedSlug = decodeURIComponent(slug ?? '');
@@ -294,34 +294,17 @@ const tender = fetchedTender!;
         )}
       </div>
 
-      <!-- Viability + Risks -->
-      <div class="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
-        <div class="flex flex-col sm:flex-row sm:items-center gap-4">
-          {tender.viabilityScore != null && (
-            <div class="flex items-center gap-3">
-              <span class={`text-2xl font-black px-4 py-2 rounded-xl ${viabilityColor(tender.viabilityScore!)}`}>
-                {tender.viabilityScore}<span class="text-base font-semibold opacity-70">/10</span>
-              </span>
-              <div>
-                <p class="text-xs text-gray-400">Viability Score</p>
-                <p class="text-sm font-medium text-gray-700">
-                  {tender.viabilityScore >= 8 ? 'High viability' : tender.viabilityScore >= 5 ? 'Moderate viability' : 'Lower viability'}
-                </p>
-              </div>
-            </div>
-          )}
-          {(tender.risks?.length ?? 0) > 0 && (
-            <div class="flex-1">
-              <p class="text-xs text-gray-400 mb-2">Risk Flags</p>
-              <div class="flex flex-wrap gap-1.5">
-                {tender.risks!.map((r: string) => (
-                  <span class="text-xs bg-red-50 text-red-700 border border-red-100 px-2.5 py-1 rounded-full font-medium">{r}</span>
-                ))}
-              </div>
-            </div>
-          )}
+      <!-- Risks -->
+      {(tender.risks?.length ?? 0) > 0 && (
+        <div class="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
+          <p class="text-xs text-gray-400 mb-2 font-semibold">Risk Flags</p>
+          <div class="flex flex-wrap gap-1.5">
+            {tender.risks!.map((r: string) => (
+              <span class="text-xs bg-red-50 text-red-700 border border-red-100 px-2.5 py-1 rounded-full font-medium">{r}</span>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       <!-- Action buttons -->
       <div class="flex flex-wrap gap-3 mb-6">

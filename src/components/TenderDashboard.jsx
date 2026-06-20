@@ -49,12 +49,7 @@ function deadlineBadge(dl) {
   return { label:`${dl}d left`, cls:'bg-green-100 text-green-700' };
 }
 
-function viabilityColor(s) {
-  if (s == null) return 'bg-gray-100 text-gray-500';
-  if (s >= 8) return 'bg-[#057A55] text-white';
-  if (s >= 5) return 'bg-[#C27803] text-white';
-  return 'bg-[#E02424] text-white';
-}
+
 
 function titleSlug(t) {
   return (t||'tender').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'').slice(0,60);
@@ -177,11 +172,6 @@ function TenderCard({ t }) {
         {/* Footer */}
         <div className="flex items-center justify-between pt-3 border-t border-gray-100">
           <div className="flex items-center gap-2">
-            {t.viabilityScore != null && (
-              <span className={`text-xs font-bold px-2 py-0.5 rounded-md ${viabilityColor(t.viabilityScore)}`}>
-                {t.viabilityScore}/10
-              </span>
-            )}
             {t.sourceMeta?.isEbidding && (
               <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-md font-medium">e-Bidding</span>
             )}
