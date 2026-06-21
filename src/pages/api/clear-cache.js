@@ -4,14 +4,14 @@ export async function POST({ request }) {
   // Verify token
   const auth = request.headers.get('authorization') || '';
   const token = auth.startsWith('Bearer ') ? auth.slice(7) : null;
-  
+
   // Try to read ADMIN_TOKEN from various potential sources
-  const adminToken = 
-    (env && env.ADMIN_TOKEN) || 
-    process.env.ADMIN_TOKEN || 
+  const adminToken =
+    (env && env.ADMIN_TOKEN) ||
+    process.env.ADMIN_TOKEN ||
     import.meta.env.ADMIN_TOKEN ||
     "admin_dev_token_123";
-  
+
   if (!token || token !== adminToken) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
@@ -29,9 +29,9 @@ export async function POST({ request }) {
         await SESSION.delete(key.name);
         deletedCount++;
       }
-      return new Response(JSON.stringify({ 
-        success: true, 
-        message: `Cleared ${deletedCount} keys from Cloudflare KV cache` 
+      return new Response(JSON.stringify({
+        success: true,
+        message: `Cleared ${deletedCount} keys from Cloudflare KV cache`
       }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
@@ -45,9 +45,9 @@ export async function POST({ request }) {
     }
   }
 
-  return new Response(JSON.stringify({ 
-    success: true, 
-    message: 'No KV namespace (SESSION) bound to clear' 
+  return new Response(JSON.stringify({
+    success: true,
+    message: 'No KV namespace (SESSION) bound to clear'
   }), {
     status: 200,
     headers: { 'Content-Type': 'application/json' },

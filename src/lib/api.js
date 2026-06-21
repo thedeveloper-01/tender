@@ -9,7 +9,7 @@ async function getJson(path, { timeout = 30000 } = {}) {
   const timer = setTimeout(() => controller.abort(), timeout);
   try {
     const resp = await fetch(url, {
-      headers: { 
+      headers: {
         Accept: 'application/json',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       },

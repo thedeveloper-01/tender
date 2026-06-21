@@ -3,13 +3,22 @@ import TenderLayout from '../../layouts/TenderLayout.astro';
 import Navbar from '../../components/Navbar.astro';
 import Footer from '../../components/Footer.astro';
 import TenderDashboard from '../../components/TenderDashboard.jsx';
-import { fetchStatsCached } from '../../lib/api.js';
+import { fetchStatsCached, fetchTendersCached } from '../../lib/api.js';
 
 let stats: { totalOpenTenders: number; totalEstimatedValue: number; bySource: Record<string, number>; lastFetchAt: string | null } = { totalOpenTenders: 0, totalEstimatedValue: 0, bySource: {}, lastFetchAt: null };
+let initialTenders = [];
+let initialTotal = 0;
+
 try {
-  stats = await fetchStatsCached();
+  const [statsData, tendersData] = await Promise.all([
+    fetchStatsCached(),
+    fetchTendersCached({ status: 'open', source: 'CSPGCL', limit: 100 })
+  ]);
+  stats = statsData;
+  initialTenders = tendersData.tenders || [];
+  initialTotal = tendersData.total || 0;
 } catch (e: any) {
-  console.error('[tenders-cspgcl] stats error:', e.message);
+  console.error('[tenders-cspgcl] SSR fetch error:', e.message);
 }
 
 const lastUpdated = stats.lastFetchAt
@@ -43,7 +52,12 @@ const lastUpdated = stats.lastFetchAt
         </div>
       </div>
     </div>
-    <TenderDashboard client:load initialSource="CSPGCL" />
+    <TenderDashboard 
+      client:load 
+      initialSource="CSPGCL" 
+      initialTenders={initialTenders} 
+      initialTotal={initialTotal} 
+    />
   </main>
   <Footer />
 </TenderLayout>

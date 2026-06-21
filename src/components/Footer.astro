@@ -8,7 +8,7 @@
       <div class="col-span-2 md:col-span-1">
         <a href="/" class="flex items-center gap-2 mb-3 group">
           <!-- Favicon-Style Logo Mark -->
-          <svg class="w-8 h-8 flex-shrink-0" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg aria-hidden="true" class="w-8 h-8 flex-shrink-0" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect x="8" y="8" width="112" height="112" rx="22" fill="#0b1329" stroke="#1a56db" stroke-width="5"/>
             <text x="64" y="72" font-family="'Outfit', system-ui, -apple-system, sans-serif" font-weight="700" font-size="44" fill="#ffffff" text-anchor="middle">CG</text>
             <line x1="48" y1="88" x2="80" y2="88" stroke="#1a56db" stroke-width="5" stroke-linecap="round"/>
@@ -62,7 +62,7 @@
 
     <div class="border-t border-gray-100 pt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
       <p class="text-xs text-gray-400">
-        © {new Date().getFullYear()} CGTenders.com. Data sourced from official government portals.
+        © <span id="copyright-year">2026</span> CGTenders.com. Data sourced from official government portals.
         Not affiliated with any government body.
       </p>
       <div class="flex gap-4">
@@ -78,3 +78,10 @@
   footer a { text-decoration: none; }
   footer a:focus { outline: 2px solid #1A56DB; outline-offset: 2px; border-radius: 2px; }
 </style>
+
+<script>
+  const yearEl = document.getElementById('copyright-year');
+  if (yearEl) {
+    yearEl.textContent = new Date().getFullYear().toString();
+  }
+</script>

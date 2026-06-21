@@ -302,11 +302,30 @@ function arr(v) {
   return Array.isArray(v) ? v[0] : v;
 }
 
+function cleanTitle(title, category) {
+  if (!title) return 'Custom Bid / BOQ';
+  const isNumericGarbage = /^[\d,\s]+(\.\.\.)?$/.test(title) && (title.includes(',') || title.trim().length > 10);
+  if (isNumericGarbage) {
+    const cat = (category || '').toLowerCase();
+    if (cat.includes('services')) {
+      return 'Custom Bid for Services';
+    } else if (cat.includes('boq')) {
+      return 'BOQ Bid for Goods';
+    } else {
+      return 'Custom / BOQ Bid';
+    }
+  }
+  return title;
+}
+
 function normalizeDoc(doc) {
   const bidNumber = arr(doc.b_bid_number);
   if (!bidNumber) return null;
 
-  const title = arr(doc.bd_category_name) || arr(doc.b_category_name) || bidNumber;
+  const category = arr(doc.b_cat_id) ?? 'General';
+  let title = arr(doc.bd_category_name) || arr(doc.b_category_name) || bidNumber;
+  title = cleanTitle(title, category);
+
   const startDate = arr(doc.final_start_date_sort) ?? null;
   const endDate = arr(doc.final_end_date_sort) ?? null;
   const status = arr(doc.b_status);
@@ -319,7 +338,7 @@ function normalizeDoc(doc) {
     title: title.length > 300 ? title.substring(0, 297) + '...' : title,
     department: department || ministry || null,
     organization: ministry || null,
-    category: arr(doc.b_cat_id) ?? 'General',
+    category,
     quantity: arr(doc.b_total_quantity) != null ? String(arr(doc.b_total_quantity)) : null,
     startDate: startDate ? new Date(startDate).toISOString() : null,
     endDate: endDate ? new Date(endDate).toISOString() : null,

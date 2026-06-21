@@ -17,14 +17,34 @@ function stableKey(parts) {
   return `CSPGCL-GEN-${Math.abs(hash)}`;
 }
 
+function cleanTitle(title, category) {
+  if (!title) return 'Custom Bid / BOQ';
+  // Check if title is numeric garbage (comma separated numbers, optional ... at end)
+  const isNumericGarbage = /^[\d,\s]+(\.\.\.)?$/.test(title) && (title.includes(',') || title.trim().length > 10);
+  if (isNumericGarbage) {
+    const cat = (category || '').toLowerCase();
+    if (cat.includes('services')) {
+      return 'Custom Bid for Services';
+    } else if (cat.includes('boq')) {
+      return 'BOQ Bid for Goods';
+    } else {
+      return 'Custom / BOQ Bid';
+    }
+  }
+  return title;
+}
+
 /** Map a raw GeM record into the unified Tender shape. */
 export function normalizeGem(raw) {
   const endDate = raw.endDate ? new Date(raw.endDate) : null;
-  const searchStr = `${raw.title || ''} ${raw.department || ''} ${raw.organization || ''} ${raw.locationText || ''}`;
+  const rawTitle = raw.title || '';
+  const categoryId = raw.category || '';
+  const title = cleanTitle(rawTitle, categoryId);
+  const searchStr = `${title} ${raw.department || ''} ${raw.organization || ''} ${raw.locationText || ''}`;
   return {
     source: 'GEM',
     bidNumber: raw.bidNumber,
-    title: raw.title,
+    title,
     department: raw.department || null,
     organization: raw.organization || null,
     category: [], // filled in by analysis step

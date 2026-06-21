@@ -273,11 +273,11 @@ async function main() {
   const now = new Date();
   try {
     const closed = await prisma.tender.updateMany({
-      where: { source: 'GEM', status: 'open',   endDate: { lt: now } },
+      where: { status: 'open',   endDate: { lt: now } },
       data:  { status: 'closed' },
     });
     const opened = await prisma.tender.updateMany({
-      where: { source: 'GEM', status: 'closed', endDate: { gte: now } },
+      where: { status: 'closed', endDate: { gte: now } },
       data:  { status: 'open' },
     });
     log(`Status update: ${closed.count} → closed, ${opened.count} → open`);

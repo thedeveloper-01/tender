@@ -300,7 +300,9 @@ function FilterPanel({ filters, onChange, onReset, totalResults, loading }) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2zM3 16a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2z" />
           </svg>
           Filters
-          <span className="bg-[#1A56DB] text-white text-xs rounded-full px-1.5 py-0.5">{totalResults}</span>
+          <span className="bg-[#1A56DB] text-white text-xs rounded-full px-1.5 py-0.5">
+            {loading ? '...' : totalResults}
+          </span>
           <svg className={`w-4 h-4 transition-transform ${mobileOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
@@ -317,7 +319,9 @@ function FilterPanel({ filters, onChange, onReset, totalResults, loading }) {
         <div className="bg-white border border-gray-200 rounded-2xl p-5 sticky top-20">
           <div className="flex items-center justify-between mb-5">
             <h3 className="text-sm font-bold text-gray-900">Filters</h3>
-            <span className="text-xs text-gray-400">{totalResults} results</span>
+            <span className="text-xs text-gray-400">
+              {loading ? 'Loading...' : `${totalResults} result${totalResults !== 1 ? 's' : ''}`}
+            </span>
           </div>
           {inner}
         </div>
@@ -333,11 +337,23 @@ const DEFAULT_FILTERS = {
   category: '', minValue: '', maxValue: '', minEmd: '', maxEmd: '',
 };
 
-export default function TenderDashboard({ initialCity = '', initialSource = 'all' }) {
-  const [tenders, setTenders] = useState([]);
-  const [total, setTotal] = useState(0);
+/**
+ * @param {object} props
+ * @param {string} [props.initialCity]
+ * @param {string} [props.initialSource]
+ * @param {any[] | null} [props.initialTenders]
+ * @param {number} [props.initialTotal]
+ */
+export default function TenderDashboard({ 
+  initialCity = '', 
+  initialSource = 'all', 
+  initialTenders = null, 
+  initialTotal = 0 
+}) {
+  const [tenders, setTenders] = useState(initialTenders || []);
+  const [total, setTotal] = useState(initialTenders ? initialTotal : 0);
   const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(initialTenders ? false : true);
   const [error, setError] = useState(null);
   const [q, setQ] = useState('');
   const [sort, setSort] = useState('endDate_asc');
@@ -391,6 +407,9 @@ export default function TenderDashboard({ initialCity = '', initialSource = 'all
     // Fire immediately on first load — no debounce wait
     if (isFirstLoad.current) {
       isFirstLoad.current = false;
+      if (initialTenders) {
+        return;
+      }
       loadTenders(filters, q, sort, page);
       return;
     }
@@ -442,12 +461,12 @@ export default function TenderDashboard({ initialCity = '', initialSource = 'all
           onChange={e => { setSort(e.target.value); setPage(1); }}
           className="px-3 py-2.5 rounded-xl border border-gray-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#1A56DB]/30 focus:border-[#1A56DB] shadow-sm"
         >
-          <option value="endDate_asc">Closing: Soonest first</option>
-          <option value="endDate_desc">Closing: Latest first</option>
-          <option value="bidValue_desc">Value: High to low</option>
-          <option value="bidValue_asc">Value: Low to high</option>
-          <option value="emdAmount_asc">EMD: Low to high</option>
-          <option value="fetchedAt_desc">Newest first</option>
+          <option value="endDate_asc">Sort by: Closing soonest</option>
+          <option value="endDate_desc">Sort by: Closing latest</option>
+          <option value="bidValue_desc">Sort by: Value high to low</option>
+          <option value="bidValue_asc">Sort by: Value low to high</option>
+          <option value="emdAmount_asc">Sort by: EMD low to high</option>
+          <option value="fetchedAt_desc">Sort by: Newest first</option>
         </select>
       </div>
 

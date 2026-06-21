@@ -3,14 +3,27 @@ import TenderLayout from '../layouts/TenderLayout.astro';
 import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
 import TenderDashboard from '../components/TenderDashboard.jsx';
-import { fetchStatsCached } from '../lib/api.js';
+import { fetchStatsCached, fetchTendersCached } from '../lib/api.js';
 import { formatRupee } from '../lib/cities.js';
 
 let stats: { totalOpenTenders: number; totalEstimatedValue: number; bySource: Record<string, number>; lastFetchAt: string | null } = { totalOpenTenders: 0, totalEstimatedValue: 0, bySource: {}, lastFetchAt: null };
+let initialTenders = [];
+let initialTotal = 0;
+
+const url = new URL(Astro.request.url);
+const source = url.searchParams.get('source') || 'all';
+const city = url.searchParams.get('city') || 'all';
+
 try {
-  stats = await fetchStatsCached();
+  const [statsData, tendersData] = await Promise.all([
+    fetchStatsCached(),
+    fetchTendersCached({ status: 'open', source, city, limit: 100 })
+  ]);
+  stats = statsData;
+  initialTenders = tendersData.tenders || [];
+  initialTotal = tendersData.total || 0;
 } catch (e) {
-  console.error('[tenders] stats error:', (e as Error).message);
+  console.error('[tenders] SSR fetch error:', (e as Error).message);
 }
 
 const lastUpdated = stats.lastFetchAt
@@ -52,60 +65,14 @@ const lastUpdated = stats.lastFetchAt
         </div>
       </div>
     </div>
-    <!-- Static skeleton shown while React hydrates (client:idle) -->
-    <div id="dashboard-shell" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <!-- Toolbar skeleton -->
-      <div class="flex gap-3 mb-6">
-        <div class="h-10 bg-gray-100 rounded-xl flex-1 animate-pulse"></div>
-        <div class="h-10 w-44 bg-gray-100 rounded-xl animate-pulse"></div>
-      </div>
-      <div class="flex gap-6 items-start">
-        <!-- Sidebar skeleton -->
-        <aside class="hidden lg:block w-64 xl:w-72 flex-shrink-0">
-          <div class="bg-white border border-gray-200 rounded-2xl p-5 space-y-4">
-            {[56, 44, 32, 44, 56].map((w, i) => (
-              <div class={`h-4 bg-gray-100 rounded animate-pulse`} style={`width:${w}%`}></div>
-            ))}
-          </div>
-        </aside>
-        <!-- Cards skeleton -->
-        <div class="flex-1 grid grid-cols-1 xl:grid-cols-2 gap-4">
-          {Array.from({length: 6}).map((_, i) => (
-            <div class="bg-white rounded-2xl border border-gray-200 p-5 h-40 animate-pulse space-y-3">
-              <div class="flex gap-2">
-                <div class="h-5 w-10 bg-gray-100 rounded-md"></div>
-                <div class="h-5 w-16 bg-gray-100 rounded-md"></div>
-                <div class="ml-auto h-5 w-14 bg-gray-100 rounded-full"></div>
-              </div>
-              <div class="h-4 bg-gray-100 rounded w-5/6"></div>
-              <div class="h-3 bg-gray-100 rounded w-3/4"></div>
-              <div class="grid grid-cols-2 gap-2 pt-1">
-                <div class="h-3 bg-gray-100 rounded"></div>
-                <div class="h-3 bg-gray-100 rounded"></div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-    <TenderDashboard client:idle />
-    <script>
-      // Hide skeleton once React dashboard has rendered its first real content
-      (function () {
-        const shell = document.getElementById('dashboard-shell');
-        if (!shell) return;
-        const observer = new MutationObserver(() => {
-          // Only hide when TenderCard <article> elements appear — not the skeleton divs
-          if (document.body.querySelector('article')) {
-            shell.style.display = 'none';
-            observer.disconnect();
-          }
-        });
-        observer.observe(document.body, { childList: true, subtree: true });
-        // Safety: hide after 6s regardless
-        setTimeout(() => { shell.style.display = 'none'; observer.disconnect(); }, 6000);
-      })();
-    </script>
+    
+    <TenderDashboard 
+      client:load 
+      initialSource={source} 
+      initialCity={city} 
+      initialTenders={initialTenders} 
+      initialTotal={initialTotal} 
+    />
   </main>
   <Footer />
 </TenderLayout>

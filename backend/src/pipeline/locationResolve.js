@@ -30,19 +30,93 @@ export function resolveCityForCspgcl(record) {
 }
 
 /**
+ * Map a 6-digit PIN code to a Chhattisgarh district.
+ */
+export function resolveCityByPin(pin) {
+  // Specific 6-digit PIN overrides for high precision
+  const exactMap = {
+    '494553': 'Dantewada', // Kirandul NMDC
+    '494556': 'Dantewada', // Bacheli NMDC
+    '494226': 'Kondagaon',
+    '495689': 'Sakti',
+    '495677': 'Korba',
+    '493445': 'Dhamtari',  // Kurud
+    '493776': 'Dhamtari',
+    '493449': 'Mahasamund',
+    '493996': 'Gariaband', // Kosambuda
+    '497229': 'Surajpur',
+    '497331': 'Manendragarh-Chirmiri-Bharatpur',
+  };
+
+  if (exactMap[pin]) return exactMap[pin];
+
+  // Prefix matching
+  const p4 = pin.substring(0, 4);
+  const p3 = pin.substring(0, 3);
+
+  // 4-digit prefix rules
+  const prefix4Map = {
+    '4910': 'Durg',
+    '4913': 'Bemetara',
+    '4914': 'Rajnandgaon',
+    '4915': 'Balod',
+    '4916': 'Rajnandgaon',
+    '4931': 'Raipur',
+    '4932': 'Raipur',
+    '4934': 'Mahasamund',
+    '4935': 'Mahasamund',
+    '4936': 'Dhamtari',
+    '4937': 'Dhamtari',
+    '4938': 'Dhamtari',
+    '4939': 'Gariaband',
+    '4944': 'Dantewada',
+    '4945': 'Dantewada',
+    '4946': 'Kanker',
+    '4947': 'Kanker',
+    '4955': 'Janjgir-Champa',
+    '4972': 'Surajpur',
+    '4973': 'Manendragarh-Chirmiri-Bharatpur',
+    '4974': 'Manendragarh-Chirmiri-Bharatpur',
+  };
+
+  if (prefix4Map[p4]) return prefix4Map[p4];
+
+  // 3-digit prefix rules
+  const prefix3Map = {
+    '490': 'Durg',
+    '492': 'Raipur',
+    '493': 'Raipur',
+    '494': 'Bastar',
+    '495': 'Bilaspur',
+    '496': 'Raigarh',
+    '497': 'Surguja',
+  };
+
+  return prefix3Map[p3] || null;
+}
+
+/**
  * Resolve a free-text location string (from GeM listings) to one of the
  * 33 CG districts via case-insensitive substring / alias matching.
  */
 export function resolveCityForGem(locationText) {
   if (!locationText) return 'Unspecified';
+
+  // 1. Try extracting and matching 6-digit PIN code
+  const pinMatch = locationText.match(/\b(49\d{4})\b/);
+  if (pinMatch) {
+    const resolvedPinCity = resolveCityByPin(pinMatch[1]);
+    if (resolvedPinCity) return resolvedPinCity;
+  }
+
   const text = locationText.toLowerCase();
 
-  // Direct district name match (handles multi-word names like "Baloda Bazar")
+  // 2. Direct district name match (handles multi-word names like "Baloda Bazar")
   for (const city of CG_CITIES) {
     if (text.includes(city.toLowerCase())) return city;
   }
 
-  // Alias / alternate-name match
+  // 3. Alias / alternate-name match
   for (const [alias, city] of Object.entries(CITY_ALIASES)) {
     if (text.includes(alias)) return city;
   }

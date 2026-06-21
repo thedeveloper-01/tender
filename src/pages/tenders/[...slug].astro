@@ -3,7 +3,7 @@ import TenderLayout from '../../layouts/TenderLayout.astro';
 import Navbar from '../../components/Navbar.astro';
 import Footer from '../../components/Footer.astro';
 import TenderDashboard from '../../components/TenderDashboard.jsx';
-import { fetchTenderDetailCached, documentUrl } from '../../lib/api.js';
+import { fetchTenderDetailCached, documentUrl, fetchTendersCached } from '../../lib/api.js';
 import { formatRupee, formatDate, daysLeft, cityFromSlug } from '../../lib/cities.js';
 
 const { slug } = Astro.params as { slug: string };
@@ -60,6 +60,9 @@ let jsonLd: any = null;
 let pageTitle = '';
 let metaDesc = '';
 
+let initialTenders = [];
+let initialTotal = 0;
+
 if (isCityRoute) {
   pageTitle = `${city} Government Tenders — CGTenders.com`;
   metaDesc = `Browse open government tenders in ${city}, Chhattisgarh from GeM and CSPGCL portals. Updated daily.`;
@@ -70,6 +73,14 @@ if (isCityRoute) {
     description: metaDesc,
     url: `https://cgtenders.com/tenders/${slug}`,
   };
+
+  try {
+    const tendersData = await fetchTendersCached({ status: 'open', city, limit: 100 });
+    initialTenders = tendersData.tenders || [];
+    initialTotal = tendersData.total || 0;
+  } catch (e: any) {
+    console.error(`[city tenders SSR] error for ${city}:`, e.message);
+  }
 } else {
   // slug format:  <source>-<bidNumber>-<title-slug>
   // GEM example:  gem-GEM/2026/B/7179248-amc-of-security-system
@@ -196,7 +207,12 @@ const tender = fetchedTender!;
           </p>
         </div>
       </div>
-      <TenderDashboard client:load initialCity={city} />
+      <TenderDashboard 
+        client:load 
+        initialCity={city} 
+        initialTenders={initialTenders} 
+        initialTotal={initialTotal} 
+      />
     </main>
   ) : (
     <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
@@ -207,7 +223,7 @@ const tender = fetchedTender!;
         <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
         </svg>
-        {tender.locationCity && (
+        {tender.locationCity && tender.locationCity !== 'Unspecified' && (
           <>
             <a href={`/tenders/${tender.locationCity.toLowerCase().replace(/[^a-z0-9]+/g,'-')}`}
               class="hover:text-[#1A56DB] transition">{tender.locationCity}</a>
@@ -263,8 +279,8 @@ const tender = fetchedTender!;
         {[
           { label: 'Bid Value', value: formatRupee(tender.bidValue), sub: tender.valueExtractionStatus === 'not_found' ? 'Not extracted from PDF' : null },
           { label: 'EMD Amount', value: formatRupee(tender.emdAmount), sub: null },
-          { label: 'Closing Date', value: formatDate(tender.endDate), sub: null },
-          { label: 'Opening Date', value: formatDate(tender.startDate), sub: null },
+          { label: tender.source === 'GEM' ? 'Bid End Date' : 'Closing Date', value: formatDate(tender.endDate), sub: null },
+          { label: tender.source === 'GEM' ? 'Bid Start Date' : 'Bid Opening Date', value: formatDate(tender.startDate), sub: null },
         ].map(({ label, value, sub }) => (
           <div class="bg-white rounded-xl border border-gray-200 p-4">
             <p class="text-xs text-gray-400 mb-0.5">{label}</p>
