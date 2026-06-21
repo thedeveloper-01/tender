@@ -5,18 +5,18 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 const API_BASE = '';
 
 const CATEGORIES = [
-  'Civil Works','Mechanical','Electrical','Manpower','Procurement',
-  'Environment','EPC','IT & Software','Transport','General',
+  'Civil Works', 'Mechanical', 'Electrical', 'Manpower', 'Procurement',
+  'Environment', 'EPC', 'IT & Software', 'Transport', 'General',
 ];
 
 const CG_CITIES = [
-  'Raipur','Bilaspur','Durg','Korba','Raigarh','Rajnandgaon',
-  'Bastar','Surguja','Dhamtari','Mahasamund','Kanker','Kondagaon',
-  'Dantewada','Sukma','Bijapur','Narayanpur','Kabirdham','Mungeli',
-  'Janjgir-Champa','Korea','Surajpur','Balrampur','Jashpur',
-  'Gariaband','Balod','Baloda Bazar','Bemetara','Mohla-Manpur',
-  'Sarangarh-Bilaigarh','Khairagarh-Chhuikhadan-Gandai',
-  'Manendragarh-Chirmiri-Bharatpur','Sakti','Gaurela-Pendra-Marwahi',
+  'Raipur', 'Bilaspur', 'Durg', 'Korba', 'Raigarh', 'Rajnandgaon',
+  'Bastar', 'Surguja', 'Dhamtari', 'Mahasamund', 'Kanker', 'Kondagaon',
+  'Dantewada', 'Sukma', 'Bijapur', 'Narayanpur', 'Kabirdham', 'Mungeli',
+  'Janjgir-Champa', 'Korea', 'Surajpur', 'Balrampur', 'Jashpur',
+  'Gariaband', 'Balod', 'Baloda Bazar', 'Bemetara', 'Mohla-Manpur',
+  'Sarangarh-Bilaigarh', 'Khairagarh-Chhuikhadan-Gandai',
+  'Manendragarh-Chirmiri-Bharatpur', 'Sakti', 'Gaurela-Pendra-Marwahi',
   'Unspecified',
 ];
 
@@ -30,7 +30,7 @@ function fmt(val) {
 function fmtDate(s) {
   if (!s) return '—';
   const d = new Date(s);
-  return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+  return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 function daysLeft(s) {
@@ -42,17 +42,17 @@ function daysLeft(s) {
 
 function deadlineBadge(dl) {
   if (dl == null) return null;
-  if (dl < 0) return { label:'Closed', cls:'bg-gray-100 text-gray-500' };
-  if (dl === 0) return { label:'Closes today', cls:'bg-red-100 text-red-700 font-semibold' };
-  if (dl <= 2) return { label:`${dl}d left`, cls:'bg-red-100 text-red-700 font-semibold' };
-  if (dl <= 7) return { label:`${dl}d left`, cls:'bg-amber-100 text-amber-700' };
-  return { label:`${dl}d left`, cls:'bg-green-100 text-green-700' };
+  if (dl < 0) return { label: 'Closed', cls: 'bg-gray-100 text-gray-500' };
+  if (dl === 0) return { label: 'Closes today', cls: 'bg-red-100 text-red-700 font-semibold' };
+  if (dl <= 2) return { label: `${dl}d left`, cls: 'bg-red-100 text-red-700 font-semibold' };
+  if (dl <= 7) return { label: `${dl}d left`, cls: 'bg-amber-100 text-amber-700' };
+  return { label: `${dl}d left`, cls: 'bg-green-100 text-green-700' };
 }
 
 
 
 function titleSlug(t) {
-  return (t||'tender').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'').slice(0,60);
+  return (t || 'tender').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 60);
 }
 
 function detailPath(t) {
@@ -88,11 +88,10 @@ function TenderCard({ t }) {
       <div className="p-5">
         {/* Top row */}
         <div className="flex items-start gap-2 mb-3">
-          <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold flex-shrink-0 ${
-            t.source === 'GEM' ? 'bg-violet-100 text-violet-700' : 'bg-amber-100 text-amber-700'
-          }`}>{t.source}</span>
+          <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold flex-shrink-0 ${t.source === 'GEM' ? 'bg-violet-100 text-violet-700' : 'bg-amber-100 text-amber-700'
+            }`}>{t.source}</span>
 
-          {t.category?.slice(0,2).map(c => (
+          {t.category?.slice(0, 2).map(c => (
             <span key={c} className="inline-flex items-center px-2 py-0.5 rounded-md text-xs bg-blue-50 text-blue-700 font-medium">{c}</span>
           ))}
 
@@ -135,10 +134,10 @@ function TenderCard({ t }) {
           // Exact keys as stored by backend/src/pipeline/extract.js
           const FIELDS = [
             { key: 'bidOfferValidity', label: 'Validity (Days)' },
-            { key: 'mseExemption',     label: 'MSE Exempt' },
+            { key: 'mseExemption', label: 'MSE Exempt' },
             { key: 'startupExemption', label: 'Startup Exempt' },
             { key: 'experienceCriteria', label: 'Exp. Criteria' },
-            { key: 'bidType',          label: 'Bid Type' },
+            { key: 'bidType', label: 'Bid Type' },
           ];
           const found = FIELDS.map(({ key, label }) =>
             f[key]?.value ? { label, value: f[key].value } : null
@@ -185,7 +184,7 @@ function TenderCard({ t }) {
           >
             View details
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </a>
         </div>
@@ -205,11 +204,10 @@ function FilterPanel({ filters, onChange, onReset, totalResults, loading }) {
       <div>
         <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">Source</label>
         <div className="flex gap-2">
-          {['all','GEM','CSPGCL'].map(s => (
+          {['all', 'GEM', 'CSPGCL'].map(s => (
             <button key={s} onClick={() => onChange('source', s)}
-              className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium border transition ${
-                filters.source === s ? 'bg-[#1A56DB] text-white border-[#1A56DB]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#1A56DB]'
-              }`}
+              className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium border transition ${filters.source === s ? 'bg-[#1A56DB] text-white border-[#1A56DB]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#1A56DB]'
+                }`}
             >{s === 'all' ? 'All' : s}</button>
           ))}
         </div>
@@ -219,11 +217,10 @@ function FilterPanel({ filters, onChange, onReset, totalResults, loading }) {
       <div>
         <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">Status</label>
         <div className="flex gap-2">
-          {['open','all','closed'].map(s => (
+          {['open', 'all', 'closed'].map(s => (
             <button key={s} onClick={() => onChange('status', s)}
-              className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium border capitalize transition ${
-                filters.status === s ? 'bg-[#1A56DB] text-white border-[#1A56DB]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#1A56DB]'
-              }`}
+              className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium border capitalize transition ${filters.status === s ? 'bg-[#1A56DB] text-white border-[#1A56DB]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#1A56DB]'
+                }`}
             >{s}</button>
           ))}
         </div>
@@ -252,9 +249,8 @@ function FilterPanel({ filters, onChange, onReset, totalResults, loading }) {
                   const next = active ? cats.filter(x => x !== c) : [...cats, c];
                   onChange('category', next.join(','));
                 }}
-                className={`px-2.5 py-1 rounded-full text-xs font-medium border transition ${
-                  active ? 'bg-[#1A56DB] text-white border-[#1A56DB]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#1A56DB]'
-                }`}
+                className={`px-2.5 py-1 rounded-full text-xs font-medium border transition ${active ? 'bg-[#1A56DB] text-white border-[#1A56DB]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#1A56DB]'
+                  }`}
               >{c}</button>
             );
           })}
@@ -267,10 +263,10 @@ function FilterPanel({ filters, onChange, onReset, totalResults, loading }) {
         <div className="flex gap-2">
           <input type="number" id="filter-min-bid-value" aria-labelledby="filter-bid-value-label" aria-label="Minimum Bid Value" placeholder="Min" value={filters.minValue || ''}
             onChange={e => onChange('minValue', e.target.value)}
-            className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-[#1A56DB]/30 focus:border-[#1A56DB]"/>
+            className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-[#1A56DB]/30 focus:border-[#1A56DB]" />
           <input type="number" id="filter-max-bid-value" aria-labelledby="filter-bid-value-label" aria-label="Maximum Bid Value" placeholder="Max" value={filters.maxValue || ''}
             onChange={e => onChange('maxValue', e.target.value)}
-            className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-[#1A56DB]/30 focus:border-[#1A56DB]"/>
+            className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-[#1A56DB]/30 focus:border-[#1A56DB]" />
         </div>
       </div>
 
@@ -280,10 +276,10 @@ function FilterPanel({ filters, onChange, onReset, totalResults, loading }) {
         <div className="flex gap-2">
           <input type="number" id="filter-min-emd" aria-labelledby="filter-emd-label" aria-label="Minimum EMD" placeholder="Min" value={filters.minEmd || ''}
             onChange={e => onChange('minEmd', e.target.value)}
-            className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-[#1A56DB]/30 focus:border-[#1A56DB]"/>
+            className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-[#1A56DB]/30 focus:border-[#1A56DB]" />
           <input type="number" id="filter-max-emd" aria-labelledby="filter-emd-label" aria-label="Maximum EMD" placeholder="Max" value={filters.maxEmd || ''}
             onChange={e => onChange('maxEmd', e.target.value)}
-            className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-[#1A56DB]/30 focus:border-[#1A56DB]"/>
+            className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-[#1A56DB]/30 focus:border-[#1A56DB]" />
         </div>
       </div>
 
@@ -301,12 +297,12 @@ function FilterPanel({ filters, onChange, onReset, totalResults, loading }) {
         <button onClick={() => setMobileOpen(o => !o)}
           className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:border-[#1A56DB] transition">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2zM3 16a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2z"/>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2zM3 16a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2z" />
           </svg>
           Filters
           <span className="bg-[#1A56DB] text-white text-xs rounded-full px-1.5 py-0.5">{totalResults}</span>
           <svg className={`w-4 h-4 transition-transform ${mobileOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </button>
         {mobileOpen && (
@@ -376,7 +372,7 @@ export default function TenderDashboard({ initialCity = '', initialSource = 'all
       if (currentFilters.maxEmd) params.set('maxEmd', currentFilters.maxEmd);
       params.set('sort', currentSort);
       params.set('page', currentPage);
-      params.set('limit', '20');
+      params.set('limit', '100');
 
       const resp = await fetch(`${API_BASE}/api/tenders?${params}`);
       if (!resp.ok) throw new Error(`API error ${resp.status}`);
@@ -416,7 +412,7 @@ export default function TenderDashboard({ initialCity = '', initialSource = 'all
     setPage(1);
   };
 
-  const totalPages = Math.ceil(total / 20);
+  const totalPages = Math.ceil(total / 100);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -425,7 +421,7 @@ export default function TenderDashboard({ initialCity = '', initialSource = 'all
         {/* Search */}
         <div className="relative flex-1">
           <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <input
             type="search"
@@ -476,7 +472,7 @@ export default function TenderDashboard({ initialCity = '', initialSource = 'all
           {loading ? <Skeleton /> : tenders.length === 0 ? (
             <div className="text-center py-16 bg-white rounded-2xl border border-gray-200">
               <svg className="w-10 h-10 text-gray-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <p className="text-gray-500 text-sm font-medium">No tenders match your filters</p>
               <button onClick={onReset} className="mt-3 text-sm text-[#1A56DB] hover:underline">Reset filters</button>

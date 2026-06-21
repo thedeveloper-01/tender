@@ -13,8 +13,8 @@ let topCities = [];
 try {
   [stats, { tenders: gemTenders }, { tenders: cspgclTenders }, { cities: topCities }] = await Promise.all([
     fetchStatsCached(),
-    fetchTendersCached({ status: 'open', source: 'GEM',    sort: 'endDate_asc', limit: 6 }),
-    fetchTendersCached({ status: 'open', source: 'CSPGCL', sort: 'endDate_asc', limit: 6 }),
+    fetchTendersCached({ status: 'open', source: 'GEM',    sort: 'endDate_asc', limit: 12 }),
+    fetchTendersCached({ status: 'open', source: 'CSPGCL', sort: 'endDate_asc', limit: 12 }),
     fetchCitiesCached(),
   ]);
 } catch (e) {
