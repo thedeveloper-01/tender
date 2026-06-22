@@ -20,20 +20,27 @@
   </defs>
 
   <!-- Rounded rect background with border -->
-  <rect x="6" y="6" width="116" height="116" rx="26" fill="url(#bgGrad)" stroke="url(#borderGrad)" stroke-width="5" />
+  <rect x="6" y="6" width="116" height="116" rx="26" fill="url(#bgGrad)" stroke="url(#borderGrad)" stroke-width="6" />
 
-  <!-- Monogram text: CG -->
-  <text
-    x="64"
-    y="76"
-    font-family="'Outfit', 'Inter', system-ui, -apple-system, sans-serif"
-    font-weight="800"
-    font-size="52"
-    fill="#ffffff"
-    text-anchor="middle"
-    letter-spacing="-1"
-  >CG</text>
+  <!-- Vector letter C -->
+  <path
+    d="M 54 44 A 20 20 0 1 0 54 76"
+    fill="none"
+    stroke="#ffffff"
+    stroke-width="12"
+    stroke-linecap="round"
+  />
+
+  <!-- Vector letter G -->
+  <path
+    d="M 98 44 A 20 20 0 1 0 98 76 L 98 60 L 84 60"
+    fill="none"
+    stroke="#ffffff"
+    stroke-width="12"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
 
   <!-- Elegant accent line beneath the monogram -->
-  <line x1="42" y1="92" x2="86" y2="92" stroke="url(#accentGrad)" stroke-width="8" stroke-linecap="round" />
+  <line x1="38" y1="96" x2="90" y2="96" stroke="url(#accentGrad)" stroke-width="8" stroke-linecap="round" />
 </svg>
