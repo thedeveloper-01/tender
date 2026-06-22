@@ -1,5 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
-  <rect x="8" y="8" width="112" height="112" rx="22" fill="#0b1329" stroke="#1a56db" stroke-width="5"/>
-  <text x="64" y="72" font-family="'Outfit', system-ui, -apple-system, sans-serif" font-weight="700" font-size="44" fill="#ffffff" text-anchor="middle">CG</text>
-  <line x1="48" y1="88" x2="80" y2="88" stroke="#1a56db" stroke-width="5" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1A56DB;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1e3a8a;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded square background -->
+  <rect width="64" height="64" rx="14" ry="14" fill="url(#bg)" />
+
+  <!-- Letter C -->
+  <text
+    x="10"
+    y="43"
+    font-family="'Segoe UI', 'Inter', Arial, sans-serif"
+    font-weight="800"
+    font-size="32"
+    fill="white"
+    letter-spacing="-1"
+  >CG</text>
+
+  <!-- Orange accent bar beneath the letters -->
+  <rect x="10" y="47" width="44" height="4" rx="2" fill="#f5820d" />
 </svg>
