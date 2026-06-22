@@ -25,18 +25,31 @@ const lastUpdated = stats.lastFetchAt
   ? new Date(stats.lastFetchAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
   : null;
 
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'WebSite',
-  name: 'CGTenders.com',
-  url: 'https://cgtenders.com',
-  description: 'Chhattisgarh government tender aggregator — GeM and CSPGCL portals in one place.',
-  potentialAction: {
-    '@type': 'SearchAction',
-    target: { '@type': 'EntryPoint', urlTemplate: 'https://cgtenders.com/tenders?q={search_term_string}' },
-    'query-input': 'required name=search_term_string',
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'CGTenders.com',
+    alternateName: 'CG Tenders',
+    url: 'https://cgtenders.com',
+    description: 'Chhattisgarh government tender aggregator — GeM and CSPGCL portals unified with AI risk flags, PDF extraction, and daily updates.',
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: { '@type': 'EntryPoint', urlTemplate: 'https://cgtenders.com/tenders?q={search_term_string}' },
+      'query-input': 'required name=search_term_string',
+    },
   },
-};
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'CGTenders.com',
+    alternateName: 'CG Tenders',
+    url: 'https://cgtenders.com',
+    logo: 'https://cgtenders.com/favicon.svg',
+    sameAs: [],
+    description: 'Aggregator for Chhattisgarh government tenders from GeM and CSPGCL portals, with risk analysis and daily updates.',
+  },
+];
 
 // Shared card render helper (used in both sections)
 type Tender = {
@@ -48,8 +61,8 @@ type Tender = {
 ---
 
 <TenderLayout
-  title="CGTenders.com — Chhattisgarh Government Tender Aggregator"
-  description="Browse open government tenders from GeM and CSPGCL portals in Chhattisgarh — enriched with risk analysis and PDF-extracted details."
+  title="CGTenders.com | Chhattisgarh Government Tenders"
+  description="Find open GeM and CSPGCL tenders in Chhattisgarh — with AI risk flags, PDF bid extraction, and a unified dashboard. Updated daily. Browse by district, category, or closing date."
   canonical="/"
   jsonLd={jsonLd}
 >
@@ -111,7 +124,7 @@ type Tender = {
               {stats.bySource?.GEM || 0} open
             </span>
           </div>
-          <a href="/tenders?source=GEM"
+          <a href="/tenders/gem"
             class="inline-flex items-center gap-1 text-sm font-medium text-violet-600 hover:underline">
             View all GeM
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -335,7 +348,7 @@ type Tender = {
         </div>
 
         <div class="bg-white border-l-4 border-[#f5820d] rounded-r-xl p-4 mb-6 text-sm text-gray-600">
-          Everything you need to know about government tenders, the e-tendering process, procurement contracts, and how bidding works in Chhattisgarh and across India.
+          Common questions about the e-tendering process, EMD, procurement contracts, and bidding in Chhattisgarh — answered in plain language.
         </div>
 
         <!-- GROUP 1 -->
