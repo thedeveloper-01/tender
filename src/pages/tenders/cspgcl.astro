@@ -3,16 +3,17 @@ import TenderLayout from '../../layouts/TenderLayout.astro';
 import Navbar from '../../components/Navbar.astro';
 import Footer from '../../components/Footer.astro';
 import TenderDashboard from '../../components/TenderDashboard.jsx';
+import TenderCard from '../../components/TenderCard.astro';
 import { fetchStatsCached, fetchTendersCached } from '../../lib/api.js';
 
 let stats: { totalOpenTenders: number; totalEstimatedValue: number; bySource: Record<string, number>; lastFetchAt: string | null } = { totalOpenTenders: 0, totalEstimatedValue: 0, bySource: {}, lastFetchAt: null };
-let initialTenders = [];
+let initialTenders = null;
 let initialTotal = 0;
 
 try {
   const [statsData, tendersData] = await Promise.all([
-    fetchStatsCached(),
-    fetchTendersCached({ status: 'open', source: 'CSPGCL', limit: 100 })
+    fetchStatsCached(Astro.locals),
+    fetchTendersCached({ status: 'open', source: 'CSPGCL', limit: 100 }, Astro.locals)
   ]);
   stats = statsData;
   initialTenders = tendersData.tenders || [];
@@ -24,15 +25,47 @@ try {
 const lastUpdated = stats.lastFetchAt
   ? new Date(stats.lastFetchAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
   : null;
+
+const cspgclCount = stats.bySource?.CSPGCL || initialTotal || 0;
+
+// Issue #6 — keyword-rich meta
+const metaTitle = `CSPGCL Power Tenders Chhattisgarh 2026 — Open Procurement | CGTenders.com`;
+const metaDesc = `Browse ${cspgclCount} open CSPGCL government tenders in Chhattisgarh. Filter by district, category and closing date. Updated daily.`;
+
+// Issue #7 — BreadcrumbList JSON-LD
+const breadcrumbLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://cgtenders.com/' },
+    { '@type': 'ListItem', position: 2, name: 'All Tenders', item: 'https://cgtenders.com/tenders' },
+    { '@type': 'ListItem', position: 3, name: 'CSPGCL Tenders', item: 'https://cgtenders.com/tenders/cspgcl' },
+  ],
+};
+
+// SSR tender list (first 20 for Googlebot)
+const ssrTenders = (initialTenders || []).slice(0, 20);
 ---
 
 <TenderLayout
-  title="CSPGCL Tenders — CGTenders.com"
-  description="Search and filter open CSPGCL tenders in Chhattisgarh. Filter by district, category, bid value, EMD, and closing date."
+  title={metaTitle}
+  description={metaDesc}
   canonical="/tenders/cspgcl"
+  jsonLd={breadcrumbLd}
 >
   <Navbar />
   <main>
+    <!-- Issue #8 — HTML Breadcrumb -->
+    <nav aria-label="Breadcrumb" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+      <ol class="flex items-center gap-1.5 text-xs text-gray-400">
+        <li><a href="/" class="hover:text-[#1A56DB] transition">Home</a></li>
+        <li aria-hidden="true">›</li>
+        <li><a href="/tenders" class="hover:text-[#1A56DB] transition">All Tenders</a></li>
+        <li aria-hidden="true">›</li>
+        <li class="text-gray-600 font-medium">CSPGCL Tenders</li>
+      </ol>
+    </nav>
+
     <div class="bg-white border-b border-gray-200">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 md:py-6">
         <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
@@ -45,13 +78,27 @@ const lastUpdated = stats.lastFetchAt
           </div>
           <div class="flex items-center gap-3 flex-wrap">
             <div class="flex items-center gap-2 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2">
-              <span class="text-xl font-extrabold text-amber-700 font-['Outfit'] leading-none">{stats.bySource?.CSPGCL || 0}</span>
+              <span class="text-xl font-extrabold text-amber-700 font-['Outfit'] leading-none">{cspgclCount}</span>
               <span class="text-xs text-amber-600 font-medium leading-tight">CSPGCL Tenders<br/>Open</span>
             </div>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Issue #1 — SSR tender list (visible to Googlebot, no JS needed) -->
+    {ssrTenders.length > 0 && (
+      <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-2">
+        <p class="text-xs text-gray-400 mb-4">{initialTotal.toLocaleString()} open CSPGCL tenders — showing first {ssrTenders.length}</p>
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+          {ssrTenders.map((t: any) => (
+            <TenderCard tender={t} />
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- JS-hydrated dashboard -->
     <TenderDashboard 
       client:load 
       initialSource="CSPGCL" 

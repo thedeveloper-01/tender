@@ -12,10 +12,10 @@ let topCities = [];
 
 try {
   [stats, { tenders: gemTenders }, { tenders: cspgclTenders }, { cities: topCities }] = await Promise.all([
-    fetchStatsCached(),
-    fetchTendersCached({ status: 'open', source: 'GEM',    sort: 'endDate_asc', limit: 12 }),
-    fetchTendersCached({ status: 'open', source: 'CSPGCL', sort: 'endDate_asc', limit: 12 }),
-    fetchCitiesCached(),
+    fetchStatsCached(Astro.locals),
+    fetchTendersCached({ status: 'open', source: 'GEM',    sort: 'endDate_asc', limit: 12 }, Astro.locals),
+    fetchTendersCached({ status: 'open', source: 'CSPGCL', sort: 'endDate_asc', limit: 12 }, Astro.locals),
+    fetchCitiesCached(Astro.locals),
   ]);
 } catch (e) {
   console.error('[homepage] API error:', (e as Error).message);

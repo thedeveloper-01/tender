@@ -1,0 +1,111 @@
+---
+import { formatRupee, formatDate, daysLeft, tenderDetailPath } from '../lib/cities.js';
+
+export interface Props {
+  tender: {
+    source: string;
+    bidNumber: string;
+    title: string;
+    organization?: string | null;
+    department?: string | null;
+    locationCity?: string | null;
+    endDate?: string | null;
+    startDate?: string | null;
+    bidValue?: number | null;
+    emdAmount?: number | null;
+    category?: string[];
+    status?: string;
+    risks?: string[];
+    fetchedAt?: string;
+    sourceMeta?: { isEbidding?: boolean } | null;
+  };
+}
+
+const { tender: t } = Astro.props;
+
+const dl = daysLeft(t.endDate);
+const isUrgent = dl !== null && dl >= 0 && dl <= 2;
+const isClosingSoon = dl !== null && dl > 2 && dl <= 7;
+const isClosed = dl !== null && dl < 0;
+
+const badgeLabel = dl == null ? null
+  : dl < 0 ? 'Closed'
+  : dl === 0 ? 'Closes today'
+  : `${dl}d left`;
+
+const badgeCls = dl == null ? ''
+  : dl < 0 ? 'bg-gray-100 text-gray-500'
+  : dl === 0 || isUrgent ? 'bg-red-100 text-red-700 font-semibold'
+  : isClosingSoon ? 'bg-amber-100 text-amber-700'
+  : 'bg-green-100 text-green-700';
+
+const sourceBadgeCls = t.source === 'GEM'
+  ? 'bg-violet-100 text-violet-700'
+  : 'bg-amber-100 text-amber-700';
+
+const detailUrl = tenderDetailPath(t);
+const titleDisplay = t.title?.slice(0, 120) || 'Untitled Tender';
+const orgDisplay = t.organization || t.department || null;
+---
+
+<article class="bg-white rounded-2xl border border-gray-200 hover:border-[#1A56DB]/40 hover:shadow-md transition group">
+  <div class="p-5">
+    <!-- Source + category badges + deadline -->
+    <div class="flex items-start gap-2 mb-3 flex-wrap">
+      <span class={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold flex-shrink-0 ${sourceBadgeCls}`}>
+        {t.source}
+      </span>
+      {t.sourceMeta?.isEbidding && (
+        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs bg-blue-50 text-blue-600 font-medium">e-Bidding</span>
+      )}
+      {t.category?.slice(0, 2).map((c: string) => (
+        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs bg-blue-50 text-blue-700 font-medium">{c}</span>
+      ))}
+      <span class="ml-auto flex-shrink-0">
+        {badgeLabel && (
+          <span class={`text-xs px-2 py-0.5 rounded-full ${badgeCls}`}>{badgeLabel}</span>
+        )}
+      </span>
+    </div>
+
+    <!-- Title -->
+    <h2 class="text-sm font-semibold text-gray-900 line-clamp-2 mb-1 group-hover:text-[#1A56DB] transition leading-snug">
+      <a href={detailUrl}>{titleDisplay}</a>
+    </h2>
+    {orgDisplay && (
+      <p class="text-xs text-gray-500 mb-3 line-clamp-1">{orgDisplay}</p>
+    )}
+
+    <!-- Key figures -->
+    <div class="grid grid-cols-2 gap-x-4 gap-y-1 mb-3">
+      <div>
+        <p class="text-xs text-gray-400">Bid Value</p>
+        <p class="text-sm font-semibold text-gray-900">{formatRupee(t.bidValue)}</p>
+      </div>
+      <div>
+        <p class="text-xs text-gray-400">EMD</p>
+        <p class="text-sm font-semibold text-gray-900">{formatRupee(t.emdAmount)}</p>
+      </div>
+      <div>
+        <p class="text-xs text-gray-400">Closing</p>
+        <p class="text-sm text-gray-700">{formatDate(t.endDate)}</p>
+      </div>
+      <div>
+        <p class="text-xs text-gray-400">District</p>
+        <p class="text-sm text-gray-700">{t.locationCity || 'Unspecified'}</p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="flex items-center justify-end pt-3 border-t border-gray-100">
+      <a href={detailUrl}
+        class="inline-flex items-center gap-1 text-xs font-medium text-[#1A56DB] hover:underline"
+        aria-label={`View details for ${titleDisplay}`}>
+        View details
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </a>
+    </div>
+  </div>
+</article>

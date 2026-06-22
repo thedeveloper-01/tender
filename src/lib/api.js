@@ -59,7 +59,17 @@ import { env } from 'cloudflare:workers';
 
 /** Helper to fetch with Cloudflare KV cache */
 async function getCachedJson(key, fetchFn, runtime, ttlSeconds = 3600) {
-  const SESSION = env?.SESSION;
+  let SESSION = null;
+  if (runtime) {
+    SESSION = runtime.runtime?.env?.SESSION || runtime.env?.SESSION;
+  }
+  if (!SESSION) {
+    try {
+      SESSION = env?.SESSION;
+    } catch (e) {
+      // Ignore reference/import error
+    }
+  }
   if (SESSION) {
     try {
       const cached = await SESSION.get(key);

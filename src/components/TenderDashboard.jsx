@@ -52,7 +52,21 @@ function deadlineBadge(dl) {
 
 
 function titleSlug(t) {
-  return (t || 'tender').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 60);
+  return (t || 'tender')
+    .toLowerCase()
+    // Remove literal date phrases like "dated 08.05.2026" or "date 01-06-2026"
+    .replace(/\b(dated?)\s+\d{1,2}[./\-]\d{1,2}[./\-]\d{2,4}\b/gi, '')
+    // Remove content in parentheses entirely
+    .replace(/\([^)]*\)/g, '')
+    // Replace & with "and"
+    .replace(/&/g, '-and-')
+    // Replace all non-alphanumeric chars (including . , / ( ) ) with -
+    .replace(/[^a-z0-9]+/g, '-')
+    // Collapse multiple hyphens to one
+    .replace(/-{2,}/g, '-')
+    // Trim leading/trailing hyphens
+    .replace(/(^-|-$)/g, '')
+    .slice(0, 60);
 }
 
 function detailPath(t) {
