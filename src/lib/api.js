@@ -57,19 +57,18 @@ export function documentUrl(source, bidNumber) {
 
 import { env } from 'cloudflare:workers';
 
-/** Helper to fetch with Cloudflare KV cache */
-async function getCachedJson(key, fetchFn, runtime, ttlSeconds = 3600) {
+/** Helper to fetch with Cloudflare KV cache.
+ * In Astro v6 the old Astro.locals.runtime.env API was removed.
+ * We rely solely on `import { env } from 'cloudflare:workers'` instead.
+ */
+async function getCachedJson(key, fetchFn, _runtime, ttlSeconds = 3600) {
   let SESSION = null;
-  if (runtime) {
-    SESSION = runtime.runtime?.env?.SESSION || runtime.env?.SESSION;
+  try {
+    SESSION = env?.SESSION ?? null;
+  } catch (e) {
+    // Not in a Cloudflare Worker context (e.g. local dev without wrangler)
   }
-  if (!SESSION) {
-    try {
-      SESSION = env?.SESSION;
-    } catch (e) {
-      // Ignore reference/import error
-    }
-  }
+
   if (SESSION) {
     try {
       const cached = await SESSION.get(key);
@@ -95,6 +94,7 @@ async function getCachedJson(key, fetchFn, runtime, ttlSeconds = 3600) {
 
   return data;
 }
+
 
 export async function fetchStatsCached(runtime) {
   return getCachedJson('api:stats', () => fetchStats(), runtime, 3600); // 1 hour
