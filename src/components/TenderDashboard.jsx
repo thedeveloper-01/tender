@@ -95,16 +95,16 @@ function Skeleton() {
 
 // --- Tender Card -------------------------------------------------------------
 
+// --- Tender Card -------------------------------------------------------------
+
 function TenderCard({ t }) {
   const dl = daysLeft(t.endDate);
   const badge = deadlineBadge(dl);
 
-  // Parse GeM extracted fields
   const fields = t.source === 'GEM' ? t.sourceMeta?.pdfExtract?.fields || {} : {};
   const mseExempt     = fields.mseExemption?.value;
   const startupExempt = fields.startupExemption?.value;
   const bidType       = fields.bidType?.value;
-  const validity      = fields.bidOfferValidity?.value;
   const experience    = fields.experienceCriteria?.value;
 
   const isMseYes     = mseExempt?.toLowerCase() === 'yes';
@@ -114,16 +114,16 @@ function TenderCard({ t }) {
   const hasEmd   = t.emdAmount != null && !isNaN(t.emdAmount) && t.emdAmount > 0;
 
   return (
-    <article className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 hover:border-blue-400/60 dark:hover:border-blue-500/50 hover:shadow-xl dark:hover:shadow-blue-900/10 transition-all duration-200 group relative overflow-hidden">
+    <article className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 hover:border-blue-400/50 dark:hover:border-blue-500/40 hover:shadow-lg transition-all duration-200 group relative overflow-hidden">
       <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-transparent group-hover:bg-[#1A56DB] transition-all duration-200 rounded-l-2xl" />
 
-      <div className="p-5 grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-0">
+      <div className="p-4 flex flex-col lg:grid lg:grid-cols-[1fr_210px_165px] lg:divide-x lg:divide-gray-100 dark:lg:divide-slate-800 lg:items-center gap-4">
 
-        {/* LEFT column */}
-        <div className="min-w-0 pr-0 lg:pr-6 lg:border-r border-gray-100 dark:border-slate-800">
+        {/* -- Col 1: Info -- */}
+        <div className="min-w-0 flex flex-col gap-1.5 pr-0 lg:pr-4">
 
-          {/* Badges row */}
-          <div className="flex flex-wrap items-center gap-1.5 mb-2.5">
+          {/* Badges row — source, plant, location, deadline, exemptions, category */}
+          <div className="flex flex-wrap items-center gap-1.5">
             <span className={t.source === 'GEM'
               ? 'inline-flex items-center px-2 py-0.5 rounded text-[10px] font-extrabold tracking-widest uppercase bg-violet-50 dark:bg-violet-950/50 text-violet-700 dark:text-violet-400 border border-violet-200 dark:border-violet-800'
               : 'inline-flex items-center px-2 py-0.5 rounded text-[10px] font-extrabold tracking-widest uppercase bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800'
@@ -131,10 +131,10 @@ function TenderCard({ t }) {
 
             {t.source === 'CSPGCL' && t.sourceMeta?.plantLabel && (
               <a href={t.bidLink} target="_blank" rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 dark:hover:bg-sky-900/60 text-sky-700 dark:text-sky-400 border border-sky-200 dark:border-sky-800 transition cursor-pointer"
+                className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded text-[10px] font-bold bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 text-sky-700 dark:text-sky-400 border border-sky-200 dark:border-sky-800 transition"
               >
                 {t.sourceMeta.plantLabel}
-                <svg className="w-2.5 h-2.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-2.5 h-2.5 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                 </svg>
               </a>
@@ -150,110 +150,79 @@ function TenderCard({ t }) {
               </span>
             )}
 
-            {badge && (
-              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold ${badge.cls}`}>
-                {badge.label}
-              </span>
-            )}
+            {badge && <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${badge.cls}`}>{badge.label}</span>}
 
             {t.sourceMeta?.isEbidding && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">e-Bidding</span>
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">e-Bid</span>
             )}
 
-            {t.category?.slice(0, 2).map(cat => (
+            {/* MSE/Startup inline with badges */}
+            {mseExempt && (
+              <span className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${isMseYes ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800' : 'bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900'}`}>
+                {isMseYes ? '?' : '?'} MSE
+              </span>
+            )}
+            {startupExempt && (
+              <span className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${isStartupYes ? 'bg-cyan-50 dark:bg-cyan-950/40 text-cyan-700 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800' : 'bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900'}`}>
+                {isStartupYes ? '?' : '?'} Startup
+              </span>
+            )}
+            {bidType && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">{bidType}</span>
+            )}
+
+            {t.category?.slice(0, 1).map(cat => (
               <span key={cat} className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-50/70 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400 border border-blue-100 dark:border-blue-900">{cat}</span>
             ))}
           </div>
 
           {/* Title */}
-          <h3 className="text-sm md:text-[15px] font-bold text-gray-900 dark:text-white leading-snug mb-1 group-hover:text-[#1A56DB] dark:group-hover:text-blue-400 transition-colors duration-150 line-clamp-2">
+          <h3 className="text-sm md:text-base font-bold text-gray-900 dark:text-white leading-snug group-hover:text-[#1A56DB] dark:group-hover:text-blue-400 transition-colors duration-150 line-clamp-2">
             <a href={detailPath(t)}>{t.title}</a>
           </h3>
 
-          {/* Organisation */}
-          {(t.organization || t.department) && (
-            <p className="text-xs text-gray-500 dark:text-slate-400 font-medium line-clamp-1 mb-2">
-              {t.organization || t.department}
-            </p>
-          )}
-
-          {/* Notice number */}
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-gray-400 dark:text-slate-500 font-mono mb-2.5">
-            <span>Notice No: <strong className="text-gray-600 dark:text-slate-300 font-semibold bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 px-1.5 py-0.5 rounded select-all">{t.bidNumber}</strong></span>
+          {/* Org + Notice No on same line */}
+          <div className="flex flex-wrap items-center gap-x-3 text-[11px] text-gray-400 dark:text-slate-500">
+            {(t.organization || t.department) && (
+              <span className="font-medium text-gray-500 dark:text-slate-400 truncate max-w-[260px]">{t.organization || t.department}</span>
+            )}
+            <span className="font-mono">
+              <span className="opacity-70">No.</span>{' '}
+              <strong className="text-gray-600 dark:text-slate-300 font-semibold bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 px-1.5 py-px rounded select-all">{t.bidNumber}</strong>
+            </span>
             {t.valueExtractionStatus === 'not_found' && (
-              <span className="text-amber-500 dark:text-amber-400 font-sans font-normal italic">Value not in PDF</span>
+              <span className="text-amber-500 dark:text-amber-400 italic">Value not in PDF</span>
             )}
           </div>
 
-          {/* MSE / Startup / Bid type pills */}
-          {(mseExempt || startupExempt || bidType || validity) && (
-            <div className="flex flex-wrap items-center gap-1.5 mb-2">
-              {mseExempt && (
-                <span className={isMseYes
-                  ? 'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
-                  : 'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900'
-                }>
-                  {isMseYes
-                    ? <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-                    : <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>
-                  }
-                  MSE Exempt: {mseExempt}
-                </span>
-              )}
-              {startupExempt && (
-                <span className={isStartupYes
-                  ? 'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-cyan-50 dark:bg-cyan-950/40 text-cyan-700 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800'
-                  : 'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900'
-                }>
-                  {isStartupYes
-                    ? <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-                    : <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>
-                  }
-                  Startup Exempt: {startupExempt}
-                </span>
-              )}
-              {bidType && (
-                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                  {bidType}
-                </span>
-              )}
-              {validity && (
-                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
-                  Valid {validity}d
-                </span>
-              )}
-            </div>
-          )}
-
-          {/* Experience criteria */}
+          {/* Experience (only if present) */}
           {experience && (
-            <div className="flex items-start gap-1.5 text-[11px] text-gray-500 dark:text-slate-400 mb-2" title={experience}>
-              <span className="font-extrabold text-violet-600 dark:text-violet-400 uppercase tracking-wide text-[9px] flex-shrink-0 mt-[3px]">Exp. Required:</span>
-              <span className="line-clamp-1 font-medium flex-1">{experience}</span>
+            <div className="flex items-start gap-1 text-[11px]" title={experience}>
+              <span className="font-extrabold text-violet-500 dark:text-violet-400 uppercase tracking-wide text-[9px] flex-shrink-0 mt-[2px]">Exp:</span>
+              <span className="line-clamp-1 text-gray-500 dark:text-slate-400 font-medium flex-1">{experience}</span>
             </div>
           )}
 
-          {/* Risk flags */}
+          {/* Risk flags (compact) */}
           {t.risks?.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1 mt-1">
-              <span className="text-[9px] font-extrabold text-red-400 dark:text-red-500 uppercase tracking-widest mr-0.5">Risks:</span>
-              {t.risks.slice(0, 3).map(r => (
-                <span key={r} className="text-[10px] bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/40 px-2 py-0.5 rounded-full font-semibold">{r}</span>
+            <div className="flex flex-wrap items-center gap-1">
+              <span className="text-[9px] font-extrabold text-red-400 dark:text-red-500 uppercase tracking-widest">Risks:</span>
+              {t.risks.slice(0, 2).map(r => (
+                <span key={r} className="text-[10px] bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/40 px-1.5 py-px rounded font-semibold">{r}</span>
               ))}
             </div>
           )}
         </div>
 
-        {/* RIGHT column */}
-        <div className="flex flex-row lg:flex-col justify-between lg:justify-center gap-4 lg:gap-5 lg:pl-6 mt-4 lg:mt-0 border-t lg:border-t-0 border-gray-100 dark:border-slate-800 pt-4 lg:pt-0 lg:min-w-[175px]">
+        {/* -- Col 2: Financials -- */}
+        <div className="lg:px-5 flex flex-row lg:flex-col justify-between lg:justify-center gap-3 border-t lg:border-t-0 pt-3 lg:pt-0">
           <div>
             <p className="text-[9px] text-gray-400 dark:text-slate-500 font-extrabold uppercase tracking-widest mb-0.5">Bid Value</p>
             {hasValue
               ? <p className="text-base font-extrabold text-emerald-600 dark:text-emerald-400 leading-none">{fmt(t.bidValue)}</p>
-              : <p className="text-[11px] font-semibold text-gray-400 dark:text-slate-500 italic">Not Available</p>
+              : <p className="text-xs font-semibold text-gray-400 dark:text-slate-500 italic">Not Available</p>
             }
           </div>
-
           <div>
             <p className="text-[9px] text-gray-400 dark:text-slate-500 font-extrabold uppercase tracking-widest mb-0.5">EMD Amount</p>
             {hasEmd
@@ -261,7 +230,10 @@ function TenderCard({ t }) {
               : <p className="text-sm font-semibold text-gray-400 dark:text-slate-500">N/A / Exempt</p>
             }
           </div>
+        </div>
 
+        {/* -- Col 3: Date + CTA -- */}
+        <div className="lg:pl-5 flex flex-col justify-center items-stretch lg:items-end gap-2.5 border-t lg:border-t-0 pt-3 lg:pt-0">
           <div className="text-left lg:text-right">
             <p className="text-[9px] text-gray-400 dark:text-slate-500 font-extrabold uppercase tracking-widest mb-0.5">Closing Date</p>
             <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{fmtDate(t.endDate)}</p>
@@ -271,21 +243,11 @@ function TenderCard({ t }) {
               </p>
             )}
           </div>
-
-          <div className="flex lg:flex-col gap-2">
-            <a href={detailPath(t)}
-              className="flex-1 lg:flex-none text-center px-4 py-2 bg-[#1A56DB] hover:bg-blue-600 active:bg-blue-800 text-white rounded-xl text-xs font-bold transition-all duration-150 shadow-sm hover:shadow-blue-500/25 hover:shadow-md whitespace-nowrap"
-            >
-              View Details
-            </a>
-            {t.bidLink && (
-              <a href={t.bidLink} target="_blank" rel="noopener noreferrer"
-                className="flex-1 lg:flex-none text-center px-4 py-2 border border-gray-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-600 text-gray-600 dark:text-slate-300 hover:text-[#1A56DB] dark:hover:text-blue-400 bg-white dark:bg-slate-800/50 rounded-xl text-xs font-bold transition-all duration-150 whitespace-nowrap"
-              >
-                Portal ?
-              </a>
-            )}
-          </div>
+          <a href={detailPath(t)}
+            className="w-full text-center px-4 py-2 bg-[#1A56DB] hover:bg-blue-600 active:bg-blue-800 text-white rounded-xl text-xs font-bold transition-all duration-150 shadow-sm hover:shadow-md hover:shadow-blue-500/20 whitespace-nowrap"
+          >
+            View Details
+          </a>
         </div>
       </div>
     </article>
