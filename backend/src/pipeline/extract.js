@@ -12,25 +12,14 @@ const NUM = '(\\d[\\d,]*(?:\\.\\d+)?)';
  * We match the English portion only, allowing for optional separators.
  */
 const VALUE_PATTERNS = [
-  // Direct concatenation: "Bid Value4024302.68" or "Bid Value: 4024302.68"
-  new RegExp(`Bid\\s*Value[^\\d\\n]{0,10}${NUM}`, 'i'),
-  new RegExp(`Estimated\\s*(?:Bid\\s*)?Value[^\\d\\n]{0,10}${NUM}`, 'i'),
-  // Multiline/labeled: "Estimated Bid Value in INR (Inclusive of all taxes)\n350400"
-  new RegExp(`Estimated\\s*(?:Bid\\s*)?Value[^\\d]{0,80}${NUM}`, 'i'),
-  // "Total value wise evaluation" is a false match — skip lines containing 'wise'
-  // Match "Total Value" only when followed by a number (not text)
-  new RegExp(`Total\\s*Value[^\\d\\n\\w]{0,5}${NUM}`, 'i'),
-  // Sometimes stored as "Amount" in item section
-  new RegExp(`(?:Unit\\s*Price|Rate|Basic\\s*Price)[^\\d\\n]{0,10}${NUM}`, 'i'),
+  new RegExp(`Estimated\\s*(?:Bid\\s*)?Value[^\\d\\n]{0,30}${NUM}`, 'i'),
+  new RegExp(`Estimated\\s*(?:Bid\\s*)?Value[^\\d]{0,120}${NUM}`, 'i'),
+  new RegExp(`Total\\s*Value[^\\d\\n\\w]{0,15}${NUM}`, 'i'),
 ];
 
 const EMD_PATTERNS = [
-  // "EMD Amount800000" — value directly after label (no separator)
-  new RegExp(`EMD\\s*(?:रािश\/)?Amount[^\\d\\n]{0,5}${NUM}`, 'i'),
-  // Multiline/labeled: "EMD Amount (INR) :\n50000"
-  new RegExp(`EMD\\s*(?:रािश\/)?Amount[^\\d]{0,80}${NUM}`, 'i'),
-  new RegExp(`Earnest\\s*Money\\s*(?:Deposit)?[^\\d\\n]{0,15}${NUM}`, 'i'),
-  new RegExp(`Earnest\\s*Money\\s*(?:Deposit)?[^\\d]{0,80}${NUM}`, 'i'),
+  new RegExp(`(?:EMD|ईएमड|Earnest\\s*Money)[\\s\\S]{0,100}?(?:Amount|रािश|Deposit)?[^\\d\\n]{0,30}${NUM}`, 'i'),
+  new RegExp(`(?:EMD|ईएमड|Earnest\\s*Money)[\\s\\S]{0,120}?(?:Amount|रािश|Deposit)?[^\\d]{0,100}${NUM}`, 'i'),
 ];
 
 /**
@@ -48,15 +37,17 @@ const DETAIL_FIELD_PATTERNS = [
   // Inspection Required: value may be on same line or next
   { key: 'inspectionRequired', label: 'Inspection Required', regex: /Inspection\s*Required[\s\S]{0,120}?\n(Yes|No)\b/i },
   // MSE Exemption: "MSE Exemption for Years Of Experience\nand  Turnover\nYes | Complete"
-  { key: 'mseExemption', label: 'MSE Exemption', regex: /MSE\s*(?:Relaxation|Exemption) for Years[\s\S]{0,60}?\n(Yes(?:\s*\|[^\n]{0,30})?|No)\b/i },
+  { key: 'mseExemption', label: 'MSE Exemption', regex: /(?:MSE\s*(?:Relaxation|Exemption)\s*(?:for\s*Years\s*Of\s*Experience\s*(?:and\s*Turnover)?)?|MSE\s*(?:Relaxation|Exemption)\s*for\s*Years[\s\S]{0,120}?(?:Experience|Turnover))[\s\S]{0,80}?\b(Yes(?:\s*\|[^\n]{0,30})?|No)\b/i },
   // Startup Relaxation: "Startup Exemption for Years Of\nExperience and  Turnover\nYes | Complete"
-  { key: 'startupExemption', label: 'Startup Exemption', regex: /Startup\s*(?:Relaxation|Exemption) for Y[\s\S]{0,80}?\n(Yes(?:\s*\|[^\n]{0,30})?|No)\b/i },
+  { key: 'startupExemption', label: 'Startup Exemption', regex: /(?:Startup\s*(?:Relaxation|Exemption)\s*(?:for\s*Years\s*Of\s*Experience\s*(?:and\s*Turnover)?)?|Startup\s*(?:Relaxation|Exemption)\s*for\s*Years[\s\S]{0,120}?(?:Experience|Turnover))[\s\S]{0,80}?\b(Yes(?:\s*\|[^\n]{0,30})?|No)\b/i },
   // Consignee delivery address — match 6-digit pincode (starting with 49 for CG) and grab address line, or fallback
   { key: 'consigneeAddress', label: 'Consignee / Delivery Address', regex: /(49\d{4}[^\n]{1,150})/i },
   // Payment Terms
   { key: 'paymentTerms', label: 'Payment Terms', regex: /Payment\s*Terms?[^\n]{0,10}?([^\n]{1,100})/i },
   // Experience Criteria - require a colon to match actual description instead of required documents list
   { key: 'experienceCriteria', label: 'Experience Criteria', regex: /Experience\s*Criteria\s*:\s*([^\n]{5,100})/i },
+  // Experience Criteria (Years)
+  { key: 'experienceYears', label: 'Experience Required (Years)', regex: /(?:Years\s*of\s*Past\s*Experience\s*Required|वष%वष%\/Years\s*of\s*Past\s*Experience\s*Required)[\s\S]{0,100}?\b(\d+)\s*(?:Years?|\(s\)|Year)/i },
   // Bid type: "Type of BidTwo Packet Bid" — directly concatenated
   { key: 'bidType', label: 'Bid Type', regex: /Type\s*of\s*Bid\s*([A-Z][^\n]{1,50})/i },
   // EMD Required flag: "Required\nNo" or "Required\nYes" after EMD Detail section
@@ -71,10 +62,16 @@ function parseNumber(str) {
   return isNaN(num) ? null : num;
 }
 
-function firstMatch(text, patterns) {
+function firstMatch(text, patterns, isBidValue = false) {
   for (const p of patterns) {
     const m = text.match(p);
-    if (m) return parseNumber(m[1]);
+    if (m) {
+      const val = parseNumber(m[1]);
+      if (isBidValue && val === 10 && (m[0].toLowerCase().includes('crore') || m[0].toLowerCase().includes('rs 10'))) {
+        continue;
+      }
+      return val;
+    }
   }
   return null;
 }
@@ -126,7 +123,7 @@ export async function extractValueAndEmd(tender, pdfPath) {
     const text = data.text || '';
     extractedText = text.replace(/\s+/g, ' ').trim().slice(0, 4000);
 
-    if (bidValue == null) bidValue = firstMatch(text, VALUE_PATTERNS);
+    if (bidValue == null) bidValue = firstMatch(text, VALUE_PATTERNS, true);
     if (emdAmount == null) emdAmount = firstMatch(text, EMD_PATTERNS);
 
     for (const field of DETAIL_FIELD_PATTERNS) {
