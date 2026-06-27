@@ -93,179 +93,199 @@ function Skeleton() {
 
 // ─── Tender Card ─────────────────────────────────────────────────────────────
 
+// --- Tender Card -------------------------------------------------------------
+
 function TenderCard({ t }) {
   const dl = daysLeft(t.endDate);
   const badge = deadlineBadge(dl);
 
-  // Extracted fields excerpt for GeM
-  let gemBooleans = [];
-  let gemExperience = null;
-  if (t.source === 'GEM' && t.sourceMeta?.pdfExtract?.fields) {
-    const f = t.sourceMeta.pdfExtract.fields;
-    if (f.mseExemption?.value) {
-      gemBooleans.push(`MSE Exempt: ${f.mseExemption.value}`);
-    }
-    if (f.startupExemption?.value) {
-      gemBooleans.push(`Startup Exempt: ${f.startupExemption.value}`);
-    }
-    if (f.bidType?.value) {
-      gemBooleans.push(`Bid Type: ${f.bidType.value}`);
-    }
-    if (f.bidOfferValidity?.value) {
-      gemBooleans.push(`Validity: ${f.bidOfferValidity.value} Days`);
-    }
-    if (f.experienceCriteria?.value) {
-      gemExperience = f.experienceCriteria.value;
-    }
-  }
+  // Parse GeM extracted fields
+  const fields = t.source === 'GEM' ? t.sourceMeta?.pdfExtract?.fields || {} : {};
+  const mseExempt     = fields.mseExemption?.value;
+  const startupExempt = fields.startupExemption?.value;
+  const bidType       = fields.bidType?.value;
+  const validity      = fields.bidOfferValidity?.value;
+  const experience    = fields.experienceCriteria?.value;
+
+  const isMseYes     = mseExempt?.toLowerCase() === 'yes';
+  const isStartupYes = startupExempt?.toLowerCase() === 'yes';
 
   const hasValue = t.bidValue != null && !isNaN(t.bidValue) && t.bidValue > 0;
-  const valueDisplay = hasValue ? fmt(t.bidValue) : 'Not Available';
-  const valueClass = hasValue ? 'text-base font-extrabold text-emerald-600' : 'text-sm font-semibold text-gray-400 italic';
-
-  const hasEmd = t.emdAmount != null && !isNaN(t.emdAmount) && t.emdAmount > 0;
-  const emdDisplay = hasEmd ? fmt(t.emdAmount) : 'N/A / Exempt';
+  const hasEmd   = t.emdAmount != null && !isNaN(t.emdAmount) && t.emdAmount > 0;
 
   return (
-    <article className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 hover:border-blue-500/40 hover:shadow-lg transition duration-200 group relative overflow-hidden">
-      {/* Left indicator bar on hover */}
-      <div className="absolute left-0 top-0 bottom-0 w-1 bg-transparent group-hover:bg-[#1A56DB] transition-all rounded-l-2xl" />
+    <article className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 hover:border-blue-400/60 dark:hover:border-blue-500/50 hover:shadow-xl dark:hover:shadow-blue-900/10 transition-all duration-200 group relative overflow-hidden">
+      <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-transparent group-hover:bg-[#1A56DB] transition-all duration-200 rounded-l-2xl" />
 
-      <div className="p-5 flex flex-col lg:grid lg:grid-cols-[1fr_220px_160px] lg:divide-x lg:divide-gray-100 lg:items-center gap-5">
-        {/* Column 1: Main Tender Info */}
-        <div className="min-w-0 flex flex-col justify-between pr-2">
-          <div>
-            {/* Badges strip */}
-            <div className="flex flex-wrap items-center gap-2 mb-2.5">
-              <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-extrabold tracking-wide uppercase border ${t.source === 'GEM'
-                ? 'bg-violet-50 text-violet-700 border-violet-100'
-                : 'bg-amber-50 text-amber-700 border-amber-100'
-                }`}>{t.source}</span>
+      <div className="p-5 grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-0">
 
-              {t.source === 'CSPGCL' && t.sourceMeta?.plantLabel && (
-                <a href={t.bidLink} target='_blank' rel='noopener noreferrer'
-                  className='inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-100 transition cursor-pointer'
-                  aria-label={'View portal for ' + t.sourceMeta.plantLabel}
-                >
-                  {t.sourceMeta.plantLabel}
-                  <svg className='w-2.5 h-2.5 text-blue-400' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
-                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14' />
-                  </svg>
-                </a>
-              )}
+        {/* LEFT column */}
+        <div className="min-w-0 pr-0 lg:pr-6 lg:border-r border-gray-100 dark:border-slate-800">
 
-              {t.locationCity && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-gray-50 text-gray-600 border border-gray-100">
-                  <svg className="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  {t.locationCity}
+          {/* Badges row */}
+          <div className="flex flex-wrap items-center gap-1.5 mb-2.5">
+            <span className={t.source === 'GEM'
+              ? 'inline-flex items-center px-2 py-0.5 rounded text-[10px] font-extrabold tracking-widest uppercase bg-violet-50 dark:bg-violet-950/50 text-violet-700 dark:text-violet-400 border border-violet-200 dark:border-violet-800'
+              : 'inline-flex items-center px-2 py-0.5 rounded text-[10px] font-extrabold tracking-widest uppercase bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800'
+            }>{t.source}</span>
+
+            {t.source === 'CSPGCL' && t.sourceMeta?.plantLabel && (
+              <a href={t.bidLink} target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 dark:hover:bg-sky-900/60 text-sky-700 dark:text-sky-400 border border-sky-200 dark:border-sky-800 transition cursor-pointer"
+              >
+                {t.sourceMeta.plantLabel}
+                <svg className="w-2.5 h-2.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </a>
+            )}
+
+            {t.locationCity && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-gray-50 dark:bg-slate-800 text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-700">
+                <svg className="w-2.5 h-2.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                {t.locationCity}
+              </span>
+            )}
+
+            {badge && (
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold ${badge.cls}`}>
+                {badge.label}
+              </span>
+            )}
+
+            {t.sourceMeta?.isEbidding && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">e-Bidding</span>
+            )}
+
+            {t.category?.slice(0, 2).map(cat => (
+              <span key={cat} className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-50/70 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400 border border-blue-100 dark:border-blue-900">{cat}</span>
+            ))}
+          </div>
+
+          {/* Title */}
+          <h3 className="text-sm md:text-[15px] font-bold text-gray-900 dark:text-white leading-snug mb-1 group-hover:text-[#1A56DB] dark:group-hover:text-blue-400 transition-colors duration-150 line-clamp-2">
+            <a href={detailPath(t)}>{t.title}</a>
+          </h3>
+
+          {/* Organisation */}
+          {(t.organization || t.department) && (
+            <p className="text-xs text-gray-500 dark:text-slate-400 font-medium line-clamp-1 mb-2">
+              {t.organization || t.department}
+            </p>
+          )}
+
+          {/* Notice number */}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-gray-400 dark:text-slate-500 font-mono mb-2.5">
+            <span>Notice No: <strong className="text-gray-600 dark:text-slate-300 font-semibold bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 px-1.5 py-0.5 rounded select-all">{t.bidNumber}</strong></span>
+            {t.valueExtractionStatus === 'not_found' && (
+              <span className="text-amber-500 dark:text-amber-400 font-sans font-normal italic">Value not in PDF</span>
+            )}
+          </div>
+
+          {/* MSE / Startup / Bid type pills */}
+          {(mseExempt || startupExempt || bidType || validity) && (
+            <div className="flex flex-wrap items-center gap-1.5 mb-2">
+              {mseExempt && (
+                <span className={isMseYes
+                  ? 'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
+                  : 'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900'
+                }>
+                  {isMseYes
+                    ? <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                    : <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>
+                  }
+                  MSE Exempt: {mseExempt}
                 </span>
               )}
-
-              {badge && (
-                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${badge.cls}`}>
-                  {badge.label}
+              {startupExempt && (
+                <span className={isStartupYes
+                  ? 'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-cyan-50 dark:bg-cyan-950/40 text-cyan-700 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800'
+                  : 'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900'
+                }>
+                  {isStartupYes
+                    ? <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                    : <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>
+                  }
+                  Startup Exempt: {startupExempt}
                 </span>
               )}
-
-              {t.sourceMeta?.isEbidding && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] bg-blue-50 text-blue-600 font-bold border border-blue-100">e-Bidding</span>
+              {bidType && (
+                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                  {bidType}
+                </span>
               )}
+              {validity && (
+                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                  Valid {validity}d
+                </span>
+              )}
+            </div>
+          )}
 
-              {t.category?.slice(0, 2).map(c => (
-                <span key={c} className="inline-flex items-center px-2 py-0.5 rounded text-[10px] bg-blue-50/60 text-blue-700 font-bold border border-blue-100/50">{c}</span>
+          {/* Experience criteria */}
+          {experience && (
+            <div className="flex items-start gap-1.5 text-[11px] text-gray-500 dark:text-slate-400 mb-2" title={experience}>
+              <span className="font-extrabold text-violet-600 dark:text-violet-400 uppercase tracking-wide text-[9px] flex-shrink-0 mt-[3px]">Exp. Required:</span>
+              <span className="line-clamp-1 font-medium flex-1">{experience}</span>
+            </div>
+          )}
+
+          {/* Risk flags */}
+          {t.risks?.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1 mt-1">
+              <span className="text-[9px] font-extrabold text-red-400 dark:text-red-500 uppercase tracking-widest mr-0.5">Risks:</span>
+              {t.risks.slice(0, 3).map(r => (
+                <span key={r} className="text-[10px] bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/40 px-2 py-0.5 rounded-full font-semibold">{r}</span>
               ))}
             </div>
-
-            {/* Title */}
-            <h3 className="text-sm md:text-base font-bold text-gray-900 leading-snug mb-1 group-hover:text-[#1A56DB] transition-colors duration-150">
-              <a href={detailPath(t)} className="hover:underline">{t.title}</a>
-            </h3>
-
-            {/* Organisation */}
-            {t.organization && (
-              <p className="text-xs text-gray-500 font-medium line-clamp-1 mb-2.5">{t.organization}</p>
-            )}
-          </div>
-
-          {/* Subtitle / Extracted pdf data or Notice Number */}
-          <div className="space-y-2 mt-1">
-            {/* Monospace Notice Number / ID */}
-            <div className="flex flex-wrap items-center gap-x-3 text-[11px] text-gray-400 font-mono">
-              <span>Notice No: <strong className="text-gray-600 font-semibold bg-gray-50 border border-gray-100 px-2 py-0.5 rounded select-all">{t.bidNumber}</strong></span>
-              {t.valueExtractionStatus === 'not_found' && (
-                <span className="text-red-500 font-sans font-normal italic">Value not extracted from PDF</span>
-              )}
-            </div>
-
-            {/* Inline GeM Extracted PDF Details */}
-            {(gemBooleans.length > 0 || gemExperience) && (
-              <div className="text-[11px] bg-violet-50/40 border border-violet-100/40 rounded-xl p-3">
-                {gemBooleans.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-gray-600 font-medium">
-                    <span className="font-extrabold text-violet-700 uppercase tracking-wider text-[10px]">Bid Details:</span>
-                    {gemBooleans.map((b, idx) => (
-                      <span key={b} className="flex items-center gap-2">
-                        {idx > 0 && <span className="text-violet-200">•</span>}
-                        <span>{b}</span>
-                      </span>
-                    ))}
-                  </div>
-                )}
-                {gemExperience && (
-                  <div className="text-gray-500 mt-1.5 pt-1.5 border-t border-violet-100/30 flex items-start gap-1.5" title={gemExperience}>
-                    <span className="font-extrabold text-violet-700 uppercase tracking-wider text-[10px] flex-shrink-0 mt-0.5">Experience:</span>
-                    <p className="line-clamp-1 leading-snug font-medium text-gray-600 flex-1">{gemExperience}</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Risks */}
-            {t.risks?.length > 0 && (
-              <div className="flex flex-wrap items-center gap-1 mt-1">
-                <span className="text-[10px] font-extrabold text-red-500 uppercase tracking-wider mr-1">Risk Flags:</span>
-                {t.risks.slice(0, 3).map(r => (
-                  <span key={r} className="text-[10px] bg-red-50 text-red-600 border border-red-100 px-2 py-0.5 rounded-md font-semibold">{r}</span>
-                ))}
-              </div>
-            )}
-          </div>
+          )}
         </div>
 
-        {/* Column 2: Financial Details */}
-        <div className="lg:px-6 flex flex-row lg:flex-col justify-between lg:justify-center gap-y-3 gap-x-4 border-t lg:border-t-0 pt-3 lg:pt-0">
-          <div className="flex-1 lg:flex-none">
-            <p className="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider mb-0.5">Bid Value</p>
-            <p className={valueClass}>{valueDisplay}</p>
+        {/* RIGHT column */}
+        <div className="flex flex-row lg:flex-col justify-between lg:justify-center gap-4 lg:gap-5 lg:pl-6 mt-4 lg:mt-0 border-t lg:border-t-0 border-gray-100 dark:border-slate-800 pt-4 lg:pt-0 lg:min-w-[175px]">
+          <div>
+            <p className="text-[9px] text-gray-400 dark:text-slate-500 font-extrabold uppercase tracking-widest mb-0.5">Bid Value</p>
+            {hasValue
+              ? <p className="text-base font-extrabold text-emerald-600 dark:text-emerald-400 leading-none">{fmt(t.bidValue)}</p>
+              : <p className="text-[11px] font-semibold text-gray-400 dark:text-slate-500 italic">Not Available</p>
+            }
           </div>
-          <div className="flex-1 lg:flex-none">
-            <p className="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider mb-0.5">EMD Amount</p>
-            <p className="text-sm font-bold text-slate-800">{emdDisplay}</p>
-          </div>
-        </div>
 
-        {/* Column 3: Dates & Actions */}
-        <div className="lg:pl-6 flex flex-col justify-center items-stretch lg:items-end gap-y-3 border-t lg:border-t-0 pt-3 lg:pt-0">
+          <div>
+            <p className="text-[9px] text-gray-400 dark:text-slate-500 font-extrabold uppercase tracking-widest mb-0.5">EMD Amount</p>
+            {hasEmd
+              ? <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{fmt(t.emdAmount)}</p>
+              : <p className="text-sm font-semibold text-gray-400 dark:text-slate-500">N/A / Exempt</p>
+            }
+          </div>
+
           <div className="text-left lg:text-right">
-            <p className="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider mb-0.5">Closing Date</p>
-            <p className="text-sm font-bold text-slate-800">{fmtDate(t.endDate)}</p>
+            <p className="text-[9px] text-gray-400 dark:text-slate-500 font-extrabold uppercase tracking-widest mb-0.5">Closing Date</p>
+            <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{fmtDate(t.endDate)}</p>
             {dl != null && (
-              <p className={`text-[10px] mt-0.5 font-semibold ${dl < 0 ? 'text-gray-400' : dl <= 2 ? 'text-red-600' : dl <= 7 ? 'text-amber-600' : 'text-green-600'
-                }`}>
+              <p className={`text-[10px] font-semibold mt-0.5 ${dl < 0 ? 'text-gray-400 dark:text-slate-600' : dl <= 2 ? 'text-red-500 dark:text-red-400' : dl <= 7 ? 'text-amber-500 dark:text-amber-400' : 'text-green-600 dark:text-green-400'}`}>
                 {dl < 0 ? 'Closed' : dl === 0 ? 'Closes today' : `${dl} days left`}
               </p>
             )}
           </div>
 
-          <a
-            href={detailPath(t)}
-            className="w-full text-center px-4 py-2 bg-[#1A56DB] text-white hover:bg-blue-700 active:bg-blue-800 rounded-xl text-xs font-bold transition duration-150 shadow-sm hover:shadow-md hover:shadow-blue-500/10"
-          >
-            View details
-          </a>
+          <div className="flex lg:flex-col gap-2">
+            <a href={detailPath(t)}
+              className="flex-1 lg:flex-none text-center px-4 py-2 bg-[#1A56DB] hover:bg-blue-600 active:bg-blue-800 text-white rounded-xl text-xs font-bold transition-all duration-150 shadow-sm hover:shadow-blue-500/25 hover:shadow-md whitespace-nowrap"
+            >
+              View Details
+            </a>
+            {t.bidLink && (
+              <a href={t.bidLink} target="_blank" rel="noopener noreferrer"
+                className="flex-1 lg:flex-none text-center px-4 py-2 border border-gray-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-600 text-gray-600 dark:text-slate-300 hover:text-[#1A56DB] dark:hover:text-blue-400 bg-white dark:bg-slate-800/50 rounded-xl text-xs font-bold transition-all duration-150 whitespace-nowrap"
+              >
+                Portal ?
+              </a>
+            )}
+          </div>
         </div>
       </div>
     </article>
