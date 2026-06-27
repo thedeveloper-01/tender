@@ -85,7 +85,7 @@ function Skeleton() {
   return (
     <div className="animate-pulse space-y-3">
       {[...Array(6)].map((_, i) => (
-        <div key={i} className="bg-white rounded-2xl border border-gray-200 p-5 h-44 md:h-28"></div>
+        <div key={i} className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 p-5 h-44 md:h-28"></div>
       ))}
     </div>
   );
@@ -130,19 +130,18 @@ function TenderCard({ t }) {
     <article className="bg-white rounded-2xl border border-gray-200 hover:border-blue-500/40 hover:shadow-lg transition duration-200 group relative overflow-hidden">
       {/* Left indicator bar on hover */}
       <div className="absolute left-0 top-0 bottom-0 w-1 bg-transparent group-hover:bg-[#1A56DB] transition-all rounded-l-2xl" />
-      
+
       <div className="p-5 flex flex-col lg:grid lg:grid-cols-[1fr_220px_160px] lg:divide-x lg:divide-gray-100 lg:items-center gap-5">
         {/* Column 1: Main Tender Info */}
         <div className="min-w-0 flex flex-col justify-between pr-2">
           <div>
             {/* Badges strip */}
             <div className="flex flex-wrap items-center gap-2 mb-2.5">
-              <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-extrabold tracking-wide uppercase border ${
-                t.source === 'GEM' 
-                  ? 'bg-violet-50 text-violet-700 border-violet-100' 
-                  : 'bg-amber-50 text-amber-700 border-amber-100'
-              }`}>{t.source}</span>
-              
+              <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-extrabold tracking-wide uppercase border ${t.source === 'GEM'
+                ? 'bg-violet-50 text-violet-700 border-violet-100'
+                : 'bg-amber-50 text-amber-700 border-amber-100'
+                }`}>{t.source}</span>
+
               {t.locationCity && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-gray-50 text-gray-600 border border-gray-100">
                   <svg className="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -242,9 +241,8 @@ function TenderCard({ t }) {
             <p className="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider mb-0.5">Closing Date</p>
             <p className="text-sm font-bold text-slate-800">{fmtDate(t.endDate)}</p>
             {dl != null && (
-              <p className={`text-[10px] mt-0.5 font-semibold ${
-                dl < 0 ? 'text-gray-400' : dl <= 2 ? 'text-red-600' : dl <= 7 ? 'text-amber-600' : 'text-green-600'
-              }`}>
+              <p className={`text-[10px] mt-0.5 font-semibold ${dl < 0 ? 'text-gray-400' : dl <= 2 ? 'text-red-600' : dl <= 7 ? 'text-amber-600' : 'text-green-600'
+                }`}>
                 {dl < 0 ? 'Closed' : dl === 0 ? 'Closes today' : `${dl} days left`}
               </p>
             )}
@@ -271,11 +269,13 @@ function FilterPanel({ filters, onChange, onReset, totalResults, loading }) {
     <div className="space-y-5">
       {/* Source */}
       <div>
-        <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">Source</label>
+        <label className="block text-xs font-semibold text-gray-700 dark:text-slate-300 uppercase tracking-wide mb-2">Source</label>
         <div className="flex gap-2">
           {['all', 'GEM', 'CSPGCL'].map(s => (
             <button key={s} onClick={() => onChange('source', s)}
-              className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium border transition ${filters.source === s ? 'bg-[#1A56DB] text-white border-[#1A56DB]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#1A56DB]'
+              className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium border transition ${filters.source === s
+                ? 'bg-[#1A56DB] text-white border-[#1A56DB]'
+                : 'bg-white dark:bg-slate-950 text-gray-600 dark:text-slate-300 border-gray-200 dark:border-slate-800 hover:border-[#1A56DB] dark:hover:border-blue-500'
                 }`}
             >{s === 'all' ? 'All' : s}</button>
           ))}
@@ -284,30 +284,46 @@ function FilterPanel({ filters, onChange, onReset, totalResults, loading }) {
 
       {/* Status */}
       <div>
-        <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">Status</label>
+        <label className="block text-xs font-semibold text-gray-700 dark:text-slate-300 uppercase tracking-wide mb-2">Status</label>
         <div className="flex gap-2">
           {['open', 'all', 'closed'].map(s => (
             <button key={s} onClick={() => onChange('status', s)}
-              className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium border capitalize transition ${filters.status === s ? 'bg-[#1A56DB] text-white border-[#1A56DB]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#1A56DB]'
+              className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium border capitalize transition ${filters.status === s
+                ? 'bg-[#1A56DB] text-white border-[#1A56DB]'
+                : 'bg-white dark:bg-slate-950 text-gray-600 dark:text-slate-300 border-gray-200 dark:border-slate-800 hover:border-[#1A56DB] dark:hover:border-blue-500'
                 }`}
             >{s}</button>
           ))}
         </div>
       </div>
 
-      {/* District */}
-      <div>
-        <label htmlFor="filter-district" className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">District</label>
-        <select id="filter-district" value={filters.city} onChange={e => onChange('city', e.target.value)}
-          className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#1A56DB]/30 focus:border-[#1A56DB]">
-          <option value="all">All Chhattisgarh</option>
-          {CG_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
-        </select>
-      </div>
+      {/* District or Plant selection */}
+      {filters.source === 'CSPGCL' ? (
+        <div>
+          <label htmlFor="filter-plant" className="block text-xs font-semibold text-gray-700 dark:text-slate-300 uppercase tracking-wide mb-2">Plant / Office</label>
+          <select id="filter-plant" value={filters.plant || 'all'} onChange={e => onChange('plant', e.target.value)}
+            className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-slate-800 text-sm bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 dark:focus:border-blue-500">
+            <option value="all">All Plants & Offices</option>
+            <option value="central">Central Offices</option>
+            <option value="korba-west">Hasdeo HTPS — Korba West</option>
+            <option value="dspm">Dr. Shyama Prasad Mukharjee TPS</option>
+            <option value="marwa">Marwa Tendubhata TPS</option>
+          </select>
+        </div>
+      ) : (
+        <div>
+          <label htmlFor="filter-district" className="block text-xs font-semibold text-gray-700 dark:text-slate-300 uppercase tracking-wide mb-2">District</label>
+          <select id="filter-district" value={filters.city} onChange={e => onChange('city', e.target.value)}
+            className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-slate-800 text-sm bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 dark:focus:border-blue-500">
+            <option value="all">All Chhattisgarh</option>
+            {CG_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+      )}
 
       {/* Category */}
       <div>
-        <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">Category</label>
+        <label className="block text-xs font-semibold text-gray-700 dark:text-slate-300 uppercase tracking-wide mb-2">Category</label>
         <div className="flex flex-wrap gap-1.5">
           {CATEGORIES.map(c => {
             const cats = filters.category ? filters.category.split(',') : [];
@@ -318,7 +334,9 @@ function FilterPanel({ filters, onChange, onReset, totalResults, loading }) {
                   const next = active ? cats.filter(x => x !== c) : [...cats, c];
                   onChange('category', next.join(','));
                 }}
-                className={`px-2.5 py-1 rounded-full text-xs font-medium border transition ${active ? 'bg-[#1A56DB] text-white border-[#1A56DB]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#1A56DB]'
+                className={`px-2.5 py-1 rounded-full text-xs font-medium border transition ${active
+                  ? 'bg-[#1A56DB] text-white border-[#1A56DB]'
+                  : 'bg-white dark:bg-slate-950 text-gray-600 dark:text-slate-300 border-gray-200 dark:border-slate-800 hover:border-[#1A56DB] dark:hover:border-blue-500'
                   }`}
               >{c}</button>
             );
@@ -328,32 +346,32 @@ function FilterPanel({ filters, onChange, onReset, totalResults, loading }) {
 
       {/* Bid Value Range */}
       <div>
-        <label id="filter-bid-value-label" className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">Bid Value (₹)</label>
+        <label id="filter-bid-value-label" className="block text-xs font-semibold text-gray-700 dark:text-slate-300 uppercase tracking-wide mb-2">Bid Value (₹)</label>
         <div className="flex gap-2">
           <input type="number" id="filter-min-bid-value" aria-labelledby="filter-bid-value-label" aria-label="Minimum Bid Value" placeholder="Min" value={filters.minValue || ''}
             onChange={e => onChange('minValue', e.target.value)}
-            className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-[#1A56DB]/30 focus:border-[#1A56DB]" />
+            className="w-full px-3 py-1.5 rounded-lg border border-gray-200 dark:border-slate-800 text-xs bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 dark:focus:border-blue-500" />
           <input type="number" id="filter-max-bid-value" aria-labelledby="filter-bid-value-label" aria-label="Maximum Bid Value" placeholder="Max" value={filters.maxValue || ''}
             onChange={e => onChange('maxValue', e.target.value)}
-            className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-[#1A56DB]/30 focus:border-[#1A56DB]" />
+            className="w-full px-3 py-1.5 rounded-lg border border-gray-200 dark:border-slate-800 text-xs bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 dark:focus:border-blue-500" />
         </div>
       </div>
 
       {/* EMD Range */}
       <div>
-        <label id="filter-emd-label" className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">EMD Amount (₹)</label>
+        <label id="filter-emd-label" className="block text-xs font-semibold text-gray-700 dark:text-slate-300 uppercase tracking-wide mb-2">EMD Amount (₹)</label>
         <div className="flex gap-2">
           <input type="number" id="filter-min-emd" aria-labelledby="filter-emd-label" aria-label="Minimum EMD" placeholder="Min" value={filters.minEmd || ''}
             onChange={e => onChange('minEmd', e.target.value)}
-            className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-[#1A56DB]/30 focus:border-[#1A56DB]" />
+            className="w-full px-3 py-1.5 rounded-lg border border-gray-200 dark:border-slate-800 text-xs bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 dark:focus:border-blue-500" />
           <input type="number" id="filter-max-emd" aria-labelledby="filter-emd-label" aria-label="Maximum EMD" placeholder="Max" value={filters.maxEmd || ''}
             onChange={e => onChange('maxEmd', e.target.value)}
-            className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-[#1A56DB]/30 focus:border-[#1A56DB]" />
+            className="w-full px-3 py-1.5 rounded-lg border border-gray-200 dark:border-slate-800 text-xs bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 dark:focus:border-blue-500" />
         </div>
       </div>
 
       <button onClick={onReset}
-        className="w-full px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition font-medium">
+        className="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-slate-800 text-sm text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition font-medium">
         Reset Filters
       </button>
     </div>
@@ -364,12 +382,12 @@ function FilterPanel({ filters, onChange, onReset, totalResults, loading }) {
       {/* Mobile toggle */}
       <div className="lg:hidden mb-4">
         <button onClick={() => setMobileOpen(o => !o)}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:border-[#1A56DB] transition">
+          className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl text-sm font-medium text-gray-700 dark:text-slate-300 hover:border-blue-500 transition">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2zM3 16a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2z" />
           </svg>
           Filters
-          <span className="bg-[#1A56DB] text-white text-xs rounded-full px-1.5 py-0.5">
+          <span className="bg-[#1A56DB] text-white text-xs rounded-full px-1.5 py-0.5 font-bold">
             {loading ? '...' : totalResults}
           </span>
           <svg className={`w-4 h-4 transition-transform ${mobileOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -377,7 +395,7 @@ function FilterPanel({ filters, onChange, onReset, totalResults, loading }) {
           </svg>
         </button>
         {mobileOpen && (
-          <div className="mt-3 bg-white border border-gray-200 rounded-2xl p-5 shadow-lg">
+          <div className="mt-3 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg">
             {inner}
           </div>
         )}
@@ -385,10 +403,10 @@ function FilterPanel({ filters, onChange, onReset, totalResults, loading }) {
 
       {/* Desktop sidebar */}
       <aside className="hidden lg:block w-64 xl:w-72 flex-shrink-0">
-        <div className="bg-white border border-gray-200 rounded-2xl p-5 sticky top-20">
+        <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-5 sticky top-20 shadow-sm">
           <div className="flex items-center justify-between mb-5">
-            <h3 className="text-sm font-bold text-gray-900">Filters</h3>
-            <span className="text-xs text-gray-400">
+            <h3 className="text-sm font-bold text-gray-900 dark:text-white">Filters</h3>
+            <span className="text-xs text-gray-400 dark:text-slate-500 font-semibold">
               {loading ? 'Loading...' : `${totalResults} result${totalResults !== 1 ? 's' : ''}`}
             </span>
           </div>
@@ -402,8 +420,12 @@ function FilterPanel({ filters, onChange, onReset, totalResults, loading }) {
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
 
 const DEFAULT_FILTERS = {
-  source: 'all', status: 'open', city: 'all',
+  source: 'all', status: 'open', city: 'all', plant: 'all',
   category: '', minValue: '', maxValue: '', minEmd: '', maxEmd: '',
+  mseStartupOnly: false,
+  zeroExperienceOnly: false,
+  highValueOnly: false,
+  lowEmdOnly: false,
 };
 
 /**
@@ -413,11 +435,11 @@ const DEFAULT_FILTERS = {
  * @param {any[] | null} [props.initialTenders]
  * @param {number} [props.initialTotal]
  */
-export default function TenderDashboard({ 
-  initialCity = '', 
-  initialSource = 'all', 
-  initialTenders = null, 
-  initialTotal = 0 
+export default function TenderDashboard({
+  initialCity = '',
+  initialSource = 'all',
+  initialTenders = null,
+  initialTotal = 0
 }) {
   const [tenders, setTenders] = useState(initialTenders || []);
   const [total, setTotal] = useState(initialTenders ? initialTotal : 0);
@@ -451,10 +473,16 @@ export default function TenderDashboard({
       if (currentFilters.status !== 'all') params.set('status', currentFilters.status);
       if (currentFilters.city !== 'all') params.set('city', currentFilters.city);
       if (currentFilters.category) params.set('category', currentFilters.category);
-      if (currentFilters.minValue) params.set('minValue', currentFilters.minValue);
+      let minValToUse = currentFilters.minValue;
+      if (currentFilters.highValueOnly) minValToUse = '10000000';
+      if (minValToUse) params.set('minValue', minValToUse);
+
       if (currentFilters.maxValue) params.set('maxValue', currentFilters.maxValue);
       if (currentFilters.minEmd) params.set('minEmd', currentFilters.minEmd);
-      if (currentFilters.maxEmd) params.set('maxEmd', currentFilters.maxEmd);
+
+      let maxEmdToUse = currentFilters.maxEmd;
+      if (currentFilters.lowEmdOnly) maxEmdToUse = '10000';
+      if (maxEmdToUse) params.set('maxEmd', maxEmdToUse);
       params.set('sort', currentSort);
       params.set('page', currentPage);
       params.set('limit', '100');
@@ -500,12 +528,29 @@ export default function TenderDashboard({
     setPage(1);
   };
 
+  const displayedTenders = tenders.filter(t => {
+    if (filters.source === 'CSPGCL' && filters.plant && filters.plant !== 'all') {
+      if (t.sourceMeta?.plantId !== filters.plant) return false;
+    }
+    if (filters.mseStartupOnly) {
+      const isMseExempt = t.sourceMeta?.pdfExtract?.fields?.mseExemption?.value?.toLowerCase() === 'yes';
+      const isStartupExempt = t.sourceMeta?.pdfExtract?.fields?.startupExemption?.value?.toLowerCase() === 'yes';
+      if (!isMseExempt && !isStartupExempt) return false;
+    }
+    if (filters.zeroExperienceOnly) {
+      const exp = t.sourceMeta?.pdfExtract?.fields?.experienceCriteria?.value?.toLowerCase();
+      const hasExp = exp && !exp.includes('0') && !exp.includes('no') && !exp.includes('not required') && !exp.includes('nil') && !exp.includes('exempt');
+      if (hasExp) return false;
+    }
+    return true;
+  });
+
   const totalPages = Math.ceil(total / 100);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-6">
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
         {/* Search */}
         <div className="relative flex-1">
           <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -518,7 +563,7 @@ export default function TenderDashboard({
             placeholder="Search tenders by keyword, number, organisation…"
             value={q}
             onChange={e => { setQ(e.target.value); setPage(1); }}
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#1A56DB]/30 focus:border-[#1A56DB] shadow-sm"
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-800 text-sm bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 dark:focus:border-blue-500 shadow-sm transition"
           />
         </div>
 
@@ -528,7 +573,7 @@ export default function TenderDashboard({
           aria-label="Sort tenders by criteria"
           value={sort}
           onChange={e => { setSort(e.target.value); setPage(1); }}
-          className="px-3 py-2.5 rounded-xl border border-gray-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#1A56DB]/30 focus:border-[#1A56DB] shadow-sm"
+          className="px-3 py-2.5 rounded-xl border border-gray-200 dark:border-slate-800 text-sm bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 dark:focus:border-blue-500 shadow-sm transition"
         >
           <option value="endDate_asc">Sort by: Closing soonest</option>
           <option value="endDate_desc">Sort by: Closing latest</option>
@@ -539,8 +584,37 @@ export default function TenderDashboard({
         </select>
       </div>
 
-      <div className="flex gap-6 items-start">
-        {/* Filter sidebar */}
+      {/* Quick Toggles */}
+      <div className="flex flex-wrap items-center gap-2 mb-6">
+        <span className="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider mr-1">Quick Toggles:</span>
+        {[
+          { key: 'mseStartupOnly', label: 'Startup/MSE Exempt' },
+          { key: 'zeroExperienceOnly', label: 'Zero Exp. Required' },
+          { key: 'highValueOnly', label: 'High Value (> 1 Cr)' },
+          { key: 'lowEmdOnly', label: 'Low EMD (< 10k)' },
+        ].map(({ key, label }) => {
+          const active = filters[key];
+          return (
+            <button
+              key={key}
+              onClick={() => onFilterChange(key, !active)}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition duration-150 flex items-center gap-1.5 ${active
+                ? 'bg-[#1A56DB] border-[#1A56DB] text-white shadow-sm'
+                : 'bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-800 text-gray-600 dark:text-slate-300 hover:border-blue-500/40 hover:text-[#1A56DB]'
+                }`}
+            >
+              {active && (
+                <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+              {label}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="flex flex-col lg:flex-row gap-8">
         <FilterPanel
           filters={filters}
           onChange={onFilterChange}
@@ -549,27 +623,30 @@ export default function TenderDashboard({
           loading={loading}
         />
 
-        {/* Results */}
-        <div className="flex-1 min-w-0">
+        {/* Main Content */}
+        <main className="flex-1 min-w-0">
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4 text-sm text-red-700">
-              Could not load tenders: {error}
+            <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 rounded-2xl p-4 text-red-700 dark:text-red-400 text-sm mb-6">
+              Error loading tenders: {error}
             </div>
           )}
 
-          {loading ? <Skeleton /> : tenders.length === 0 ? (
-            <div className="text-center py-16 bg-white rounded-2xl border border-gray-200">
-              <svg className="w-10 h-10 text-gray-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <p className="text-gray-500 text-sm font-medium">No tenders match your filters</p>
+          {loading ? (
+            <Skeleton />
+          ) : displayedTenders.length === 0 ? (
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 p-8 text-center shadow-sm">
+              <p className="text-gray-500 dark:text-slate-400 text-sm font-medium">No tenders match your filters</p>
               <button onClick={onReset} className="mt-3 text-sm text-[#1A56DB] hover:underline">Reset filters</button>
             </div>
           ) : (
             <>
-              <p className="text-xs text-gray-400 mb-4">{total.toLocaleString()} result{total !== 1 ? 's' : ''}</p>
+              <p className="text-xs text-gray-400 dark:text-slate-400 mb-4">
+                {displayedTenders.length === tenders.length
+                  ? `${total.toLocaleString()} result${total !== 1 ? 's' : ''}`
+                  : `Showing ${displayedTenders.length} matching of ${tenders.length} page results (${total.toLocaleString()} total)`}
+              </p>
               <div className="flex flex-col gap-3">
-                {tenders.map(t => <TenderCard key={`${t.source}-${t.bidNumber}`} t={t} />)}
+                {displayedTenders.map(t => <TenderCard key={`${t.source}-${t.bidNumber}`} t={t} />)}
               </div>
 
               {/* Pagination */}
@@ -588,7 +665,7 @@ export default function TenderDashboard({
               )}
             </>
           )}
-        </div>
+        </main>
       </div>
     </div>
   );

@@ -104,8 +104,26 @@ const jsonLdItems: object[] = jsonLd
     <!-- Preconnect for external portals linked from tender detail pages -->
     <link rel="preconnect" href="https://mkp.gem.gov.in" crossorigin />
     <link rel="dns-prefetch" href="https://mkp.gem.gov.in" />
+
+    <!-- Dark Mode Inline script to avoid flickering -->
+    <script is:inline>
+      const theme = (() => {
+        if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
+          return localStorage.getItem('theme');
+        }
+        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          return 'dark';
+        }
+        return 'light';
+      })();
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    </script>
   </head>
-  <body>
+  <body class="dark:bg-slate-950 dark:text-slate-100 min-h-screen transition-colors duration-200">
     <slot />
   </body>
 </html>
