@@ -88,14 +88,16 @@ const ssrTenders = (initialTenders || []).slice(0, 20);
 
     <!-- Issue #1 — SSR tender list (visible to Googlebot, no JS needed) -->
     {ssrTenders.length > 0 && (
-      <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-2">
-        <p class="text-xs text-gray-400 mb-4">{initialTotal.toLocaleString()} open CSPGCL tenders — showing first {ssrTenders.length}</p>
-        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
-          {ssrTenders.map((t: any) => (
-            <TenderCard tender={t} />
-          ))}
-        </div>
-      </section>
+      <noscript>
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-2">
+          <p class="text-xs text-gray-400 mb-4">{initialTotal.toLocaleString()} open CSPGCL tenders — showing first {ssrTenders.length}</p>
+          <div class="flex flex-col gap-3">
+            {ssrTenders.map((t: any) => (
+              <TenderCard tender={t} />
+            ))}
+          </div>
+        </section>
+      </noscript>
     )}
 
     <!-- JS-hydrated dashboard -->

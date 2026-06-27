@@ -85,7 +85,7 @@ function Skeleton() {
   return (
     <div className="animate-pulse space-y-3">
       {[...Array(6)].map((_, i) => (
-        <div key={i} className="bg-white rounded-2xl border border-gray-200 p-5 h-36"></div>
+        <div key={i} className="bg-white rounded-2xl border border-gray-200 p-5 h-44 md:h-28"></div>
       ))}
     </div>
   );
@@ -97,109 +97,137 @@ function TenderCard({ t }) {
   const dl = daysLeft(t.endDate);
   const badge = deadlineBadge(dl);
 
+  // Extracted fields excerpt for GeM
+  let gemInfoExcerpt = null;
+  if (t.source === 'GEM' && t.sourceMeta?.pdfExtract?.fields) {
+    const f = t.sourceMeta.pdfExtract.fields;
+    const FIELDS = [
+      { key: 'mseExemption', label: 'MSE Exempt' },
+      { key: 'startupExemption', label: 'Startup Exempt' },
+      { key: 'experienceCriteria', label: 'Exp. Criteria' },
+      { key: 'bidType', label: 'Bid Type' },
+    ];
+    const found = FIELDS.map(({ key, label }) =>
+      f[key]?.value ? { label, value: f[key].value } : null
+    ).filter(Boolean);
+    if (found.length > 0) {
+      gemInfoExcerpt = found;
+    }
+  }
+
   return (
-    <article className="bg-white rounded-2xl border border-gray-200 hover:border-[#1A56DB]/40 hover:shadow-md transition group">
-      <div className="p-5">
-        {/* Top row */}
-        <div className="flex items-start gap-2 mb-3">
-          <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold flex-shrink-0 ${t.source === 'GEM' ? 'bg-violet-100 text-violet-700' : 'bg-amber-100 text-amber-700'
-            }`}>{t.source}</span>
-
-          {t.category?.slice(0, 2).map(c => (
-            <span key={c} className="inline-flex items-center px-2 py-0.5 rounded-md text-xs bg-blue-50 text-blue-700 font-medium">{c}</span>
-          ))}
-
-          <span className="ml-auto flex-shrink-0">
-            {badge && <span className={`text-xs px-2 py-0.5 rounded-full ${badge.cls}`}>{badge.label}</span>}
-          </span>
-        </div>
-
-        {/* Title */}
-        <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 mb-1 group-hover:text-[#1A56DB] transition leading-snug">
-          {t.title}
-        </h3>
-        {t.organization && (
-          <p className="text-xs text-gray-500 mb-3 line-clamp-1">{t.organization}</p>
-        )}
-
-        {/* Value row */}
-        <div className="grid grid-cols-2 gap-x-4 gap-y-1 mb-3">
+    <article className="bg-white rounded-2xl border border-gray-200 hover:border-[#1A56DB]/40 hover:shadow-md transition duration-200 group">
+      <div className="p-5 flex flex-col md:flex-row md:items-stretch gap-4">
+        {/* Column 1: Main Tender Info (flex-1) */}
+        <div className="flex-1 min-w-0 flex flex-col justify-between">
           <div>
-            <p className="text-xs text-gray-400">Bid Value</p>
-            <p className="text-sm font-semibold text-gray-900">{fmt(t.bidValue)}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-400">EMD</p>
-            <p className="text-sm font-semibold text-gray-900">{fmt(t.emdAmount)}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-400">Closing</p>
-            <p className="text-sm text-gray-700">{fmtDate(t.endDate)}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-400">District</p>
-            <p className="text-sm text-gray-700">{t.locationCity || 'Unspecified'}</p>
-          </div>
-        </div>
+            {/* Badges strip */}
+            <div className="flex flex-wrap items-center gap-2 mb-2.5">
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold tracking-wide uppercase ${
+                t.source === 'GEM' ? 'bg-violet-100 text-violet-700' : 'bg-amber-100 text-amber-700'
+              }`}>{t.source}</span>
+              
+              {t.locationCity && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-gray-50 text-gray-700">
+                  <svg className="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  {t.locationCity}
+                </span>
+              )}
 
-        {/* GEM extracted fields strip */}
-        {t.source === 'GEM' && t.sourceMeta?.pdfExtract?.fields && (() => {
-          const f = t.sourceMeta.pdfExtract.fields;
-          // Exact keys as stored by backend/src/pipeline/extract.js
-          const FIELDS = [
-            { key: 'bidOfferValidity', label: 'Validity (Days)' },
-            { key: 'mseExemption', label: 'MSE Exempt' },
-            { key: 'startupExemption', label: 'Startup Exempt' },
-            { key: 'experienceCriteria', label: 'Exp. Criteria' },
-            { key: 'bidType', label: 'Bid Type' },
-          ];
-          const found = FIELDS.map(({ key, label }) =>
-            f[key]?.value ? { label, value: f[key].value } : null
-          ).filter(Boolean);
+              {badge && (
+                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] ${badge.cls}`}>
+                  {badge.label}
+                </span>
+              )}
 
-          if (!found.length) return null;
-          return (
-            <div className="mb-3 bg-violet-50/60 border border-violet-100 rounded-xl px-3 py-2.5">
-              <p className="text-[10px] font-bold text-violet-500 uppercase tracking-wide mb-1.5">From Bid Document</p>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
-                {found.map(({ label, value }) => (
-                  <div key={label}>
-                    <p className="text-[10px] text-gray-400 leading-tight">{label}</p>
-                    <p className="text-xs font-semibold text-gray-800 leading-snug truncate" title={value}>{value}</p>
-                  </div>
+              {t.sourceMeta?.isEbidding && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] bg-blue-50 text-blue-600 font-medium">e-Bidding</span>
+              )}
+
+              {t.category?.slice(0, 2).map(c => (
+                <span key={c} className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] bg-blue-50 text-blue-700 font-medium">{c}</span>
+              ))}
+            </div>
+
+            {/* Title */}
+            <h3 className="text-sm md:text-base font-bold text-gray-900 line-clamp-2 mb-1 group-hover:text-[#1A56DB] transition leading-snug">
+              <a href={detailPath(t)} className="hover:underline">{t.title}</a>
+            </h3>
+
+            {/* Organisation */}
+            {t.organization && (
+              <p className="text-xs text-gray-500 mb-2 line-clamp-1">{t.organization}</p>
+            )}
+          </div>
+
+          {/* Subtitle / Extracted pdf data or Notice Number */}
+          <div className="mt-2 space-y-2">
+            {/* Monospace Notice Number / ID */}
+            <div className="flex flex-wrap items-center gap-x-3 text-[11px] text-gray-400 font-mono">
+              <span>Notice No: <strong className="text-gray-600 font-medium select-all">{t.bidNumber}</strong></span>
+              {t.valueExtractionStatus === 'not_found' && (
+                <span className="text-red-500 italic font-sans font-normal">Value not extracted from PDF</span>
+              )}
+            </div>
+
+            {/* Inline GeM Extracted PDF Details */}
+            {gemInfoExcerpt && (
+              <div className="text-[11px] bg-violet-50/60 border border-violet-100/50 rounded-lg px-2.5 py-1.5 flex flex-wrap gap-x-4 gap-y-1">
+                <span className="font-bold text-violet-500 uppercase tracking-wider mr-1">Bid Details:</span>
+                {gemInfoExcerpt.map(({ label, value }) => (
+                  <span key={label} className="text-gray-600">
+                    <span className="text-gray-400">{label}:</span> <strong className="font-semibold text-gray-700">{value}</strong>
+                  </span>
                 ))}
               </div>
-            </div>
-          );
-        })()}
-
-        {/* Risks */}
-        {t.risks?.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-3">
-            {t.risks.slice(0, 2).map(r => (
-              <span key={r} className="text-xs bg-red-50 text-red-700 px-2 py-0.5 rounded-full">{r}</span>
-            ))}
-          </div>
-        )}
-
-        {/* Footer */}
-        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-          <div className="flex items-center gap-2">
-            {t.sourceMeta?.isEbidding && (
-              <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-md font-medium">e-Bidding</span>
             )}
-            {t.valueExtractionStatus === 'not_found' && (
-              <span className="text-xs text-gray-400 italic">Value not extracted</span>
+
+            {/* Risks */}
+            {t.risks?.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-1">
+                <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider self-center mr-1">Risk Flags:</span>
+                {t.risks.slice(0, 3).map(r => (
+                  <span key={r} className="text-[10px] bg-red-50 text-red-600 border border-red-100 px-1.5 py-0.5 rounded-md font-medium">{r}</span>
+                ))}
+              </div>
             )}
           </div>
+        </div>
+
+        {/* Column 2: Financial Details (w-full md:w-56) */}
+        <div className="w-full md:w-56 flex-shrink-0 flex md:flex-col justify-center gap-y-2 border-t md:border-t-0 md:border-l md:border-r border-gray-100 pt-3 md:pt-0 md:px-5">
+          <div className="flex-1 md:flex-none">
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Bid Value</p>
+            <p className="text-base font-extrabold text-[#1A56DB]">{fmt(t.bidValue)}</p>
+          </div>
+          <div className="flex-1 md:flex-none">
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">EMD Amount</p>
+            <p className="text-xs font-bold text-gray-800">{fmt(t.emdAmount)}</p>
+          </div>
+        </div>
+
+        {/* Column 3: Dates & Actions (w-full md:w-44) */}
+        <div className="w-full md:w-44 flex-shrink-0 flex flex-col justify-between items-stretch md:items-end border-t md:border-t-0 pt-3 md:pt-0 md:pl-4">
+          <div className="text-left md:text-right mb-3 md:mb-0">
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Closing Date</p>
+            <p className="text-xs font-semibold text-gray-700">{fmtDate(t.endDate)}</p>
+            {dl != null && (
+              <p className={`text-[10px] mt-0.5 font-medium ${
+                dl < 0 ? 'text-gray-400' : dl <= 2 ? 'text-red-600 font-semibold' : dl <= 7 ? 'text-amber-600' : 'text-green-600'
+              }`}>
+                {dl < 0 ? 'Closed' : dl === 0 ? 'Closes today' : `${dl} days left`}
+              </p>
+            )}
+          </div>
+
           <a
             href={detailPath(t)}
-            className="inline-flex items-center gap-1 text-xs font-medium text-[#1A56DB] hover:underline"
+            className="w-full text-center px-4 py-2 bg-blue-50 text-[#1A56DB] hover:bg-[#1A56DB] hover:text-white rounded-xl text-xs font-bold transition duration-150 shadow-sm"
           >
             View details
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
           </a>
         </div>
       </div>
@@ -513,7 +541,7 @@ export default function TenderDashboard({
           ) : (
             <>
               <p className="text-xs text-gray-400 mb-4">{total.toLocaleString()} result{total !== 1 ? 's' : ''}</p>
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+              <div className="flex flex-col gap-3">
                 {tenders.map(t => <TenderCard key={`${t.source}-${t.bidNumber}`} t={t} />)}
               </div>
 
