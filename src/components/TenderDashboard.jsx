@@ -127,7 +127,7 @@ function TenderCard({ t }) {
   const emdDisplay = hasEmd ? fmt(t.emdAmount) : 'N/A / Exempt';
 
   return (
-    <article className="bg-white rounded-2xl border border-gray-200 hover:border-blue-500/40 hover:shadow-lg transition duration-200 group relative overflow-hidden">
+    <article className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 hover:border-blue-500/40 hover:shadow-lg transition duration-200 group relative overflow-hidden">
       {/* Left indicator bar on hover */}
       <div className="absolute left-0 top-0 bottom-0 w-1 bg-transparent group-hover:bg-[#1A56DB] transition-all rounded-l-2xl" />
 
@@ -141,6 +141,18 @@ function TenderCard({ t }) {
                 ? 'bg-violet-50 text-violet-700 border-violet-100'
                 : 'bg-amber-50 text-amber-700 border-amber-100'
                 }`}>{t.source}</span>
+
+              {t.source === 'CSPGCL' && t.sourceMeta?.plantLabel && (
+                <a href={t.bidLink} target='_blank' rel='noopener noreferrer'
+                  className='inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-100 transition cursor-pointer'
+                  aria-label={'View portal for ' + t.sourceMeta.plantLabel}
+                >
+                  {t.sourceMeta.plantLabel}
+                  <svg className='w-2.5 h-2.5 text-blue-400' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14' />
+                  </svg>
+                </a>
+              )}
 
               {t.locationCity && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-gray-50 text-gray-600 border border-gray-100">
@@ -322,27 +334,29 @@ function FilterPanel({ filters, onChange, onReset, totalResults, loading }) {
       )}
 
       {/* Category */}
-      <div>
-        <label className="block text-xs font-semibold text-gray-700 dark:text-slate-300 uppercase tracking-wide mb-2">Category</label>
-        <div className="flex flex-wrap gap-1.5">
-          {CATEGORIES.map(c => {
-            const cats = filters.category ? filters.category.split(',') : [];
-            const active = cats.includes(c);
-            return (
-              <button key={c}
-                onClick={() => {
-                  const next = active ? cats.filter(x => x !== c) : [...cats, c];
-                  onChange('category', next.join(','));
-                }}
-                className={`px-2.5 py-1 rounded-full text-xs font-medium border transition ${active
-                  ? 'bg-[#1A56DB] text-white border-[#1A56DB]'
-                  : 'bg-white dark:bg-slate-950 text-gray-600 dark:text-slate-300 border-gray-200 dark:border-slate-800 hover:border-[#1A56DB] dark:hover:border-blue-500'
-                  }`}
-              >{c}</button>
-            );
-          })}
+      {filters.source !== 'CSPGCL' && (
+        <div>
+          <label className="block text-xs font-semibold text-gray-700 dark:text-slate-300 uppercase tracking-wide mb-2">Category</label>
+          <div className="flex flex-wrap gap-1.5">
+            {CATEGORIES.map(c => {
+              const cats = filters.category ? filters.category.split(',') : [];
+              const active = cats.includes(c);
+              return (
+                <button key={c}
+                  onClick={() => {
+                    const next = active ? cats.filter(x => x !== c) : [...cats, c];
+                    onChange('category', next.join(','));
+                  }}
+                  className={`px-2.5 py-1 rounded-full text-xs font-medium border transition ${active
+                    ? 'bg-[#1A56DB] text-white border-[#1A56DB]'
+                    : 'bg-white dark:bg-slate-950 text-gray-600 dark:text-slate-300 border-gray-200 dark:border-slate-800 hover:border-[#1A56DB] dark:hover:border-blue-500'
+                    }`}
+                >{c}</button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Bid Value Range */}
       <div>
@@ -585,34 +599,36 @@ export default function TenderDashboard({
       </div>
 
       {/* Quick Toggles */}
-      <div className="flex flex-wrap items-center gap-2 mb-6">
-        <span className="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider mr-1">Quick Toggles:</span>
-        {[
-          { key: 'mseStartupOnly', label: 'Startup/MSE Exempt' },
-          { key: 'zeroExperienceOnly', label: 'Zero Exp. Required' },
-          { key: 'highValueOnly', label: 'High Value (> 1 Cr)' },
-          { key: 'lowEmdOnly', label: 'Low EMD (< 10k)' },
-        ].map(({ key, label }) => {
-          const active = filters[key];
-          return (
-            <button
-              key={key}
-              onClick={() => onFilterChange(key, !active)}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition duration-150 flex items-center gap-1.5 ${active
-                ? 'bg-[#1A56DB] border-[#1A56DB] text-white shadow-sm'
-                : 'bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-800 text-gray-600 dark:text-slate-300 hover:border-blue-500/40 hover:text-[#1A56DB]'
-                }`}
-            >
-              {active && (
-                <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-              )}
-              {label}
-            </button>
-          );
-        })}
-      </div>
+      {filters.source !== 'CSPGCL' && (
+        <div className="flex flex-wrap items-center gap-2 mb-6">
+          <span className="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider mr-1">Quick Toggles:</span>
+          {[
+            { key: 'mseStartupOnly', label: 'Startup/MSE Exempt' },
+            { key: 'zeroExperienceOnly', label: 'Zero Exp. Required' },
+            { key: 'highValueOnly', label: 'High Value (> 1 Cr)' },
+            { key: 'lowEmdOnly', label: 'Low EMD (< 10k)' },
+          ].map(({ key, label }) => {
+            const active = filters[key];
+            return (
+              <button
+                key={key}
+                onClick={() => onFilterChange(key, !active)}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition duration-150 flex items-center gap-1.5 ${active
+                  ? 'bg-[#1A56DB] border-[#1A56DB] text-white shadow-sm'
+                  : 'bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-800 text-gray-600 dark:text-slate-300 hover:border-blue-500/40 hover:text-[#1A56DB]'
+                  }`}
+              >
+                {active && (
+                  <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+                {label}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       <div className="flex flex-col lg:flex-row gap-8">
         <FilterPanel
