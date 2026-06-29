@@ -269,7 +269,7 @@ if (isCityRoute) {
     itemListElement: breadcrumbItems,
   };
 
-  // SEO — FAQPage JSON-LD: auto-generated Q&A for Google FAQ rich results
+  // SEO â€” FAQPage JSON-LD: auto-generated Q&A for Google FAQ rich results
   const _issuer = fetchedTender.organization || fetchedTender.department || 'the issuing government body';
   const _location = fetchedTender.locationCity && fetchedTender.locationCity !== 'Unspecified'
     ? `${fetchedTender.locationCity}, Chhattisgarh`
@@ -430,20 +430,95 @@ const riskMeterColor = riskLevel === 'Low' ? 'text-emerald-500'
         </div>
       </div>
 
-      <!-- SSR tender list - always rendered so Googlebot indexes district page content -->
+      <!-- Issue #1 — SSR tender list for district pages -->
       {ssrTenders.length > 0 && (
-        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-2" id="ssr-city-list">
-          <p class="text-xs text-gray-400 dark:text-slate-500 mb-4">{initialTotal.toLocaleString()} open tenders in {city} - showing first {ssrTenders.length}</p>
-          <div class="flex flex-col gap-3">
-            {ssrTenders.map((t: any) => (
-              <TenderCard tender={t} />
-            ))}
-          </div>
-          {initialTotal > ssrTenders.length && (
-            <p class="text-xs text-gray-400 dark:text-slate-500 mt-3 text-center">Showing {ssrTenders.length} of {initialTotal.toLocaleString()} - use filters below to narrow</p>
+        <noscript>
+          <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-2">
+            <p class="text-xs text-gray-400 dark:text-slate-500 mb-4">{initialTotal.toLocaleString()} open tenders in {city} — showing first {ssrTenders.length}</p>
+            <div class="flex flex-col gap-3">
+              {ssrTenders.map((t: any) => (
+                <TenderCard tender={t} />
+              ))}
+            </div>
+          </section>
+        </noscript>
+      )}
+
+      <TenderDashboard 
+        client:load 
+        initialCity={city} 
+        initialTenders={initialTenders} 
+        initialTotal={initialTotal} 
+      />
+    </main>
+  ) : (
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 transition-colors duration-200">
+
+      <!-- Issue #8 — HTML Breadcrumb (aria-label, all <a> links except last) -->
+      <nav aria-label="Breadcrumb" class="mb-6">
+        <ol class="flex items-center gap-1.5 text-xs text-gray-400 flex-wrap">
+          <li><a href="/tenders" class="hover:text-[#1A56DB] dark:hover:text-blue-400 transition">All Tenders</a></li>
+          {tender.locationCity && tender.locationCity !== 'Unspecified' && (
+            <>
+              <li aria-hidden="true">›</li>
+              <li>
+                <a href={`/tenders/${tender.locationCity.toLowerCase().replace(/[^a-z0-9]+/g,'-')}`}
+                  class="hover:text-[#1A56DB] dark:hover:text-blue-400 transition">{tender.locationCity}</a>
+              </li>
+            </>
           )}
-        </section>
-      )} => (
+          <li aria-hidden="true">›</li>
+          <li class="text-gray-500 dark:text-slate-400 truncate max-w-[180px]">{tender.title.slice(0, 40)}{tender.title.length > 40 ? '…' : ''}</li>
+        </ol>
+      </nav>
+
+      <!-- Header card -->
+      <div class="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 shadow-sm p-6 md:p-8 mb-6">
+        <div class="flex flex-wrap gap-2 mb-4">
+          <span class={`px-2.5 py-1 rounded-md text-xs font-bold ${tender.source === 'GEM' ? 'bg-violet-50 text-violet-700 dark:bg-violet-950/60 dark:text-violet-400 border border-violet-100 dark:border-violet-900/40' : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-100 dark:border-amber-900/40'}`}>
+            {tender.source}
+          </span>
+          {tender.status === 'open'
+            ? <span class="px-2.5 py-1 rounded-md text-xs font-bold bg-green-50 text-green-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-green-100 dark:border-emerald-900/40">Open</span>
+            : <span class="px-2.5 py-1 rounded-md text-xs font-bold bg-gray-100 text-gray-600 dark:bg-slate-850 dark:text-slate-400 border border-gray-200 dark:border-slate-800">Closed</span>
+          }
+          {tender.sourceMeta?.isEbidding && (
+            <span class="px-2.5 py-1 rounded-md text-xs font-bold bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 border border-blue-100 dark:border-blue-900/40">e-Bidding</span>
+          )}
+          {tender.category?.map((c: string) => (
+            <span class="px-2.5 py-1 rounded-md text-xs bg-blue-50/60 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 font-bold border border-blue-100/50 dark:border-blue-900/30">{c}</span>
+          ))}
+        </div>
+
+        <h1 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white leading-snug mb-2 font-['Outfit']">
+          {tender.title}
+        </h1>
+        {tender.organization && (
+          <p class="text-sm text-gray-500 dark:text-slate-300 mb-1">{tender.organization}</p>
+        )}
+        {tender.department && tender.department !== tender.organization && (
+          <p class="text-xs text-gray-400 dark:text-slate-400">{tender.department}</p>
+        )}
+
+        <!-- Deadline -->
+        {deadlineLabel && (
+          <div class={`mt-4 inline-flex items-center gap-1.5 text-sm font-semibold ${deadlineCls}`}>
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            {deadlineLabel}
+          </div>
+        )}
+      </div>
+
+      <!-- Key figures -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        {[
+          { label: 'Bid Value', value: formatRupee(tender.bidValue), sub: tender.valueExtractionStatus === 'not_found' ? 'Not extracted from PDF' : null },
+          { label: 'EMD Amount', value: formatRupee(tender.emdAmount), sub: null },
+          { label: tender.source === 'GEM' ? 'Bid End Date' : 'Closing Date', value: formatDate(tender.endDate), sub: null },
+          { label: tender.source === 'GEM' ? 'Bid Start Date' : 'Bid Opening Date', value: formatDate(tender.startDate), sub: null },
+        ].map(({ label, value, sub }) => (
           <div class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 p-4">
             <p class="text-xs text-gray-400 dark:text-slate-500 mb-0.5">{label}</p>
             <p class={`text-base font-bold ${value === 'Not available' ? 'text-gray-400 dark:text-slate-600 text-sm' : 'text-gray-900 dark:text-white'}`}>
@@ -523,10 +598,10 @@ const riskMeterColor = riskLevel === 'Low' ? 'text-emerald-500'
         </div>
       )}
 
-      <!-- ═══════════════════════════════════════════════════════════════ -->
+            <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
       <!-- SEO BLOCK 1: Structured Tender Information Table (SSR)         -->
       <!-- Google indexes every label-value pair as keyword-rich text     -->
-      <!-- ═══════════════════════════════════════════════════════════════ -->
+      <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
       <section
         aria-labelledby="tender-info-heading"
         class="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 shadow-sm mb-6 overflow-hidden"
@@ -554,8 +629,8 @@ const riskMeterColor = riskLevel === 'Low' ? 'text-emerald-500'
             <dt class="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide pt-0.5">Source Portal</dt>
             <dd class="text-sm text-gray-900 dark:text-slate-100">
               {tender.source === 'GEM'
-                ? 'GeM — Government e-Marketplace (gem.gov.in)'
-                : 'CSPGCL — Chhattisgarh State Power Generation Company Ltd'}
+                ? 'GeM â€” Government e-Marketplace (gem.gov.in)'
+                : 'CSPGCL â€” Chhattisgarh State Power Generation Company Ltd'}
             </dd>
           </div>
 
@@ -574,7 +649,7 @@ const riskMeterColor = riskLevel === 'Low' ? 'text-emerald-500'
           {tender.category && tender.category.length > 0 && (
             <div class="grid grid-cols-[150px_1fr] sm:grid-cols-[210px_1fr] items-start px-6 py-3 hover:bg-gray-50/60 dark:hover:bg-slate-800/20 transition-colors">
               <dt class="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide pt-0.5">Category / Industry</dt>
-              <dd class="text-sm text-gray-900 dark:text-slate-100">{tender.category.join(' — ')}</dd>
+              <dd class="text-sm text-gray-900 dark:text-slate-100">{tender.category.join(' â€” ')}</dd>
             </div>
           )}
 
@@ -582,7 +657,7 @@ const riskMeterColor = riskLevel === 'Low' ? 'text-emerald-500'
             <dt class="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide pt-0.5">Tender Location</dt>
             <dd class="text-sm text-gray-900 dark:text-slate-100">
               {tender.locationCity && tender.locationCity !== 'Unspecified'
-                ? `${tender.locationCity} — Chhattisgarh, India`
+                ? `${tender.locationCity} â€” Chhattisgarh, India`
                 : 'Chhattisgarh, India'}
             </dd>
           </div>
@@ -640,7 +715,7 @@ const riskMeterColor = riskLevel === 'Low' ? 'text-emerald-500'
             <dt class="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide pt-0.5">Tender Status</dt>
             <dd class="text-sm">
               {tender.status === 'open'
-                ? <span class="inline-flex items-center gap-1.5 font-semibold text-green-700 dark:text-green-400"><span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse inline-block"></span>Open — Accepting Bids</span>
+                ? <span class="inline-flex items-center gap-1.5 font-semibold text-green-700 dark:text-green-400"><span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse inline-block"></span>Open â€” Accepting Bids</span>
                 : <span class="inline-flex items-center gap-1.5 font-semibold text-gray-500 dark:text-slate-400"><span class="w-1.5 h-1.5 rounded-full bg-gray-400 inline-block"></span>Closed</span>
               }
             </dd>
@@ -654,9 +729,9 @@ const riskMeterColor = riskLevel === 'Low' ? 'text-emerald-500'
         </dl>
       </section>
 
-      <!-- ═══════════════════════════════════════════════════════════════ -->
+      <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
       <!-- SEO BLOCK 2: Keyword-rich prose description (SSR)             -->
-      <!-- ═══════════════════════════════════════════════════════════════ -->
+      <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
       <section
         aria-labelledby="tender-desc-heading"
         class="bg-gradient-to-br from-blue-50/50 to-indigo-50/30 dark:from-blue-950/10 dark:to-indigo-950/10 border border-blue-100/70 dark:border-blue-900/30 rounded-2xl p-6 mb-6"
@@ -668,9 +743,9 @@ const riskMeterColor = riskLevel === 'Low' ? 'text-emerald-500'
           About This Tender
         </h2>
         <p class="text-sm text-gray-700 dark:text-slate-300 leading-relaxed">
-          {'This tender — '}
+          {'This tender â€” '}
           <strong class="text-gray-900 dark:text-white">{tender.title}</strong>
-          {' — has been issued by '}
+          {' â€” has been issued by '}
           <strong class="text-gray-900 dark:text-white">{tender.organization || tender.department || 'a government body'}</strong>
           {' via the '}
           <strong class="text-gray-900 dark:text-white">{tender.source === 'GEM' ? 'GeM (Government e-Marketplace) portal' : 'CSPGCL portal'}</strong>
@@ -694,8 +769,7 @@ const riskMeterColor = riskLevel === 'Low' ? 'text-emerald-500'
           {'.'}
         </p>
       </section>
-
-      <!-- Action buttons -->
+<!-- Action buttons -->
       <div class="flex flex-wrap gap-3 mb-6">
         {pdfLink && (
           <a href={pdfLink} target="_blank" rel="noopener noreferrer"
@@ -767,10 +841,10 @@ const riskMeterColor = riskLevel === 'Low' ? 'text-emerald-500'
         </details>
       )}
 
-      <!-- ═══════════════════════════════════════════════════════════════════ -->
-      <!-- SEO BLOCK 3: FAQ Accordion — FAQPage JSON-LD companion (SSR)       -->
+            <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+      <!-- SEO BLOCK 3: FAQ Accordion â€” FAQPage JSON-LD companion (SSR)       -->
       <!-- details/summary keeps answers in DOM so Googlebot indexes them all  -->
-      <!-- ═══════════════════════════════════════════════════════════════════ -->
+      <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
       <section
         aria-labelledby="faq-heading"
         class="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 shadow-sm mb-6 overflow-hidden"
@@ -864,14 +938,14 @@ const riskMeterColor = riskLevel === 'Low' ? 'text-emerald-500'
 
       <!-- Fetched at -->
       <p class="text-xs text-gray-400 dark:text-slate-500 mt-2 mb-8 text-center">
-        Last updated: {formatDate(tender.fetchedAt)} · Data sourced from official government portals
+        Last updated: {formatDate(tender.fetchedAt)} Â· Data sourced from official government portals
       </p>
 
-      <!-- ═══════════════════════════════════════════════════════════════════════ -->
+      <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
       <!-- SEO BLOCK 4: Keyword-rich Internal Link Hub (SSR)                       -->
-      <!-- Each anchor uses descriptive keyword anchor text — search engines use   -->
+      <!-- Each anchor uses descriptive keyword anchor text â€” search engines use   -->
       <!-- these links to trace and index district, portal, and tender pages       -->
-      <!-- ═══════════════════════════════════════════════════════════════════════ -->
+      <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
       <aside
         aria-label="Explore more government tenders"
         class="border-t border-gray-100 dark:border-slate-800 pt-8 pb-4"
@@ -958,7 +1032,7 @@ const riskMeterColor = riskLevel === 'Low' ? 'text-emerald-500'
 
         </div>
 
-        <!-- Related tenders — SSR, each linked URL discovered by Googlebot -->
+        <!-- Related tenders â€” SSR, each linked URL discovered by Googlebot -->
         {relatedTenders.length > 0 && (
           <div>
             <h3 class="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-3">More Tenders Like This</h3>
@@ -978,7 +1052,7 @@ const riskMeterColor = riskLevel === 'Low' ? 'text-emerald-500'
                       <p class="text-sm font-medium text-gray-900 dark:text-slate-100 group-hover:text-[#1A56DB] dark:group-hover:text-blue-400 transition line-clamp-2 leading-snug">{rt.title}</p>
                       <div class="flex items-center gap-2 mt-1 text-xs text-gray-400 dark:text-slate-500">
                         {rt.locationCity && <span>{rt.locationCity}, Chhattisgarh</span>}
-                        {rt.locationCity && rt.endDate && <span aria-hidden="true">·</span>}
+                        {rt.locationCity && rt.endDate && <span aria-hidden="true">Â·</span>}
                         {rt.endDate && <span>Closes {formatDate(rt.endDate)}</span>}
                       </div>
                     </div>
@@ -992,6 +1066,5 @@ const riskMeterColor = riskLevel === 'Low' ? 'text-emerald-500'
       </aside>
     </main>
   )}
-
   <Footer />
 </TenderLayout>
