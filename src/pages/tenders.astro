@@ -1,4 +1,4 @@
----
+﻿---
 import TenderLayout from '../layouts/TenderLayout.astro';
 import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
@@ -41,8 +41,8 @@ const lastUpdated = stats.lastFetchAt
   : null;
 
 // Issue #6 — keyword-rich meta
-const metaTitle = `All Government Tenders in Chhattisgarh 2026 — GeM & CSPGCL | CGTenders.com`;
-const metaDesc = `Browse ${stats.totalOpenTenders || 'open'} government tenders in Chhattisgarh from GeM and CSPGCL portals. Filter by district, category, bid value, EMD, and closing date. Updated daily.`;
+const metaTitle = `Chhattisgarh Government Tenders ${new Date().getFullYear()} - All Open GeM & CSPGCL Bids | CGTenders.com`;
+const metaDesc = `Browse ${stats.totalOpenTenders || 'open'} open government tenders in Chhattisgarh - GeM & CSPGCL eProcurement bids. Filter by district, category, bid value, EMD & closing date. Updated daily.`;
 
 // Issue #7 — BreadcrumbList JSON-LD
 const breadcrumbLd = {
@@ -103,18 +103,19 @@ const ssrTenders = (initialTenders || []).slice(0, 20);
       </div>
     </div>
 
-    <!-- Issue #1 — SSR tender list (visible to Googlebot, no JS needed) -->
+    <!-- SSR tender list — always rendered in HTML so Googlebot indexes real content -->
     {ssrTenders.length > 0 && (
-      <noscript>
-        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-2">
-          <p class="text-xs text-gray-400 mb-4">{initialTotal.toLocaleString()} open tenders — showing first {ssrTenders.length}</p>
-          <div class="flex flex-col gap-3">
-            {ssrTenders.map((t: any) => (
-              <TenderCard tender={t} />
-            ))}
-          </div>
-        </section>
-      </noscript>
+      <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-2" id="ssr-tenders-list">
+        <p class="text-xs text-gray-400 dark:text-slate-500 mb-4">{initialTotal.toLocaleString()} open tenders in Chhattisgarh — showing first {ssrTenders.length}</p>
+        <div class="flex flex-col gap-3">
+          {ssrTenders.map((t: any) => (
+            <TenderCard tender={t} />
+          ))}
+        </div>
+        {initialTotal > ssrTenders.length && (
+          <p class="text-xs text-gray-400 dark:text-slate-500 mt-3 text-center">Showing {ssrTenders.length} of {initialTotal.toLocaleString()} tenders — use filters below to narrow results</p>
+        )}
+      </section>
     )}
 
     <!-- JS-hydrated dashboard (interactive filters, pagination, search) -->

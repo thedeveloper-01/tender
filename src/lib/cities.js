@@ -1,4 +1,4 @@
-// 33 Chhattisgarh districts — kept in sync with backend/src/config.js
+﻿// 33 Chhattisgarh districts — kept in sync with backend/src/config.js
 export const CG_CITIES = [
   'Raipur', 'Bilaspur', 'Durg', 'Korba', 'Raigarh', 'Rajnandgaon',
   'Bastar', 'Surguja', 'Dhamtari', 'Mahasamund', 'Kanker', 'Kondagaon',
@@ -19,7 +19,7 @@ export function cityFromSlug(slug) {
 
 export function formatRupee(val) {
   if (val == null || isNaN(val)) return 'Not available';
-  return '₹' + Number(val).toLocaleString('en-IN');
+  return '\u20b9' + Number(val).toLocaleString('en-IN');
 }
 
 export function formatDate(dateStr) {
@@ -41,25 +41,34 @@ export function daysLeft(dateStr) {
 export function titleSlug(title) {
   return (title || 'tender')
     .toLowerCase()
-    // Remove literal date phrases like "dated 08.05.2026" or "date 01-06-2026"
-    .replace(/\b(dated?)\s+\d{1,2}[./\-]\d{1,2}[./\-]\d{2,4}\b/gi, '')
-    // Remove content in parentheses entirely
+    .replace(/\b(dated?)\s+\d{1,2}[.\/\-]\d{1,2}[.\/\-]\d{2,4}\b/gi, '')
     .replace(/\([^)]*\)/g, '')
-    // Replace & with "and"
     .replace(/&/g, '-and-')
-    // Replace all non-alphanumeric chars (including . , / ( ) ) with -
     .replace(/[^a-z0-9]+/g, '-')
-    // Collapse multiple hyphens to one
     .replace(/-{2,}/g, '-')
-    // Trim leading/trailing hyphens
     .replace(/(^-|-$)/g, '')
     .slice(0, 60);
 }
 
+/**
+ * Sanitise bid number for URL use.
+ * Preserves slashes (path separators needed by [...slug] route parser for GEM/CSPGCL)
+ * but strips spaces, commas, and other chars that create malformed, non-indexable URLs.
+ * e.g. "TN-103/26-27, HW-136/26-27" -> "TN-103/26-27HW-136/26-27"
+ */
+function safeBidNumber(bidNumber) {
+  return (bidNumber || '')
+    .replace(/[ ,;]+/g, '')
+    .replace(/[^a-zA-Z0-9\-\/]/g, '-')
+    .replace(/-{2,}/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
+
 export function tenderDetailPath(tender) {
-  // Do NOT encode bidNumber — GEM bids have slashes (GEM/2026/B/…) that must
-  // remain as literal path separators for the [...slug] parser to work.
-  return `/tenders/${tender.source.toLowerCase()}-${tender.bidNumber}-${titleSlug(tender.title)}`;
+  // Slashes in bidNumber are kept as literal path separators — the [...slug] parser
+  // reconstructs the bidNumber from the full slug path via its CSPGCL/GEM matchers.
+  // Spaces and commas are stripped to prevent malformed/non-indexable URLs (SEO fix).
+  return `/tenders/${tender.source.toLowerCase()}-${safeBidNumber(tender.bidNumber)}-${titleSlug(tender.title)}`;
 }
 
 /**

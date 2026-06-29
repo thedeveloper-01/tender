@@ -1,4 +1,4 @@
----
+﻿---
 import TenderLayout from "../../layouts/TenderLayout.astro";
 import Navbar from "../../components/Navbar.astro";
 import Footer from "../../components/Footer.astro";
@@ -28,9 +28,9 @@ const lastUpdated = stats.lastFetchAt
 
 const gemCount = stats.bySource?.GEM || initialTotal || 0;
 
-// Issue #6 — keyword-rich meta
-const metaTitle = `GeM Tenders in Chhattisgarh 2026 — Open e-Procurement | CGTenders.com`;
-const metaDesc = `Browse ${gemCount} open GeM government tenders in Chhattisgarh. Filter by district, category and closing date. Updated daily.`;
+const year = new Date().getFullYear();
+const metaTitle = `GeM Tenders Chhattisgarh ${year} - Live Open Bids & eProcurement | CGTenders.com`;
+const metaDesc = `Browse ${gemCount} open GeM (Government e-Marketplace) tenders in Chhattisgarh ${year}. Filter by district, category, EMD & closing date. CG GeM bid notices updated daily.`;
 
 // Issue #7 — BreadcrumbList JSON-LD
 const breadcrumbLd = {
@@ -99,18 +99,20 @@ const ssrTenders = (initialTenders || []).slice(0, 20);
       </div>
     </div>
 
-    <!-- Issue #1 — SSR tender list (visible to Googlebot, no JS needed) -->
+    <!-- SSR tender list — always rendered in HTML so Googlebot indexes real content -->
+    <!-- The React TenderDashboard below hydrates on top for interactive filtering    -->
     {ssrTenders.length > 0 && (
-      <noscript>
-        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-2">
-          <p class="text-xs text-gray-400 mb-4">{initialTotal.toLocaleString()} open GeM tenders — showing first {ssrTenders.length}</p>
-          <div class="flex flex-col gap-3">
-            {ssrTenders.map((t: any) => (
-              <TenderCard tender={t} />
-            ))}
-          </div>
-        </section>
-      </noscript>
+      <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-2" id="ssr-gem-list">
+        <p class="text-xs text-gray-400 dark:text-slate-500 mb-4">{initialTotal.toLocaleString()} open GeM tenders in Chhattisgarh — showing first {ssrTenders.length}</p>
+        <div class="flex flex-col gap-3">
+          {ssrTenders.map((t: any) => (
+            <TenderCard tender={t} />
+          ))}
+        </div>
+        {initialTotal > ssrTenders.length && (
+          <p class="text-xs text-gray-400 dark:text-slate-500 mt-3 text-center">Showing {ssrTenders.length} of {initialTotal.toLocaleString()} open GeM tenders — use filters below to narrow results</p>
+        )}
+      </section>
     )}
 
     <!-- JS-hydrated dashboard -->
