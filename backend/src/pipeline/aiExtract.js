@@ -106,7 +106,7 @@ ${truncated}
  *
  * Returns null on any failure — callers must handle gracefully.
  */
-export async function aiExtractTender(pdfText) {
+export async function aiExtractTenderLegacy(pdfText) {
   if (!config.aiExtractEnabled) {
     console.log('[aiExtract] AI extraction disabled (AI_EXTRACT_ENABLED=false)');
     return null;
