@@ -1,0 +1,326 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>CGTenders | GeM Tenders Workspace</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .filter-sheet-active {
+            transform: translateY(0%);
+        }
+        .filter-sheet-inactive {
+            transform: translateY(100%);
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ffb4ab",
+                        "tertiary-container": "#df7412",
+                        "tertiary": "#ffb786",
+                        "on-primary-fixed-variant": "#004395",
+                        "inverse-on-surface": "#233143",
+                        "surface-container-high": "#1c2b3c",
+                        "surface-variant": "#273647",
+                        "secondary-container": "#00a572",
+                        "primary-fixed": "#d8e2ff",
+                        "primary": "#adc6ff",
+                        "secondary-fixed-dim": "#4edea3",
+                        "on-secondary": "#003824",
+                        "background": "#051424",
+                        "surface-container-highest": "#273647",
+                        "on-primary-container": "#00285d",
+                        "surface-bright": "#2c3a4c",
+                        "inverse-primary": "#005ac2",
+                        "surface-container-lowest": "#010f1f",
+                        "on-secondary-fixed-variant": "#005236",
+                        "outline": "#8c909f",
+                        "surface-tint": "#adc6ff",
+                        "primary-container": "#4d8eff",
+                        "tertiary-fixed-dim": "#ffb786",
+                        "error-container": "#93000a",
+                        "on-primary": "#002e6a",
+                        "on-error-container": "#ffdad6",
+                        "surface-container-low": "#0d1c2d",
+                        "secondary-fixed": "#6ffbbe",
+                        "on-error": "#690005",
+                        "secondary": "#4edea3",
+                        "on-surface-variant": "#c2c6d6",
+                        "surface-container": "#122131",
+                        "tertiary-fixed": "#ffdcc6",
+                        "on-tertiary-fixed": "#311400",
+                        "on-background": "#d4e4fa",
+                        "on-tertiary-fixed-variant": "#723600",
+                        "on-secondary-container": "#00311f",
+                        "surface": "#051424",
+                        "primary-fixed-dim": "#adc6ff",
+                        "inverse-surface": "#d4e4fa",
+                        "on-surface": "#d4e4fa",
+                        "on-tertiary-container": "#461f00",
+                        "on-secondary-fixed": "#002113",
+                        "on-primary-fixed": "#001a42",
+                        "outline-variant": "#424754",
+                        "surface-dim": "#051424",
+                        "on-tertiary": "#502400"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "gutter": "12px",
+                        "container-margin": "16px",
+                        "md": "16px",
+                        "xs": "4px",
+                        "sm": "8px",
+                        "base": "4px",
+                        "xl": "32px",
+                        "lg": "24px",
+                        "container-padding-desktop": "32px",
+                        "container-padding-mobile": "16px",
+                        "component-gap": "12px",
+                        "base-unit": "4px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "label-md": ["JetBrains Mono"],
+                        "label-lg": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-lg": ["Hanken Grotesk"],
+                        "headline-lg-mobile": ["Hanken Grotesk"],
+                        "display-lg": ["Hanken Grotesk"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-sm": ["10px", {"lineHeight": "12px", "fontWeight": "700"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                        "label-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                        "headline-sm": ["16px", {"lineHeight": "20px", "fontWeight": "600"}],
+                        "headline-md": ["18px", {"lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background selection:bg-primary-container selection:text-on-primary-container">
+<!-- Top App Bar -->
+<header class="fixed top-0 left-0 w-full z-40 bg-surface border-b border-outline-variant flex justify-between items-center px-container-margin py-md">
+<div class="flex items-center gap-sm">
+<img alt="CGTenders Logo" class="h-8 object-contain brightness-0 invert" src="https://lh3.googleusercontent.com/aida/AP1WRLv99T6x3Ue-LOm4-mmjWh0cWp0vwuRbtyG3Q8Y7c800dJqTXOdXfwsdxRqV7f16TaoEFXRcDatPnW7EEtheGXkaKeHQK0HATJmTIFYNPdq4z_6DmGyY_GYm524v0qzNxx5CWWF7zKQUeXl7kJHstuYP1Zip80Orb7zhfsnYjnJ1UFwQKW_UdubuDlGxFe7ucTvN4zCDQ4PCYJBQKRtrrPucWyKgB8ILf4fmSYfWlYdgRPWuG5hlbXmvyL8">
+</div>
+<div class="flex items-center gap-md">
+<button class="p-xs active:scale-95 transition-transform hover:bg-surface-container-low rounded-full">
+<span class="material-symbols-outlined text-on-surface" data-icon="search">search</span>
+</button>
+</div>
+</header>
+<!-- Sub-Navigation (Dual Tab Architecture) -->
+<nav class="fixed top-[64px] left-0 w-full z-30 bg-surface flex p-xs border-b border-outline-variant">
+<a class="flex-1 flex justify-center items-center py-sm font-label-lg text-label-lg bg-primary-container text-on-primary-container rounded-full transition-all" href="#">
+        GeM Tenders
+    </a>
+<a class="flex-1 flex justify-center items-center py-sm font-label-lg text-label-lg text-on-surface-variant hover:bg-surface-container-low rounded-full transition-all" href="#">
+        PSU Portals
+    </a>
+</nav>
+<!-- Floating Filter Trigger -->
+<button class="fixed bottom-24 right-4 z-40 bg-primary-container text-on-primary-container shadow-2xl flex items-center gap-sm px-md py-sm rounded-full active:scale-95 transition-transform border border-outline-variant" onclick="toggleFilters()">
+<span class="material-symbols-outlined" data-icon="filter_list">filter_list</span>
+<span class="font-label-lg text-label-lg">Filters</span>
+</button>
+<!-- Main Content Canvas -->
+<main class="mt-[132px] mb-20 px-container-margin pt-md">
+<!-- Dashboard Summary -->
+<div class="mb-lg flex gap-sm overflow-x-auto hide-scrollbar pb-xs">
+<div class="min-w-[140px] p-md bg-surface-container-low border border-outline-variant rounded-lg">
+<p class="font-label-md text-label-md text-on-surface-variant mb-xs">Live Tenders</p>
+<p class="font-headline-md text-headline-md text-on-surface">1,284</p>
+</div>
+<div class="min-w-[140px] p-md bg-surface-container-low border border-outline-variant rounded-lg">
+<p class="font-label-md text-label-md text-on-surface-variant mb-xs">Closing Today</p>
+<p class="font-headline-md text-headline-md text-on-surface text-tertiary">42</p>
+</div>
+<div class="min-w-[140px] p-md bg-surface-container-low border border-outline-variant rounded-lg">
+<p class="font-label-md text-label-md text-on-surface-variant mb-xs">Value (Cr)</p>
+<p class="font-headline-md text-headline-md text-on-surface">₹84.2</p>
+</div>
+</div>
+<!-- Tender Listing Grid -->
+<div class="flex flex-col gap-md">
+<!-- Tender Card 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-md transition-all hover:border-primary active:scale-[0.98]">
+<div class="flex justify-between items-start mb-sm">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 bg-surface-variant flex items-center justify-center rounded-sm">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="factory">factory</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface-variant">ONGC Limited</span>
+</div>
+<span class="px-sm py-xs bg-secondary-container text-on-secondary-container font-label-sm text-label-sm rounded-full">Exempted</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-md line-clamp-2">Annual Maintenance Contract for IT Infrastructure and Networking Equipment at Mumbai Regional Office</h3>
+<div class="grid grid-cols-3 gap-xs border-t border-outline-variant pt-md">
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase">Value</p>
+<p class="font-body-md text-body-md font-bold text-on-surface">₹24,50,000</p>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase">Ends In</p>
+<p class="font-body-md text-body-md text-error">4 Days</p>
+</div>
+<div class="text-right">
+<button class="text-primary font-label-md text-label-md underline">View Details</button>
+</div>
+</div>
+</div>
+<!-- Tender Card 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-md transition-all hover:border-primary active:scale-[0.98]">
+<div class="flex justify-between items-start mb-sm">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 bg-surface-variant flex items-center justify-center rounded-sm">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="bolt">bolt</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface-variant">NTPC Limited</span>
+</div>
+<span class="px-sm py-xs bg-surface-container-high text-on-surface font-label-sm text-label-sm rounded-full">Open</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-md line-clamp-2">Supply, Installation and Commissioning of 500KW Solar Photovoltaic Plant</h3>
+<div class="grid grid-cols-3 gap-xs border-t border-outline-variant pt-md">
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase">Value</p>
+<p class="font-body-md text-body-md font-bold text-on-surface">₹1.8 Cr</p>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase">Ends In</p>
+<p class="font-body-md text-body-md text-on-surface">12 Days</p>
+</div>
+<div class="text-right">
+<button class="text-primary font-label-md text-label-md underline">View Details</button>
+</div>
+</div>
+</div>
+<!-- Tender Card 3 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-md transition-all hover:border-primary active:scale-[0.98]">
+<div class="flex justify-between items-start mb-sm">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 bg-surface-variant flex items-center justify-center rounded-sm">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="medical_services">medical_services</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface-variant">AIIMS Raipur</span>
+</div>
+<span class="px-sm py-xs bg-secondary-container text-on-secondary-container font-label-sm text-label-sm rounded-full">Exempted</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-md line-clamp-2">Procurement of Specialized Diagnostic Equipment for Cardiology Department</h3>
+<div class="grid grid-cols-3 gap-xs border-t border-outline-variant pt-md">
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase">Value</p>
+<p class="font-body-md text-body-md font-bold text-on-surface">₹4.2 Cr</p>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase">Ends In</p>
+<p class="font-body-md text-body-md text-error">2 Days</p>
+</div>
+<div class="text-right">
+<button class="text-primary font-label-md text-label-md underline">View Details</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation Bar -->
+<footer class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 py-xs bg-surface border-t border-outline-variant">
+<a class="flex flex-col items-center justify-center text-primary font-bold px-sm py-xs" href="#">
+<span class="material-symbols-outlined" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-label-sm text-label-sm">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary px-sm py-xs" href="#">
+<span class="material-symbols-outlined" data-icon="visibility">visibility</span>
+<span class="font-label-sm text-label-sm">Watchlist</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary px-sm py-xs" href="#">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="font-label-sm text-label-sm">Alerts</span>
+</a>
+</footer>
+<!-- Filter Drawer (Bottom Sheet) -->
+<div class="fixed inset-0 bg-black/60 z-[60] hidden opacity-0 transition-opacity duration-300" id="filter-backdrop" onclick="toggleFilters()"></div>
+<div class="fixed bottom-0 left-0 w-full bg-surface-container z-[70] rounded-t-xl filter-sheet-inactive transition-transform duration-300 ease-in-out p-md pb-xl shadow-2xl" id="filter-sheet">
+<div class="w-12 h-1 bg-outline-variant rounded-full mx-auto mb-lg"></div>
+<div class="flex justify-between items-center mb-lg">
+<h2 class="font-headline-md text-headline-md text-on-surface">Filter Tenders</h2>
+<button class="text-on-surface-variant p-1 rounded-full hover:bg-surface-variant" onclick="toggleFilters()">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+</div>
+<form class="space-y-lg">
+<!-- MSE Status -->
+<div>
+<label class="font-label-md text-label-md text-on-surface-variant mb-sm block">MSE Preference (incl. EMD Exemption)</label>
+<div class="flex gap-sm">
+<button class="flex-1 py-sm border border-primary bg-primary-container text-on-primary-container rounded-sm font-label-lg text-label-lg" type="button">All</button>
+<button class="flex-1 py-sm border border-outline-variant hover:bg-surface-variant text-on-surface rounded-sm font-label-lg text-label-lg" type="button">MSE Only</button>
+</div>
+</div>
+<!-- Turnover -->
+<div>
+<label class="font-label-md text-label-md text-on-surface-variant mb-sm block">Minimum Turnover (Cr)</label>
+<select class="w-full bg-surface-container-low border border-outline-variant rounded-sm p-sm font-body-md text-on-surface focus:border-primary focus:ring-0">
+<option>No Minimum</option>
+<option>&gt; ₹1 Cr</option>
+<option>&gt; ₹5 Cr</option>
+<option>&gt; ₹10 Cr</option>
+</select>
+</div>
+<!-- EMD Toggle -->
+<div>
+<label class="font-label-md text-label-md text-on-surface-variant mb-sm block">EMD Amount Range (₹)</label>
+<div class="flex items-center gap-sm">
+<input class="flex-1 bg-surface-container-low border border-outline-variant rounded-sm p-sm font-body-md text-on-surface focus:border-primary focus:ring-0" max="10000" min="0" placeholder="From" type="number">
+<span class="text-on-surface-variant">-</span>
+<input class="flex-1 bg-surface-container-low border border-outline-variant rounded-sm p-sm font-body-md text-on-surface focus:border-primary focus:ring-0" max="10000" min="0" placeholder="To" type="number">
+</div>
+</div>
+<!-- Geography -->
+<div>
+<label class="font-label-md text-label-md text-on-surface-variant mb-sm block">Region / State</label>
+<div class="flex flex-wrap gap-sm">
+<span class="px-sm py-xs bg-surface-container-high border border-outline-variant text-on-surface rounded-sm font-label-sm text-label-sm flex items-center gap-xs">
+                    Maharashtra <span class="material-symbols-outlined text-[14px]" data-icon="close">close</span>
+</span>
+<span class="px-sm py-xs bg-surface-container-high border border-outline-variant text-on-surface rounded-sm font-label-sm text-label-sm flex items-center gap-xs">
+                    Delhi <span class="material-symbols-outlined text-[14px]" data-icon="close">close</span>
+</span>
+<button class="px-sm py-xs border border-primary text-primary rounded-sm font-label-sm text-label-sm" type="button">+ Add Region</button>
+</div>
+</div>
+<div class="flex gap-md pt-lg">
+<button class="flex-1 py-md font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface active:opacity-50" type="reset">Reset</button>
+<button class="flex-[2] py-md bg-primary-container text-on-primary-container rounded-sm font-label-lg text-label-lg active:scale-95 transition-transform" onclick="toggleFilters()" type="button">Apply Filters</button>
+</div>
+</form></div></body></html>

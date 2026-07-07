@@ -1,0 +1,314 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>PSU Portals | CGTenders</title>
+<!-- Google Fonts & Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed-dim": "#4edea3",
+                        "surface-container-highest": "#d3e4fe",
+                        "on-secondary-container": "#00714d",
+                        "tertiary": "#000000",
+                        "tertiary-fixed": "#d8e2ff",
+                        "on-surface": "#0b1c30",
+                        "primary": "#000000",
+                        "background": "#f8f9ff",
+                        "primary-container": "#131b2e",
+                        "on-primary": "#ffffff",
+                        "primary-fixed-dim": "#bec6e0",
+                        "inverse-on-surface": "#eaf1ff",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-tint": "#565e74",
+                        "on-tertiary-fixed": "#001a42",
+                        "surface-container-high": "#dce9ff",
+                        "surface-container-low": "#eff4ff",
+                        "surface": "#f8f9ff",
+                        "surface-bright": "#f8f9ff",
+                        "outline": "#76777d",
+                        "on-primary-container": "#7c839b",
+                        "on-error": "#ffffff",
+                        "inverse-surface": "#213145",
+                        "on-tertiary-container": "#3980f4",
+                        "secondary-container": "#6cf8bb",
+                        "surface-variant": "#d3e4fe",
+                        "on-secondary-fixed-variant": "#005236",
+                        "error": "#ba1a1a",
+                        "on-primary-fixed": "#131b2e",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "secondary": "#006c49",
+                        "primary-fixed": "#dae2fd",
+                        "outline-variant": "#c6c6cd",
+                        "on-surface-variant": "#45464d",
+                        "on-secondary": "#ffffff",
+                        "on-background": "#0b1c30",
+                        "secondary-fixed": "#6ffbbe",
+                        "error-container": "#ffdad6",
+                        "inverse-primary": "#bec6e0",
+                        "tertiary-container": "#001a42",
+                        "on-tertiary-fixed-variant": "#004395",
+                        "on-error-container": "#93000a",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed-dim": "#adc6ff",
+                        "on-secondary-fixed": "#002113",
+                        "surface-dim": "#cbdbf5",
+                        "surface-container": "#e5eeff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "gutter": "12px",
+                        "base": "4px",
+                        "md": "16px",
+                        "xl": "32px",
+                        "sm": "8px",
+                        "lg": "24px",
+                        "container-margin": "16px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-lg": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "label-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                        "label-sm": ["10px", {"lineHeight": "12px", "fontWeight": "700"}],
+                        "headline-md": ["18px", {"lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "headline-sm": ["16px", {"lineHeight": "20px", "fontWeight": "600"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .segmented-toggle-active {
+            background-color: #6cf8bb; /* secondary-container */
+            color: #002113; /* on-secondary-fixed */
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9ff;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface">
+<!-- TopAppBar Component -->
+<header class="sticky top-0 z-50 bg-surface dark:bg-background text-on-surface dark:text-on-background border-b border-outline-variant dark:border-outline flex justify-between items-center w-full px-container-margin py-md">
+<div class="flex items-center gap-md">
+<img alt="CGTenders Logo" class="h-8 w-auto" src="https://lh3.googleusercontent.com/aida/AP1WRLv99T6x3Ue-LOm4-mmjWh0cWp0vwuRbtyG3Q8Y7c800dJqTXOdXfwsdxRqV7f16TaoEFXRcDatPnW7EEtheGXkaKeHQK0HATJmTIFYNPdq4z_6DmGyY_GYm524v0qzNxx5CWWF7zKQUeXl7kJHstuYP1Zip80Orb7zhfsnYjnJ1UFwQKW_UdubuDlGxFe7ucTvN4zCDQ4PCYJBQKRtrrPucWyKgB8ILf4fmSYfWlYdgRPWuG5hlbXmvyL8">
+<h1 class="text-headline-lg font-headline-lg font-bold text-primary dark:text-primary-fixed">CGTenders</h1>
+</div>
+<div class="hidden md:flex flex-1 max-w-md mx-xl">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-surface-container-low border border-outline-variant rounded-lg pl-10 pr-4 py-sm text-body-md focus:outline-none focus:ring-1 focus:ring-primary" placeholder="Search tenders..." type="text">
+</div>
+</div>
+<div class="flex items-center gap-sm">
+<div class="hidden sm:flex flex-col items-end">
+<span class="text-label-sm font-label-sm uppercase tracking-wider text-on-surface-variant">Active Tenders</span>
+<span class="text-headline-sm font-headline-sm font-bold text-secondary">14K</span>
+</div>
+<button class="p-2 hover:bg-surface-container-low rounded-full transition-transform active:scale-95">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+</button>
+</div>
+</header>
+<!-- Navigation Tabs (NavigationDrawer Context - PSU Portals Active) -->
+<nav class="bg-surface-container-low dark:bg-surface-container-highest px-container-margin flex gap-sm border-b border-outline-variant">
+<button class="px-lg py-md text-label-lg font-label-lg text-on-surface-variant hover:bg-surface-variant transition-colors border-b-2 border-transparent">
+            GeM Tenders
+        </button>
+<button class="px-lg py-md text-label-lg font-label-lg bg-primary dark:bg-primary-container text-on-primary dark:text-on-primary-container font-bold border-b-2 border-secondary">
+            PSU Portals
+        </button>
+</nav>
+<!-- Context Control Bar -->
+<section class="w-full bg-surface border-b border-outline-variant px-container-margin py-md grid grid-cols-1 md:grid-cols-3 gap-md items-center">
+<div class="flex flex-col gap-xs">
+<label class="text-label-md font-label-md text-on-surface-variant">Organization</label>
+<div class="relative">
+<select class="w-full appearance-none bg-surface-container-lowest border border-outline-variant rounded-lg px-md py-sm text-body-md focus:ring-1 focus:ring-primary">
+<option>[ NTPC ]</option>
+<option>[ ONGC ]</option>
+<option>[ SAIL ]</option>
+<option>[ IOCL ]</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">expand_more</span>
+</div>
+</div>
+<div class="flex flex-col gap-xs">
+<label class="text-label-md font-label-md text-on-surface-variant">Plant / Location</label>
+<div class="relative">
+<select class="w-full appearance-none bg-surface-container-lowest border border-outline-variant rounded-lg px-md py-sm text-body-md focus:ring-1 focus:ring-primary">
+<option>[ All Plants ]</option>
+<option>Vindhyachal</option>
+<option>Mumbai Offshore</option>
+<option>Bhilai</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">expand_more</span>
+</div>
+</div>
+<div class="flex flex-col gap-xs">
+<label class="text-label-md font-label-md text-on-surface-variant">EMD Status</label>
+<div class="flex bg-surface-container-low p-1 rounded-lg border border-outline-variant h-[40px]">
+<button class="flex-1 text-label-md rounded-md hover:bg-surface-variant transition-colors">All</button>
+<button class="flex-1 text-label-md rounded-md segmented-toggle-active font-bold">Free</button>
+<button class="flex-1 text-label-md rounded-md hover:bg-surface-variant transition-colors">Fee Required</button>
+</div>
+</div>
+</section>
+<!-- Tender Listing -->
+<main class="w-full max-w-full px-container-margin py-lg flex flex-col gap-md">
+<!-- Card 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant p-lg hover:shadow-sm transition-shadow rounded-sm">
+<div class="flex justify-between items-start mb-sm">
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 bg-surface-container flex items-center justify-center rounded-sm text-on-surface-variant">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">factory</span>
+</div>
+<div>
+<p class="text-label-sm font-label-sm text-on-surface-variant uppercase">PSU Portal: NTPC</p>
+<p class="text-body-sm font-body-sm">Vindhyachal Plant</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-label-sm font-label-sm text-on-surface-variant">Estimated Value</p>
+<p class="text-headline-sm font-headline-sm text-primary">₹45,00,000</p>
+</div>
+</div>
+<h3 class="text-headline-md font-headline-md text-on-surface mb-md">Supply &amp; Installation of Solar PV Arrays</h3>
+<div class="flex items-center justify-between border-t border-outline-variant pt-md">
+<div class="bg-[#e7f9f2] text-secondary font-label-md px-md py-xs rounded-full flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]">check_circle</span>
+                    ✓ EMD Exempted / Nil
+                </div>
+<button class="text-primary hover:text-on-tertiary-container text-label-lg font-label-lg flex items-center gap-xs">
+                    View Details
+                    <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant p-lg hover:shadow-sm transition-shadow rounded-sm">
+<div class="flex justify-between items-start mb-sm">
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 bg-surface-container flex items-center justify-center rounded-sm text-on-surface-variant">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">water_drop</span>
+</div>
+<div>
+<p class="text-label-sm font-label-sm text-on-surface-variant uppercase">PSU Portal: ONGC</p>
+<p class="text-body-sm font-body-sm">Mumbai Offshore</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-label-sm font-label-sm text-on-surface-variant">Estimated Value</p>
+<p class="text-headline-sm font-headline-sm text-primary">₹1,20,00,000</p>
+</div>
+</div>
+<h3 class="text-headline-md font-headline-md text-on-surface mb-md">Maintenance of Drilling Rig Control Systems</h3>
+<div class="flex items-center justify-between border-t border-outline-variant pt-md">
+<div class="bg-surface-container text-on-surface-variant font-label-md px-md py-xs rounded-full flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]">payments</span>
+                    ₹2,40,000 Fee Required
+                </div>
+<button class="text-primary hover:text-on-tertiary-container text-label-lg font-label-lg flex items-center gap-xs">
+                    View Details
+                    <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface-container-lowest border border-outline-variant p-lg hover:shadow-sm transition-shadow rounded-sm">
+<div class="flex justify-between items-start mb-sm">
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 bg-surface-container flex items-center justify-center rounded-sm text-on-surface-variant">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">precision_manufacturing</span>
+</div>
+<div>
+<p class="text-label-sm font-label-sm text-on-surface-variant uppercase">PSU Portal: SAIL</p>
+<p class="text-body-sm font-body-sm">Bhilai Steel Plant</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-label-sm font-label-sm text-on-surface-variant">Estimated Value</p>
+<p class="text-headline-sm font-headline-sm text-primary">₹12,50,000</p>
+</div>
+</div>
+<h3 class="text-headline-md font-headline-md text-on-surface mb-md">Procurement of Industrial Safety Gear</h3>
+<div class="flex items-center justify-between border-t border-outline-variant pt-md">
+<div class="bg-[#e7f9f2] text-secondary font-label-md px-md py-xs rounded-full flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]">check_circle</span>
+                    ✓ EMD Exempted / Nil
+                </div>
+<button class="text-primary hover:text-on-tertiary-container text-label-lg font-label-lg flex items-center gap-xs">
+                    View Details
+                    <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</main>
+<!-- BottomNavBar Component -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 py-xs bg-surface dark:bg-inverse-surface border-t border-outline-variant dark:border-outline">
+<div class="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant py-2">
+<span class="material-symbols-outlined">home</span>
+<span class="text-label-sm font-label-sm">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant py-2">
+<span class="material-symbols-outlined">visibility</span>
+<span class="text-label-sm font-label-sm">Watchlist</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant py-2">
+<span class="material-symbols-outlined">notifications</span>
+<span class="text-label-sm font-label-sm">Alerts</span>
+</div>
+<div class="flex flex-col items-center justify-center text-primary dark:text-secondary-fixed-dim font-bold py-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="text-label-sm font-label-sm">Profile</span>
+</div>
+</nav>
+<!-- Spacing for fixed BottomNav -->
+<div class="h-20"></div>
+<script>
+        // Micro-interaction for hover states and button feedback
+        document.querySelectorAll('button, .hover\\:shadow-sm').forEach(el => {
+            el.addEventListener('mousedown', () => {
+                el.classList.add('scale-95');
+                el.style.transition = 'transform 0.1s ease';
+            });
+            el.addEventListener('mouseup', () => {
+                el.classList.remove('scale-95');
+            });
+            el.addEventListener('mouseleave', () => {
+                el.classList.remove('scale-95');
+            });
+        });
+    </script>
+</body></html>

@@ -1,0 +1,261 @@
+<!DOCTYPE html><html class="light" lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=block" rel="stylesheet"><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">try{
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed-dim": "#4edea3",
+                        "surface-container-highest": "#d3e4fe",
+                        "on-secondary-container": "#00714d",
+                        "tertiary": "#000000",
+                        "tertiary-fixed": "#d8e2ff",
+                        "on-surface": "#0b1c30",
+                        "primary": "#000000",
+                        "background": "#f8f9ff",
+                        "primary-container": "#131b2e",
+                        "on-primary": "#ffffff",
+                        "primary-fixed-dim": "#bec6e0",
+                        "inverse-on-surface": "#eaf1ff",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-tint": "#565e74",
+                        "on-tertiary-fixed": "#001a42",
+                        "surface-container-high": "#dce9ff",
+                        "surface-container-low": "#eff4ff",
+                        "surface": "#f8f9ff",
+                        "surface-bright": "#f8f9ff",
+                        "outline": "#76777d",
+                        "on-primary-container": "#7c839b",
+                        "on-error": "#ffffff",
+                        "inverse-surface": "#213145",
+                        "on-tertiary-container": "#3980f4",
+                        "secondary-container": "#6cf8bb",
+                        "surface-variant": "#d3e4fe",
+                        "on-secondary-fixed-variant": "#005236",
+                        "error": "#ba1a1a",
+                        "on-primary-fixed": "#131b2e",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "secondary": "#006c49",
+                        "primary-fixed": "#dae2fd",
+                        "outline-variant": "#c6c6cd",
+                        "on-surface-variant": "#45464d",
+                        "on-secondary": "#ffffff",
+                        "on-background": "#0b1c30",
+                        "secondary-fixed": "#6ffbbe",
+                        "error-container": "#ffdad6",
+                        "inverse-primary": "#bec6e0",
+                        "tertiary-container": "#001a42",
+                        "on-tertiary-fixed-variant": "#004395",
+                        "on-error-container": "#93000a",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed-dim": "#adc6ff",
+                        "on-secondary-fixed": "#002113",
+                        "surface-dim": "#cbdbf5",
+                        "surface-container": "#e5eeff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.4rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "gutter": "12px",
+                        "base": "4px",
+                        "md": "12px",
+                        "xl": "24px",
+                        "sm": "8px",
+                        "lg": "16px",
+                        "container-margin": "16px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-lg": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "label-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-md": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                        "headline-lg": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "body-lg": ["15px", {"lineHeight": "22px", "fontWeight": "400"}],
+                        "label-lg": ["13px", {"lineHeight": "18px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                        "label-sm": ["10px", {"lineHeight": "12px", "fontWeight": "600"}],
+                        "headline-md": ["16px", {"lineHeight": "22px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "body-sm": ["11px", {"lineHeight": "14px", "fontWeight": "400"}],
+                        "headline-sm": ["14px", {"lineHeight": "20px", "fontWeight": "600"}],
+                        "label-md": ["11px", {"lineHeight": "14px", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    }catch(_e){}</script></head><body class="bg-surface text-on-surface">
+<!-- TopAppBar Component - Optimized for Mobile -->
+<header class="sticky top-0 z-50 bg-surface/90 backdrop-blur-md border-b border-outline-variant/50 flex justify-between items-center w-full px-container-margin py-3">
+<div class="flex items-center gap-2">
+<img alt="CGTenders Logo" class="h-6 w-auto" src="https://lh3.googleusercontent.com/aida/AP1WRLv99T6x3Ue-LOm4-mmjWh0cWp0vwuRbtyG3Q8Y7c800dJqTXOdXfwsdxRqV7f16TaoEFXRcDatPnW7EEtheGXkaKeHQK0HATJmTIFYNPdq4z_6DmGyY_GYm524v0qzNxx5CWWF7zKQUeXl7kJHstuYP1Zip80Orb7zhfsnYjnJ1UFwQKW_UdubuDlGxFe7ucTvN4zCDQ4PCYJBQKRtrrPucWyKgB8ILf4fmSYfWlYdgRPWuG5hlbXmvyL8">
+<h1 class="text-headline-sm font-bold text-primary">CGTenders</h1>
+</div>
+<div class="flex items-center gap-2">
+<div class="hidden sm:flex flex-col items-end">
+<span class="text-[9px] uppercase tracking-wider text-on-surface-variant font-medium">Live</span>
+<span class="text-label-md text-secondary">14,284 Tenders</span>
+</div>
+<button class="w-9 h-9 flex items-center justify-center hover:bg-surface-container-low rounded-full transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="search">search</span>
+</button>
+</div>
+</header>
+<!-- Navigation Tabs - More Compact & Integrated -->
+<nav class="bg-surface px-container-margin flex border-b border-outline-variant/30">
+<button class="flex-1 py-3 text-label-md text-on-surface-variant hover:text-on-surface border-b-2 border-transparent transition-all">
+            GeM Tenders
+        </button>
+<button class="flex-1 py-3 text-label-md text-primary font-bold border-b-2 border-primary">
+            PSU Portals
+        </button>
+</nav>
+<!-- Context Control Bar - Sleek & Subtle -->
+<section class="w-full bg-surface-container-lowest border-b border-outline-variant/20 px-container-margin py-lg grid grid-cols-1 gap-lg">
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-lg">
+<div class="flex flex-col gap-1.5">
+<label class="text-[11px] font-medium text-on-surface-variant/80 uppercase tracking-tight">Portal Unit</label>
+<div class="relative">
+<select class="filter-select w-full bg-surface-container-low/50 border border-outline-variant/40 rounded-xl px-3 py-2 text-body-md focus:ring-1 focus:ring-primary/20 focus:border-primary/40 outline-none transition-all">
+<option>[ NTPC - Vindhyachal ]</option>
+<option>[ ONGC - Mumbai Offshore ]</option>
+<option>[ SAIL - Bhilai ]</option>
+<option>[ IOCL - All Plants ]</option>
+</select>
+</div>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="text-[11px] font-medium text-on-surface-variant/80 uppercase tracking-tight">EMD Amount (₹)</label>
+<div class="flex gap-2 items-center">
+<div class="relative flex-1">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] text-on-surface-variant/60">Min</span>
+<input class="w-full bg-surface-container-low/50 border border-outline-variant/40 rounded-xl pl-10 pr-2 py-2 text-body-md focus:ring-1 focus:ring-primary/20 focus:border-primary/40 outline-none" type="number" value="0">
+</div>
+<div class="relative flex-1">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] text-on-surface-variant/60">Max</span>
+<input class="w-full bg-surface-container-low/50 border border-outline-variant/40 rounded-xl pl-10 pr-2 py-2 text-body-md focus:ring-1 focus:ring-primary/20 focus:border-primary/40 outline-none" type="number" value="10000">
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Tender Listing - Flatter Cards, Improved Rhythm -->
+<main class="w-full max-w-full px-container-margin py-lg flex flex-col gap-lg">
+<!-- Card 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant/30 p-lg rounded-xl hover:border-outline-variant/60 transition-all">
+<div class="flex justify-between items-start mb-3">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 bg-surface-container-low flex items-center justify-center rounded-lg text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">factory</span>
+</div>
+<div>
+<p class="text-[10px] font-semibold text-secondary uppercase tracking-tight">NTPC Portal</p>
+<p class="text-body-sm text-on-surface-variant">Vindhyachal Plant</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-[10px] text-on-surface-variant/70 uppercase">Value</p>
+<p class="text-headline-sm font-bold text-primary">₹45.00 L</p>
+</div>
+</div>
+<h3 class="text-headline-md font-semibold text-on-surface mb-lg leading-snug">Supply &amp; Installation of Solar PV Arrays</h3>
+<div class="flex items-center justify-between border-t border-outline-variant/10 pt-3">
+<div class="bg-secondary/10 text-secondary text-[11px] font-semibold px-2.5 py-1 rounded-md flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+                    EMD Exempted
+                </div>
+<button class="text-primary hover:underline text-label-md font-bold flex items-center gap-1">
+                    Details
+                    <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant/30 p-lg rounded-xl hover:border-outline-variant/60 transition-all">
+<div class="flex justify-between items-start mb-3">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 bg-surface-container-low flex items-center justify-center rounded-lg text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">water_drop</span>
+</div>
+<div>
+<p class="text-[10px] font-semibold text-secondary uppercase tracking-tight">ONGC Portal</p>
+<p class="text-body-sm text-on-surface-variant">Mumbai Offshore</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-[10px] text-on-surface-variant/70 uppercase">Value</p>
+<p class="text-headline-sm font-bold text-primary">₹1.20 Cr</p>
+</div>
+</div>
+<h3 class="text-headline-md font-semibold text-on-surface mb-lg leading-snug">Maintenance of Drilling Rig Control Systems</h3>
+<div class="flex items-center justify-between border-t border-outline-variant/10 pt-3">
+<div class="bg-surface-container text-on-surface-variant/80 text-[11px] font-semibold px-2.5 py-1 rounded-md flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">payments</span>
+                    ₹2,40,000 Fee
+                </div>
+<button class="text-primary hover:underline text-label-md font-bold flex items-center gap-1">
+                    Details
+                    <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface-container-lowest border border-outline-variant/30 p-lg rounded-xl hover:border-outline-variant/60 transition-all">
+<div class="flex justify-between items-start mb-3">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 bg-surface-container-low flex items-center justify-center rounded-lg text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">precision_manufacturing</span>
+</div>
+<div>
+<p class="text-[10px] font-semibold text-secondary uppercase tracking-tight">SAIL Portal</p>
+<p class="text-body-sm text-on-surface-variant">Bhilai Steel Plant</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-[10px] text-on-surface-variant/70 uppercase">Value</p>
+<p class="text-headline-sm font-bold text-primary">₹12.50 L</p>
+</div>
+</div>
+<h3 class="text-headline-md font-semibold text-on-surface mb-lg leading-snug">Procurement of Industrial Safety Gear</h3>
+<div class="flex items-center justify-between border-t border-outline-variant/10 pt-3">
+<div class="bg-secondary/10 text-secondary text-[11px] font-semibold px-2.5 py-1 rounded-md flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+                    EMD Exempted
+                </div>
+<button class="text-primary hover:underline text-label-md font-bold flex items-center gap-1">
+                    Details
+                    <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</main>
+<!-- BottomNavBar - Subtle Integration -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 py-1.5 bg-surface/95 backdrop-blur-md border-t border-outline-variant/30 shadow-lg">
+<div class="flex flex-col items-center justify-center text-on-surface-variant/60 py-1 flex-1">
+<span class="material-symbols-outlined text-[22px]">home</span>
+<span class="text-[10px] font-medium mt-0.5">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant/60 py-1 flex-1">
+<span class="material-symbols-outlined text-[22px]">visibility</span>
+<span class="text-[10px] font-medium mt-0.5">Watchlist</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant/60 py-1 flex-1">
+<span class="material-symbols-outlined text-[22px]">notifications</span>
+<span class="text-[10px] font-medium mt-0.5">Alerts</span>
+</div>
+
+</nav>
+<!-- Spacing for fixed BottomNav -->
+<div class="h-16"></div>
+<script class="">
+        // Micro-interaction for feedback
+        document.querySelectorAll('button,</script></body></html>
