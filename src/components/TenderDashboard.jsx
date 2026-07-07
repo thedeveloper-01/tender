@@ -226,12 +226,12 @@ function TenderCard({ t }) {
               : <span style={{ fontSize:'11px', color:C.outline, fontStyle:'italic' }}>Not available</span>
             }
           </div>
-          {hasEmd && (
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-              <span style={{ fontSize:'11px', color:C.outline }}>EMD:</span>
-              <span style={{ fontSize:'12px', fontWeight:600, color:C.onSurfaceVar }}>{fmt(t.emdAmount)}</span>
-            </div>
-          )}
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+            <span style={{ fontSize:'11px', color:C.outline }}>EMD:</span>
+            <span style={{ fontSize:'12px', fontWeight:600, color: hasEmd ? C.onSurfaceVar : C.secondary }}>
+              {hasEmd ? fmt(t.emdAmount) : 'Exempt / N/A'}
+            </span>
+          </div>
         </div>
 
         {/* Risk flags */}

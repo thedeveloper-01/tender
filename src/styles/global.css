@@ -1,55 +1,107 @@
 @import "tailwindcss";
 
-/* ── MD3 Dark Token Custom Properties ─────────────────────────────────────── */
+/* Light Mode Variables by default */
 :root {
-  --surface: #051424;
-  --surface-dim: #051424;
-  --surface-container-lowest: #010f1f;
-  --surface-container-low: #0d1c2d;
-  --surface-container: #122131;
-  --surface-container-high: #1c2b3c;
+  --surface:                   #f8f9fc;
+  --surface-dim:               #edf0f5;
+  --surface-container-lowest:  #ffffff;
+  --surface-container-low:     #f1f3f7;
+  --surface-container:         #ffffff;
+  --surface-container-high:    #e8ebf0;
+  --surface-container-highest: #dfe2e8;
+  --surface-bright:            #fcfdfe;
+  --surface-variant:           #e2e8f0;
+
+  --on-surface:          #0f172a;
+  --on-surface-variant:  #475569;
+  --on-background:       #0f172a;
+
+  --primary:             #1a56db;
+  --primary-container:   #dbeafe;
+  --primary-fixed:       #dbeafe;
+  --primary-fixed-dim:   #adc6ff;
+  --on-primary:          #ffffff;
+  --on-primary-container:#1e40af;
+  --on-primary-fixed:    #1e40af;
+  --inverse-primary:     #adc6ff;
+
+  --secondary:            #008a5d;
+  --secondary-container:  #d1fae5;
+  --secondary-fixed:      #a7f3d0;
+  --secondary-fixed-dim:  #4edea3;
+  --on-secondary:         #ffffff;
+  --on-secondary-container:#065f46;
+
+  --tertiary:             #c2410c;
+  --tertiary-container:   #ffedd5;
+  --tertiary-fixed:       #ffedd5;
+  --tertiary-fixed-dim:   #ffb786;
+  --on-tertiary:          #ffffff;
+  --on-tertiary-container:#9a3412;
+
+  --error:                #ba1a1a;
+  --error-container:      #ffdad6;
+  --on-error:             #ffffff;
+  --on-error-container:   #410002;
+
+  --outline:              #64748b;
+  --outline-variant:      #cbd5e1;
+  --inverse-surface:      #0f172a;
+  --inverse-on-surface:   #f8f9fc;
+  --surface-tint:         #1a56db;
+  --background:           #f8f9fc;
+}
+
+/* Dark Mode Variables when class "dark" is present on html element */
+html.dark {
+  --surface:                   #051424;
+  --surface-dim:               #051424;
+  --surface-container-lowest:  #010f1f;
+  --surface-container-low:     #0d1c2d;
+  --surface-container:         #122131;
+  --surface-container-high:    #1c2b3c;
   --surface-container-highest: #273647;
-  --surface-bright: #2c3a4c;
-  --surface-variant: #273647;
+  --surface-bright:            #2c3a4c;
+  --surface-variant:           #273647;
 
-  --on-surface: #d4e4fa;
-  --on-surface-variant: #c2c6d6;
-  --on-background: #d4e4fa;
+  --on-surface:          #d4e4fa;
+  --on-surface-variant:  #c2c6d6;
+  --on-background:       #d4e4fa;
 
-  --primary: #adc6ff;
-  --primary-container: #4d8eff;
-  --primary-fixed: #d8e2ff;
-  --primary-fixed-dim: #adc6ff;
-  --on-primary: #002e6a;
-  --on-primary-container: #00285d;
-  --on-primary-fixed: #001a42;
-  --inverse-primary: #005ac2;
+  --primary:             #adc6ff;
+  --primary-container:   #4d8eff;
+  --primary-fixed:       #d8e2ff;
+  --primary-fixed-dim:   #adc6ff;
+  --on-primary:          #002e6a;
+  --on-primary-container:#00285d;
+  --on-primary-fixed:    #001a42;
+  --inverse-primary:     #005ac2;
 
-  --secondary: #4edea3;
-  --secondary-container: #00a572;
-  --secondary-fixed: #6ffbbe;
-  --secondary-fixed-dim: #4edea3;
-  --on-secondary: #003824;
-  --on-secondary-container: #00311f;
+  --secondary:            #4edea3;
+  --secondary-container:  #00a572;
+  --secondary-fixed:      #6ffbbe;
+  --secondary-fixed-dim:  #4edea3;
+  --on-secondary:         #003824;
+  --on-secondary-container:#00311f;
 
-  --tertiary: #ffb786;
-  --tertiary-container: #df7412;
-  --tertiary-fixed: #ffdcc6;
-  --tertiary-fixed-dim: #ffb786;
-  --on-tertiary: #502400;
-  --on-tertiary-container: #461f00;
+  --tertiary:             #ffb786;
+  --tertiary-container:   #df7412;
+  --tertiary-fixed:       #ffdcc6;
+  --tertiary-fixed-dim:   #ffb786;
+  --on-tertiary:          #502400;
+  --on-tertiary-container:#461f00;
 
-  --error: #ffb4ab;
-  --error-container: #93000a;
-  --on-error: #690005;
-  --on-error-container: #ffdad6;
+  --error:                #ffb4ab;
+  --error-container:      #93000a;
+  --on-error:             #690005;
+  --on-error-container:   #ffdad6;
 
-  --outline: #8c909f;
-  --outline-variant: #424754;
-  --inverse-surface: #d4e4fa;
-  --inverse-on-surface: #233143;
-  --surface-tint: #adc6ff;
-  --background: #051424;
+  --outline:              #8c909f;
+  --outline-variant:      #424754;
+  --inverse-surface:      #d4e4fa;
+  --inverse-on-surface:   #233143;
+  --surface-tint:         #adc6ff;
+  --background:           #051424;
 }
 
 /* ── Tailwind v4 dark variant (kept for any legacy use) ───────────────────── */

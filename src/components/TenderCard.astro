@@ -154,12 +154,12 @@ const risks = t.risks || [];
           : <span style="font-size:12px;color:#8c909f;font-style:italic;">Not available</span>
         }
       </div>
-      {hasEmd && (
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <span style="font-size:11px;color:#8c909f;font-weight:500;">EMD:</span>
-          <span style="font-size:12px;font-weight:600;color:#c2c6d6;">{formatRupee(t.emdAmount)}</span>
-        </div>
-      )}
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:11px;color:#8c909f;font-weight:500;">EMD:</span>
+        <span style={`font-size:12px;font-weight:600;color:${hasEmd ? 'var(--on-surface-variant)' : 'var(--secondary)'};`}>
+          {hasEmd ? formatRupee(t.emdAmount) : 'Exempt / N/A'}
+        </span>
+      </div>
     </div>
 
     <!-- Risk flags (compact) -->

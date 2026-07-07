@@ -2,69 +2,86 @@
 const path = Astro.url.pathname;
 ---
 
-<header style="background:#051424;border-bottom:1px solid #424754;position:sticky;top:0;z-index:50;height:64px;">
+<header style="background:var(--surface);border-bottom:1px solid var(--outline-variant);position:sticky;top:0;z-index:50;height:64px;transition:background-color 0.2s, border-color 0.2s;">
   <div style="max-width:1440px;margin:0 auto;padding:0 32px;height:100%;display:flex;align-items:center;justify-content:space-between;gap:24px;">
 
     <!-- Brand -->
     <a href="/" style="display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0;">
       <svg aria-hidden="true" width="36" height="36" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="4" y="4" width="120" height="120" rx="20" fill="#122131" stroke="#4d8eff" stroke-width="6"/>
-        <text x="64" y="73" font-family="'Hanken Grotesk','Inter',system-ui" font-weight="700" font-size="46" fill="#adc6ff" text-anchor="middle">CG</text>
-        <line x1="44" y1="90" x2="84" y2="90" stroke="#4edea3" stroke-width="5" stroke-linecap="round"/>
+        <rect x="4" y="4" width="120" height="120" rx="20" fill="var(--surface-container)" stroke="var(--primary)" stroke-width="6" style="transition:fill 0.2s, stroke 0.2s;"/>
+        <text x="64" y="73" font-family="'Hanken Grotesk','Inter',system-ui" font-weight="700" font-size="46" fill="var(--primary)" text-anchor="middle" style="transition:fill 0.2s;">CG</text>
+        <line x1="44" y1="90" x2="84" y2="90" stroke="var(--secondary)" stroke-width="5" stroke-linecap="round" style="transition:stroke 0.2s;"/>
       </svg>
       <div>
-        <div style="font-family:'Hanken Grotesk','Inter',sans-serif;font-weight:700;font-size:17px;color:#d4e4fa;line-height:1.1;letter-spacing:-0.01em;">CGTenders</div>
-        <div style="font-size:9px;color:#4edea3;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;margin-top:1px;">PROCUREMENT · SIMPLIFIED</div>
+        <div style="font-family:'Hanken Grotesk','Inter',sans-serif;font-weight:700;font-size:17px;color:var(--on-surface);line-height:1.1;letter-spacing:-0.01em;transition:color 0.2s;">CGTenders</div>
+        <div style="font-size:9px;color:var(--secondary);font-weight:700;letter-spacing:0.12em;text-transform:uppercase;margin-top:1px;transition:color 0.2s;">PROCUREMENT · SIMPLIFIED</div>
       </div>
     </a>
 
     <!-- Search bar (desktop) -->
     <div style="flex:1;max-width:420px;position:relative;display:none;" class="md-search-wrap">
-      <span class="material-symbols-outlined" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#8c909f;font-size:20px;pointer-events:none;">search</span>
+      <span class="material-symbols-outlined" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--outline);font-size:20px;pointer-events:none;transition:color 0.2s;">search</span>
       <input
         id="navbar-search"
         type="search"
         placeholder="Search tenders, districts, or keywords…"
         autocomplete="off"
-        style="width:100%;padding:8px 16px 8px 40px;background:#0d1c2d;border:1px solid #424754;border-radius:4px;color:#d4e4fa;font-size:14px;font-family:inherit;outline:none;transition:border-color 0.2s;"
-        onfocus="this.style.borderColor='#adc6ff'"
-        onblur="this.style.borderColor='#424754'"
+        style="width:100%;padding:8px 16px 8px 40px;background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:4px;color:var(--on-surface);font-size:14px;font-family:inherit;outline:none;transition:all 0.2s;"
+        onfocus="this.style.borderColor='var(--primary)'"
+        onblur="this.style.borderColor='var(--outline-variant)'"
       />
     </div>
 
-    <!-- Nav links (desktop) -->
-    <nav style="display:flex;align-items:center;gap:4px;" class="md-nav">
-      <a href="/tenders"
-        style={`padding:6px 14px;border-radius:4px;font-size:14px;font-weight:500;text-decoration:none;transition:all 0.15s;${path.startsWith('/tenders') ? 'color:#adc6ff;background:#1c2b3c;' : 'color:#c2c6d6;'}`}
-      >All Tenders</a>
-      <a href="/districts"
-        style={`padding:6px 14px;border-radius:4px;font-size:14px;font-weight:500;text-decoration:none;transition:all 0.15s;${path.startsWith('/districts') ? 'color:#adc6ff;background:#1c2b3c;' : 'color:#c2c6d6;'}`}
-      >Districts</a>
-      <a href="/about"
-        style={`padding:6px 14px;border-radius:4px;font-size:14px;font-weight:500;text-decoration:none;transition:all 0.15s;${path === '/about' ? 'color:#adc6ff;background:#1c2b3c;' : 'color:#c2c6d6;'}`}
-      >About</a>
-    </nav>
+    <!-- Nav & Theme Controls (desktop & mobile toggle) -->
+    <div style="display:flex;align-items:center;gap:16px;">
+      <!-- Nav links (desktop) -->
+      <nav style="display:flex;align-items:center;gap:4px;" class="md-nav">
+        <a href="/tenders"
+          style={`padding:6px 14px;border-radius:4px;font-size:14px;font-weight:500;text-decoration:none;transition:all 0.15s;${path.startsWith('/tenders') ? 'color:var(--primary);background:var(--surface-container-high);' : 'color:var(--on-surface-variant);'}`}
+        >All Tenders</a>
+        <a href="/districts"
+          style={`padding:6px 14px;border-radius:4px;font-size:14px;font-weight:500;text-decoration:none;transition:all 0.15s;${path.startsWith('/districts') ? 'color:var(--primary);background:var(--surface-container-high);' : 'color:var(--on-surface-variant);'}`}
+        >Districts</a>
+        <a href="/about"
+          style={`padding:6px 14px;border-radius:4px;font-size:14px;font-weight:500;text-decoration:none;transition:all 0.15s;${path === '/about' ? 'color:var(--primary);background:var(--surface-container-high);' : 'color:var(--on-surface-variant);'}`}
+        >About</a>
+      </nav>
 
-    <!-- Mobile menu button -->
-    <button id="mobile-menu-btn" aria-label="Open menu"
-      style="display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:4px;border:1px solid #424754;background:transparent;color:#c2c6d6;cursor:pointer;"
-      class="md-hide"
-    >
-      <span class="material-symbols-outlined" style="font-size:22px;">menu</span>
-    </button>
+      <!-- Action buttons: Theme + Mobile Menu -->
+      <div style="display:flex;align-items:center;gap:8px;">
+        <!-- Theme Toggle Button -->
+        <button id="theme-toggle-btn" aria-label="Toggle theme"
+          style="display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:4px;border:1px solid var(--outline-variant);background:transparent;color:var(--on-surface-variant);cursor:pointer;transition:all 0.15s;"
+        >
+          <!-- Light Mode Icon (visible in dark mode) -->
+          <span id="theme-toggle-light-icon" class="material-symbols-outlined" style="font-size:22px;display:none;">light_mode</span>
+          <!-- Dark Mode Icon (visible in light mode) -->
+          <span id="theme-toggle-dark-icon" class="material-symbols-outlined" style="font-size:22px;display:none;">dark_mode</span>
+        </button>
+
+        <!-- Mobile menu button -->
+        <button id="mobile-menu-btn" aria-label="Open menu"
+          style="display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:4px;border:1px solid var(--outline-variant);background:transparent;color:var(--on-surface-variant);cursor:pointer;"
+          class="md-hide"
+        >
+          <span class="material-symbols-outlined" style="font-size:22px;">menu</span>
+        </button>
+      </div>
+    </div>
+
   </div>
 
   <!-- Mobile menu -->
-  <div id="mobile-menu" style="display:none;background:#0d1c2d;border-top:1px solid #424754;padding:12px 16px;">
-    <a href="/" style="display:block;padding:10px 12px;color:#c2c6d6;font-size:15px;font-weight:500;border-radius:4px;">Home</a>
-    <a href="/tenders" style="display:block;padding:10px 12px;color:#c2c6d6;font-size:15px;font-weight:500;border-radius:4px;">All Tenders</a>
-    <a href="/districts" style="display:block;padding:10px 12px;color:#c2c6d6;font-size:15px;font-weight:500;border-radius:4px;">By District</a>
-    <a href="/about" style="display:block;padding:10px 12px;color:#c2c6d6;font-size:15px;font-weight:500;border-radius:4px;">About</a>
+  <div id="mobile-menu" style="display:none;background:var(--surface-container-low);border-top:1px solid var(--outline-variant);padding:12px 16px;transition:background-color 0.2s, border-color 0.2s;">
+    <a href="/" style="display:block;padding:10px 12px;color:var(--on-surface-variant);font-size:15px;font-weight:500;border-radius:4px;text-decoration:none;">Home</a>
+    <a href="/tenders" style="display:block;padding:10px 12px;color:var(--on-surface-variant);font-size:15px;font-weight:500;border-radius:4px;text-decoration:none;">All Tenders</a>
+    <a href="/districts" style="display:block;padding:10px 12px;color:var(--on-surface-variant);font-size:15px;font-weight:500;border-radius:4px;text-decoration:none;">By District</a>
+    <a href="/about" style="display:block;padding:10px 12px;color:var(--on-surface-variant);font-size:15px;font-weight:500;border-radius:4px;text-decoration:none;">About</a>
     <!-- Mobile search -->
     <div style="position:relative;margin-top:10px;">
-      <span class="material-symbols-outlined" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#8c909f;font-size:18px;pointer-events:none;">search</span>
-      <input type="search" placeholder="Search tenders…"
-        style="width:100%;padding:8px 12px 8px 38px;background:#122131;border:1px solid #424754;border-radius:4px;color:#d4e4fa;font-size:14px;outline:none;" />
+      <span class="material-symbols-outlined" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--outline);font-size:18px;pointer-events:none;">search</span>
+      <input id="navbar-search-mobile" type="search" placeholder="Search tenders…"
+        style="width:100%;padding:8px 12px 8px 38px;background:var(--surface-container);border:1px solid var(--outline-variant);border-radius:4px;color:var(--on-surface);font-size:14px;outline:none;" />
     </div>
   </div>
 </header>
@@ -77,8 +94,9 @@ const path = Astro.url.pathname;
   @media (max-width: 767px) {
     .md-nav { display: none !important; }
   }
-  header a:hover { color: #adc6ff !important; }
-  #mobile-menu a:hover { background: #122131; color: #adc6ff !important; }
+  header a:hover { color: var(--primary) !important; }
+  #mobile-menu a:hover { background: var(--surface-container); color: var(--primary) !important; }
+  #theme-toggle-btn:hover { background: var(--surface-container-low); border-color: var(--primary) !important; color: var(--primary) !important; }
 </style>
 
 <script>
@@ -89,11 +107,42 @@ const path = Astro.url.pathname;
     if (menu) menu.style.display = isOpen ? 'none' : 'block';
   });
 
+  // Theme Toggle logic
+  const themeToggleBtn = document.getElementById('theme-toggle-btn');
+  const lightIcon = document.getElementById('theme-toggle-light-icon');
+  const darkIcon = document.getElementById('theme-toggle-dark-icon');
+
+  function updateThemeIcons() {
+    const isDark = document.documentElement.classList.contains('dark');
+    if (isDark) {
+      if (lightIcon) lightIcon.style.display = 'block';
+      if (darkIcon) darkIcon.style.display = 'none';
+    } else {
+      if (lightIcon) lightIcon.style.display = 'none';
+      if (darkIcon) darkIcon.style.display = 'block';
+    }
+  }
+
+  updateThemeIcons();
+
+  themeToggleBtn?.addEventListener('click', () => {
+    const isDark = document.documentElement.classList.toggle('dark');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    updateThemeIcons();
+  });
+
   // Navbar search → redirect to /tenders?q=...
   const navSearch = document.getElementById('navbar-search') as HTMLInputElement | null;
   navSearch?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && navSearch.value.trim()) {
       window.location.href = `/tenders?q=${encodeURIComponent(navSearch.value.trim())}`;
+    }
+  });
+
+  const navSearchMobile = document.getElementById('navbar-search-mobile') as HTMLInputElement | null;
+  navSearchMobile?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && navSearchMobile.value.trim()) {
+      window.location.href = `/tenders?q=${encodeURIComponent(navSearchMobile.value.trim())}`;
     }
   });
 </script>

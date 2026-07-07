@@ -111,12 +111,25 @@ const jsonLdItems: object[] = jsonLd
     <link rel="preconnect" href="https://mkp.gem.gov.in" crossorigin />
     <link rel="dns-prefetch" href="https://mkp.gem.gov.in" />
 
-    <!-- Always dark — no flash, no toggle -->
-    <style>
-      html { background: #051424; color: #d4e4fa; }
-    </style>
+    <!-- Dark Mode Inline script to avoid flickering -->
+    <script is:inline>
+      const theme = (() => {
+        if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
+          return localStorage.getItem('theme');
+        }
+        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          return 'dark';
+        }
+        return 'light';
+      })();
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    </script>
   </head>
-  <body style="background:#051424;color:#d4e4fa;min-height:100vh;">
+  <body style="background:var(--surface);color:var(--on-surface);min-height:100vh;transition:background-color 0.2s, color 0.2s;">
     <slot />
   </body>
 </html>
