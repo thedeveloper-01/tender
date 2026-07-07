@@ -100,13 +100,37 @@ function Skeleton() {
 
 // ─── MD3 Tender Card ─────────────────────────────────────────────────────────
 
+const getMseExempt = (tender) => {
+  const eligibility = tender.sourceMeta?.aiExtract?.eligibility;
+  if (eligibility && eligibility.mseExemption !== undefined) return eligibility.mseExemption;
+  const fields = tender.sourceMeta?.pdfExtract?.fields;
+  if (fields && fields.mseExemption) return fields.mseExemption.value;
+  return null;
+};
+
+const getStartupExempt = (tender) => {
+  const eligibility = tender.sourceMeta?.aiExtract?.eligibility;
+  if (eligibility && eligibility.startupExemption !== undefined) return eligibility.startupExemption;
+  const fields = tender.sourceMeta?.pdfExtract?.fields;
+  if (fields && fields.startupExemption) return fields.startupExemption.value;
+  return null;
+};
+
+const getYearsOfExperience = (tender) => {
+  const eligibility = tender.sourceMeta?.aiExtract?.eligibility;
+  if (eligibility && eligibility.yearsOfExperience !== undefined) return eligibility.yearsOfExperience;
+  const fields = tender.sourceMeta?.pdfExtract?.fields;
+  if (fields && fields.experienceCriteria) return fields.experienceCriteria.value;
+  return null;
+};
+
 function TenderCard({ t }) {
   const dl = daysLeft(t.endDate);
-  const aiExtract = t.sourceMeta?.aiExtract || {};
-  const eligibility = aiExtract.eligibility || {};
-  const mseExempt = eligibility.mseExemption;
-  const experience = eligibility.yearsOfExperience;
-  const isMseYes  = mseExempt?.toLowerCase().startsWith('yes');
+  const mseExempt = getMseExempt(t);
+  const startupExempt = getStartupExempt(t);
+  const experience = getYearsOfExperience(t);
+  const isMseYes = mseExempt?.toLowerCase().startsWith('yes') || mseExempt?.toLowerCase().startsWith('exempt');
+  const isStartupYes = startupExempt?.toLowerCase().startsWith('yes') || startupExempt?.toLowerCase().startsWith('exempt');
 
   const hasValue = t.bidValue != null && !isNaN(t.bidValue) && t.bidValue > 0;
   const hasEmd   = t.emdAmount != null && !isNaN(t.emdAmount) && t.emdAmount > 0;
@@ -184,14 +208,20 @@ function TenderCard({ t }) {
                 EMD Exempt
               </span>
             )}
-            {mseExempt && (
+            {isMseYes && (
               <span style={{
                 fontSize:'9px', fontWeight:700, padding:'2px 6px', borderRadius:'2px',
-                ...(isMseYes
-                  ? { background:'rgba(78,222,163,0.1)', color:C.secondary, border:'1px solid rgba(78,222,163,0.2)' }
-                  : { background:'rgba(255,180,171,0.1)', color:C.error, border:'1px solid rgba(255,180,171,0.2)' }),
+                background:'rgba(78,222,163,0.1)', color:C.secondary, border:'1px solid rgba(78,222,163,0.2)'
               }}>
-                {isMseYes ? '✓' : '✗'} MSE
+                ✓ MSE
+              </span>
+            )}
+            {isStartupYes && (
+              <span style={{
+                fontSize:'9px', fontWeight:700, padding:'2px 6px', borderRadius:'2px',
+                background:'rgba(78,222,163,0.1)', color:C.secondary, border:'1px solid rgba(78,222,163,0.2)'
+              }}>
+                ✓ Startup
               </span>
             )}
           </div>
@@ -734,13 +764,14 @@ export default function TenderDashboard({
       if (t.sourceMeta?.plantId !== filters.plant) return false;
     }
     if (filters.mseStartupOnly) {
-      const eligibility = t.sourceMeta?.aiExtract?.eligibility || {};
-      const isMseExempt = eligibility.mseExemption?.toLowerCase().startsWith('yes');
-      const isStartupExempt = eligibility.startupExemption?.toLowerCase().startsWith('yes');
+      const mseVal = getMseExempt(t);
+      const startupVal = getStartupExempt(t);
+      const isMseExempt = mseVal?.toLowerCase().startsWith('yes') || mseVal?.toLowerCase().startsWith('exempt');
+      const isStartupExempt = startupVal?.toLowerCase().startsWith('yes') || startupVal?.toLowerCase().startsWith('exempt');
       if (!isMseExempt && !isStartupExempt) return false;
     }
     if (filters.zeroExperienceOnly) {
-      const exp = t.sourceMeta?.aiExtract?.eligibility?.yearsOfExperience?.toLowerCase();
+      const exp = getYearsOfExperience(t)?.toLowerCase();
       const hasExp = exp && exp !== 'not specified' && !exp.includes('0') && !exp.includes('no') && !exp.includes('not required') && !exp.includes('nil') && !exp.includes('exempt');
       if (hasExp) return false;
     }
