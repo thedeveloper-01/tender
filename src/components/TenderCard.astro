@@ -77,7 +77,7 @@ const experience = getYearsOfExperience(t);
 
 const isMseYes = mseExempt?.toLowerCase().startsWith('yes') || mseExempt?.toLowerCase().startsWith('exempt');
 const isStartupYes = startupExempt?.toLowerCase().startsWith('yes') || startupExempt?.toLowerCase().startsWith('exempt');
-const isEmdExempt = !hasEmd;
+const isEmdExempt = t.emdAmount === 0 || (t.source === 'GEM' && t.emdAmount == null && (t.valueExtractionStatus === 'extracted' || t.valueExtractionStatus === 'not_found'));
 
 // Deadline color: red ≤2, amber ≤7, green otherwise
 const dlColor = dl == null ? '#8c909f'

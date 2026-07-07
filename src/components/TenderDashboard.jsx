@@ -134,7 +134,7 @@ function TenderCard({ t }) {
 
   const hasValue = t.bidValue != null && !isNaN(t.bidValue) && t.bidValue > 0;
   const hasEmd   = t.emdAmount != null && !isNaN(t.emdAmount) && t.emdAmount > 0;
-  const isEmdExempt = !hasEmd;
+  const isEmdExempt = t.emdAmount === 0 || (t.source === 'GEM' && t.emdAmount == null && (t.valueExtractionStatus === 'extracted' || t.valueExtractionStatus === 'not_found'));
 
   const dlColor = dl == null ? C.outline
     : dl < 0 ? C.outline : dl <= 2 ? C.error : dl <= 7 ? C.tertiary : C.secondary;
@@ -708,6 +708,8 @@ export default function TenderDashboard({
       let maxEmdToUse = currentFilters.maxEmd;
       if (currentFilters.lowEmdOnly) maxEmdToUse = '10000';
       if (maxEmdToUse) params.set('maxEmd', maxEmdToUse);
+      if (currentFilters.mseStartupOnly) params.set('mseStartupOnly', 'true');
+      if (currentFilters.zeroExperienceOnly) params.set('zeroExperienceOnly', 'true');
       params.set('sort', currentSort);
       params.set('page', currentPage);
       params.set('limit', '100');

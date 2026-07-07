@@ -41,40 +41,161 @@ router.get('/', async (req, res) => {
       minEmd,
       maxEmd,
       source,
+      mseStartupOnly,
+      zeroExperienceOnly,
       sort = 'endDate_asc',
       page = '1',
       limit = '20',
     } = req.query;
 
     const where = {};
+    const andClauses = [];
 
-    if (city && city !== 'all') where.locationCity = city;
-    if (source && source !== 'all') where.source = source.toUpperCase();
-    if (status && status !== 'all') where.status = status;
+    if (city && city !== 'all') andClauses.push({ locationCity: city });
+    if (source && source !== 'all') andClauses.push({ source: source.toUpperCase() });
+    if (status && status !== 'all') andClauses.push({ status: status });
 
     if (q) {
-      where.OR = [
-        { title: { contains: q, mode: 'insensitive' } },
-        { organization: { contains: q, mode: 'insensitive' } },
-        { bidNumber: { contains: q, mode: 'insensitive' } },
-      ];
+      andClauses.push({
+        OR: [
+          { title: { contains: q, mode: 'insensitive' } },
+          { organization: { contains: q, mode: 'insensitive' } },
+          { bidNumber: { contains: q, mode: 'insensitive' } },
+        ]
+      });
     }
 
     if (category) {
       const cats = Array.isArray(category) ? category : String(category).split(',');
-      where.category = { hasSome: cats };
+      andClauses.push({ category: { hasSome: cats } });
     }
 
     if (minValue || maxValue) {
-      where.bidValue = {};
-      if (minValue) where.bidValue.gte = Number(minValue);
-      if (maxValue) where.bidValue.lte = Number(maxValue);
+      const range = {};
+      if (minValue) range.gte = Number(minValue);
+      if (maxValue) range.lte = Number(maxValue);
+      andClauses.push({ bidValue: range });
     }
 
     if (minEmd || maxEmd) {
-      where.emdAmount = {};
-      if (minEmd) where.emdAmount.gte = Number(minEmd);
-      if (maxEmd) where.emdAmount.lte = Number(maxEmd);
+      const range = {};
+      if (minEmd) range.gte = Number(minEmd);
+      if (maxEmd) range.lte = Number(maxEmd);
+      andClauses.push({ emdAmount: range });
+    }
+
+    if (mseStartupOnly === 'true') {
+      andClauses.push({
+        OR: [
+          {
+            sourceMeta: {
+              path: ['aiExtract', 'eligibility', 'mseExemption'],
+              string_contains: 'yes',
+            },
+          },
+          {
+            sourceMeta: {
+              path: ['aiExtract', 'eligibility', 'startupExemption'],
+              string_contains: 'yes',
+            },
+          },
+          {
+            sourceMeta: {
+              path: ['pdfExtract', 'fields', 'mseExemption', 'value'],
+              string_contains: 'Yes',
+            },
+          },
+          {
+            sourceMeta: {
+              path: ['pdfExtract', 'fields', 'startupExemption', 'value'],
+              string_contains: 'Yes',
+            },
+          },
+        ]
+      });
+    }
+
+    if (zeroExperienceOnly === 'true') {
+      andClauses.push({
+        OR: [
+          {
+            sourceMeta: {
+              path: ['aiExtract', 'eligibility', 'yearsOfExperience'],
+              string_contains: '0',
+            },
+          },
+          {
+            sourceMeta: {
+              path: ['aiExtract', 'eligibility', 'yearsOfExperience'],
+              string_contains: 'no',
+            },
+          },
+          {
+            sourceMeta: {
+              path: ['aiExtract', 'eligibility', 'yearsOfExperience'],
+              string_contains: 'nil',
+            },
+          },
+          {
+            sourceMeta: {
+              path: ['aiExtract', 'eligibility', 'yearsOfExperience'],
+              string_contains: 'not required',
+            },
+          },
+          {
+            sourceMeta: {
+              path: ['aiExtract', 'eligibility', 'yearsOfExperience'],
+              string_contains: 'exempt',
+            },
+          },
+          {
+            sourceMeta: {
+              path: ['pdfExtract', 'fields', 'experienceCriteria', 'value'],
+              string_contains: '0',
+            },
+          },
+          {
+            sourceMeta: {
+              path: ['pdfExtract', 'fields', 'experienceCriteria', 'value'],
+              string_contains: 'No',
+            },
+          },
+          {
+            sourceMeta: {
+              path: ['pdfExtract', 'fields', 'experienceCriteria', 'value'],
+              string_contains: 'Nil',
+            },
+          },
+          {
+            sourceMeta: {
+              path: ['pdfExtract', 'fields', 'experienceCriteria', 'value'],
+              string_contains: 'Not Required',
+            },
+          },
+          {
+            sourceMeta: {
+              path: ['pdfExtract', 'fields', 'experienceCriteria', 'value'],
+              string_contains: 'Exempt',
+            },
+          },
+          {
+            sourceMeta: {
+              path: ['aiExtract', 'eligibility', 'yearsOfExperience'],
+              equals: 'not specified',
+            },
+          },
+          {
+            sourceMeta: {
+              path: ['pdfExtract', 'fields', 'experienceCriteria', 'value'],
+              equals: 'Not Specified',
+            },
+          },
+        ]
+      });
+    }
+
+    if (andClauses.length > 0) {
+      where.AND = andClauses;
     }
 
     const pageNum  = Math.max(1, parseInt(page, 10)  || 1);
