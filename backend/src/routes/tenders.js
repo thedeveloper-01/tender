@@ -49,196 +49,161 @@ router.get('/', async (req, res) => {
     } = req.query;
 
     const where = {};
-    const andClauses = [];
 
-    if (city && city !== 'all') andClauses.push({ locationCity: city });
-    if (source && source !== 'all') andClauses.push({ source: source.toUpperCase() });
-    if (status && status !== 'all') andClauses.push({ status: status });
+    if (city && city !== 'all') where.locationCity = city;
+    if (source && source !== 'all') where.source = source.toUpperCase();
+    if (status && status !== 'all') where.status = status;
 
     if (q) {
-      andClauses.push({
-        OR: [
-          { title: { contains: q, mode: 'insensitive' } },
-          { organization: { contains: q, mode: 'insensitive' } },
-          { bidNumber: { contains: q, mode: 'insensitive' } },
-        ]
-      });
+      where.OR = [
+        { title: { contains: q, mode: 'insensitive' } },
+        { organization: { contains: q, mode: 'insensitive' } },
+        { bidNumber: { contains: q, mode: 'insensitive' } },
+      ];
     }
 
     if (category) {
       const cats = Array.isArray(category) ? category : String(category).split(',');
-      andClauses.push({ category: { hasSome: cats } });
+      where.category = { hasSome: cats };
     }
 
     if (minValue || maxValue) {
-      const range = {};
-      if (minValue) range.gte = Number(minValue);
-      if (maxValue) range.lte = Number(maxValue);
-      andClauses.push({ bidValue: range });
+      where.bidValue = {};
+      if (minValue) where.bidValue.gte = Number(minValue);
+      if (maxValue) where.bidValue.lte = Number(maxValue);
     }
 
     if (minEmd || maxEmd) {
-      const range = {};
-      if (minEmd) range.gte = Number(minEmd);
-      if (maxEmd) range.lte = Number(maxEmd);
-      andClauses.push({ emdAmount: range });
-    }
-
-    if (mseStartupOnly === 'true') {
-      andClauses.push({
-        OR: [
-          {
-            sourceMeta: {
-              path: ['aiExtract', 'eligibility', 'mseExemption'],
-              string_contains: 'yes',
-            },
-          },
-          {
-            sourceMeta: {
-              path: ['aiExtract', 'eligibility', 'startupExemption'],
-              string_contains: 'yes',
-            },
-          },
-          {
-            sourceMeta: {
-              path: ['pdfExtract', 'fields', 'mseExemption', 'value'],
-              string_contains: 'Yes',
-            },
-          },
-          {
-            sourceMeta: {
-              path: ['pdfExtract', 'fields', 'startupExemption', 'value'],
-              string_contains: 'Yes',
-            },
-          },
-        ]
-      });
-    }
-
-    if (zeroExperienceOnly === 'true') {
-      andClauses.push({
-        OR: [
-          {
-            sourceMeta: {
-              path: ['aiExtract', 'eligibility', 'yearsOfExperience'],
-              string_contains: '0',
-            },
-          },
-          {
-            sourceMeta: {
-              path: ['aiExtract', 'eligibility', 'yearsOfExperience'],
-              string_contains: 'no',
-            },
-          },
-          {
-            sourceMeta: {
-              path: ['aiExtract', 'eligibility', 'yearsOfExperience'],
-              string_contains: 'nil',
-            },
-          },
-          {
-            sourceMeta: {
-              path: ['aiExtract', 'eligibility', 'yearsOfExperience'],
-              string_contains: 'not required',
-            },
-          },
-          {
-            sourceMeta: {
-              path: ['aiExtract', 'eligibility', 'yearsOfExperience'],
-              string_contains: 'exempt',
-            },
-          },
-          {
-            sourceMeta: {
-              path: ['pdfExtract', 'fields', 'experienceCriteria', 'value'],
-              string_contains: '0',
-            },
-          },
-          {
-            sourceMeta: {
-              path: ['pdfExtract', 'fields', 'experienceCriteria', 'value'],
-              string_contains: 'No',
-            },
-          },
-          {
-            sourceMeta: {
-              path: ['pdfExtract', 'fields', 'experienceCriteria', 'value'],
-              string_contains: 'Nil',
-            },
-          },
-          {
-            sourceMeta: {
-              path: ['pdfExtract', 'fields', 'experienceCriteria', 'value'],
-              string_contains: 'Not Required',
-            },
-          },
-          {
-            sourceMeta: {
-              path: ['pdfExtract', 'fields', 'experienceCriteria', 'value'],
-              string_contains: 'Exempt',
-            },
-          },
-          {
-            sourceMeta: {
-              path: ['aiExtract', 'eligibility', 'yearsOfExperience'],
-              equals: 'not specified',
-            },
-          },
-          {
-            sourceMeta: {
-              path: ['pdfExtract', 'fields', 'experienceCriteria', 'value'],
-              equals: 'Not Specified',
-            },
-          },
-        ]
-      });
-    }
-
-    if (andClauses.length > 0) {
-      where.AND = andClauses;
+      where.emdAmount = {};
+      if (minEmd) where.emdAmount.gte = Number(minEmd);
+      if (maxEmd) where.emdAmount.lte = Number(maxEmd);
     }
 
     const pageNum  = Math.max(1, parseInt(page, 10)  || 1);
     const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
 
-    let orderBy = SORT_MAP[sort] || SORT_MAP.endDate_asc;
-
-    // For endDate_asc (default), push nulls last by querying non-null first,
-    // then padding with null-endDate tenders if needed.
+    const isJsonFiltering = mseStartupOnly === 'true' || zeroExperienceOnly === 'true';
     let tenders, total;
-    if (sort === 'endDate_asc' || !sort) {
-      const whereWithDate = { ...where, endDate: { not: null } };
-      const whereNullDate = { ...where, endDate: null };
 
-      total = await prisma.tender.count({ where });
-      const withDate = await prisma.tender.findMany({
-        where: whereWithDate,
-        orderBy: { endDate: 'asc' },
-        skip: (pageNum - 1) * limitNum,
-        take: limitNum,
+    if (isJsonFiltering) {
+      // 1. Fetch all matching candidates from the database (unpaginated)
+      let candidates = await prisma.tender.findMany({
+        where,
       });
 
-      let remaining = limitNum - withDate.length;
-      let nullDateItems = [];
-      if (remaining > 0) {
-        const dateCount = await prisma.tender.count({ where: whereWithDate });
-        const skipNull  = Math.max(0, (pageNum - 1) * limitNum - dateCount);
-        nullDateItems = await prisma.tender.findMany({
-          where: whereNullDate,
-          orderBy: { fetchedAt: 'desc' },
-          skip: skipNull,
-          take: remaining,
+      // Helpers to safely read both standard aiExtract and legacy pdfExtract structures
+      const getMseExempt = (tender) => {
+        const eligibility = tender.sourceMeta?.aiExtract?.eligibility;
+        if (eligibility && eligibility.mseExemption !== undefined) return eligibility.mseExemption;
+        const fields = tender.sourceMeta?.pdfExtract?.fields;
+        if (fields && fields.mseExemption) return fields.mseExemption.value;
+        return null;
+      };
+
+      const getStartupExempt = (tender) => {
+        const eligibility = tender.sourceMeta?.aiExtract?.eligibility;
+        if (eligibility && eligibility.startupExemption !== undefined) return eligibility.startupExemption;
+        const fields = tender.sourceMeta?.pdfExtract?.fields;
+        if (fields && fields.startupExemption) return fields.startupExemption.value;
+        return null;
+      };
+
+      const getYearsOfExperience = (tender) => {
+        const eligibility = tender.sourceMeta?.aiExtract?.eligibility;
+        if (eligibility && eligibility.yearsOfExperience !== undefined) return eligibility.yearsOfExperience;
+        const fields = tender.sourceMeta?.pdfExtract?.fields;
+        if (fields && fields.experienceCriteria) return fields.experienceCriteria.value;
+        return null;
+      };
+
+      // 2. Perform Javascript filtering in memory
+      if (mseStartupOnly === 'true') {
+        candidates = candidates.filter(t => {
+          const mseVal = getMseExempt(t);
+          const startupVal = getStartupExempt(t);
+          const isMseExempt = mseVal?.toLowerCase().startsWith('yes') || mseVal?.toLowerCase().startsWith('exempt');
+          const isStartupExempt = startupVal?.toLowerCase().startsWith('yes') || startupVal?.toLowerCase().startsWith('exempt');
+          return isMseExempt || isStartupExempt;
         });
       }
-      tenders = [...withDate, ...nullDateItems];
+
+      if (zeroExperienceOnly === 'true') {
+        candidates = candidates.filter(t => {
+          const exp = getYearsOfExperience(t)?.toLowerCase();
+          const hasExp = exp && exp !== 'not specified' && !exp.includes('0') && !exp.includes('no') && !exp.includes('not required') && !exp.includes('nil') && !exp.includes('exempt');
+          return !hasExp;
+        });
+      }
+
+      total = candidates.length;
+
+      // 3. Sort (matching standard sorting rules)
+      if (sort === 'endDate_asc' || !sort) {
+        // Sort ascending, placing null endDates at the end
+        candidates.sort((a, b) => {
+          if (a.endDate && b.endDate) return new Date(a.endDate) - new Date(b.endDate);
+          if (a.endDate) return -1;
+          if (b.endDate) return 1;
+          return new Date(b.fetchedAt) - new Date(a.fetchedAt);
+        });
+      } else {
+        const orderBy = SORT_MAP[sort] || SORT_MAP.endDate_asc;
+        const key = Object.keys(orderBy)[0];
+        const dir = orderBy[key];
+        candidates.sort((a, b) => {
+          const valA = a[key];
+          const valB = b[key];
+          if (valA == null && valB == null) return 0;
+          if (valA == null) return 1;
+          if (valB == null) return -1;
+          if (typeof valA === 'string') {
+            return dir === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+          }
+          return dir === 'asc' ? valA - valB : valB - valA;
+        });
+      }
+
+      // 4. Skip & Take pagination slice
+      tenders = candidates.slice((pageNum - 1) * limitNum, pageNum * limitNum);
+
     } else {
-      total   = await prisma.tender.count({ where });
-      tenders = await prisma.tender.findMany({
-        where,
-        orderBy,
-        skip: (pageNum - 1) * limitNum,
-        take: limitNum,
-      });
+      // Standard database pagination query (highly optimized, unchanged)
+      let orderBy = SORT_MAP[sort] || SORT_MAP.endDate_asc;
+
+      if (sort === 'endDate_asc' || !sort) {
+        const whereWithDate = { ...where, endDate: { not: null } };
+        const whereNullDate = { ...where, endDate: null };
+
+        total = await prisma.tender.count({ where });
+        const withDate = await prisma.tender.findMany({
+          where: whereWithDate,
+          orderBy: { endDate: 'asc' },
+          skip: (pageNum - 1) * limitNum,
+          take: limitNum,
+        });
+
+        let remaining = limitNum - withDate.length;
+        let nullDateItems = [];
+        if (remaining > 0) {
+          const dateCount = await prisma.tender.count({ where: whereWithDate });
+          const skipNull  = Math.max(0, (pageNum - 1) * limitNum - dateCount);
+          nullDateItems = await prisma.tender.findMany({
+            where: whereNullDate,
+            orderBy: { fetchedAt: 'desc' },
+            skip: skipNull,
+            take: remaining,
+          });
+        }
+        tenders = [...withDate, ...nullDateItems];
+      } else {
+        total   = await prisma.tender.count({ where });
+        tenders = await prisma.tender.findMany({
+          where,
+          orderBy,
+          skip: (pageNum - 1) * limitNum,
+          take: limitNum,
+        });
+      }
     }
 
     const result = { tenders, total, page: pageNum, limit: limitNum };
