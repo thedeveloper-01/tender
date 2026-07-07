@@ -179,10 +179,20 @@ async function main() {
         where: { source_bidNumber: { source: data.source, bidNumber: data.bidNumber } },
       });
 
+      const updateData = { ...data };
+      if (existing) {
+        if (existing.valueExtractionStatus && existing.valueExtractionStatus !== 'not_attempted' && data.valueExtractionStatus === 'not_attempted') {
+          delete updateData.valueExtractionStatus;
+          delete updateData.bidValue;
+          delete updateData.emdAmount;
+          delete updateData.pdfPath;
+        }
+      }
+
       const saved = await prisma.tender.upsert({
         where:  { source_bidNumber: { source: data.source, bidNumber: data.bidNumber } },
         create: data,
-        update: data,
+        update: updateData,
       });
 
       if (!existing) {
@@ -226,7 +236,7 @@ async function main() {
 
       let updatedCity = tender.locationCity;
       if (!updatedCity || updatedCity === 'Unspecified') {
-        const addressText = result.extractedFields?.consigneeAddress?.value || '';
+        const addressText = result.aiExtract?.consignees?.[0]?.address || '';
         const fullText = result.extractedText || '';
         const resolved = resolveCityForGem(`${addressText} ${fullText}`);
         if (resolved && resolved !== 'Unspecified') {
@@ -237,7 +247,8 @@ async function main() {
 
       const sourceMeta = {
         ...(tender.sourceMeta || {}),
-        pdfExtract: { text: result.extractedText, fields: result.extractedFields },
+        pdfExtract:  { text: result.extractedText },
+        aiExtract:   result.aiExtract ?? null,   // full AI-structured payload (consignees, eligibility, atc)
       };
 
       await prisma.tender.update({

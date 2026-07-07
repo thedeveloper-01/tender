@@ -46,7 +46,7 @@ const jsonLdItems: object[] = jsonLd
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
     <meta name="robots" content={noindex ? 'noindex, nofollow' : 'index, follow'} />
-    <meta name="theme-color" content="#1A56DB" />
+    <meta name="theme-color" content="#051424" />
     <link rel="canonical" href={canonicalUrl} />
 
     <!-- Open Graph -->
@@ -82,48 +82,41 @@ const jsonLdItems: object[] = jsonLd
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
 
-    <!-- Fonts: non-render-blocking using print→all swap trick -->
+    <!-- Fonts: Hanken Grotesk (display/headlines) + Inter (body) + JetBrains Mono (ids/numbers) + Material Symbols -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
       rel="stylesheet"
       media="print"
       onload="this.media='all'"
     />
     <noscript>
       <link
-        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
         rel="stylesheet"
       />
     </noscript>
-    <!-- DNS prefetch for API backend -->
+
+    <!-- DNS prefetch -->
     <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
     <link rel="dns-prefetch" href="https://cgtenders-com.onrender.com" />
     <link rel="preconnect" href="https://cgtenders-com.onrender.com" crossorigin />
-    <!-- Preconnect for external portals linked from tender detail pages -->
     <link rel="preconnect" href="https://mkp.gem.gov.in" crossorigin />
     <link rel="dns-prefetch" href="https://mkp.gem.gov.in" />
 
-    <!-- Dark Mode Inline script to avoid flickering -->
-    <script is:inline>
-      const theme = (() => {
-        if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
-          return localStorage.getItem('theme');
-        }
-        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-          return 'dark';
-        }
-        return 'light';
-      })();
-      if (theme === 'dark') {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-    </script>
+    <!-- Always dark — no flash, no toggle -->
+    <style>
+      html { background: #051424; color: #d4e4fa; }
+    </style>
   </head>
-  <body class="dark:bg-slate-950 dark:text-slate-100 min-h-screen transition-colors duration-200">
+  <body style="background:#051424;color:#d4e4fa;min-height:100vh;">
     <slot />
   </body>
 </html>

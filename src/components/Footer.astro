@@ -1,87 +1,73 @@
 ---
 ---
-<footer class="bg-white border-t border-gray-200 mt-12 md:mt-16">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
+<footer style="background:#273647;border-top:1px solid #424754;margin-top:auto;">
+  <div style="max-width:1440px;margin:0 auto;padding:32px;display:flex;flex-direction:column;gap:28px;">
 
-      <!-- Brand -->
-      <div class="col-span-2 md:col-span-1">
-        <a href="/" class="flex items-center gap-2 mb-3 group">
-          <!-- Favicon-Style Logo Mark -->
-          <svg aria-hidden="true" class="w-8 h-8 flex-shrink-0" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="8" y="8" width="112" height="112" rx="22" fill="#0b1329" stroke="#1a56db" stroke-width="5"/>
-            <text x="64" y="72" font-family="'Outfit', system-ui, -apple-system, sans-serif" font-weight="700" font-size="44" fill="#ffffff" text-anchor="middle">CG</text>
-            <line x1="48" y1="88" x2="80" y2="88" stroke="#1a56db" stroke-width="5" stroke-linecap="round"/>
+    <!-- Top row: brand + links -->
+    <div style="display:flex;flex-wrap:wrap;gap:40px;justify-content:space-between;align-items:flex-start;">
+
+      <!-- Brand block -->
+      <div style="max-width:260px;">
+        <a href="/" style="display:flex;align-items:center;gap:10px;text-decoration:none;margin-bottom:12px;">
+          <svg aria-hidden="true" width="30" height="30" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="4" y="4" width="120" height="120" rx="20" fill="#122131" stroke="#4d8eff" stroke-width="6"/>
+            <text x="64" y="73" font-family="'Hanken Grotesk','Inter',system-ui" font-weight="700" font-size="46" fill="#adc6ff" text-anchor="middle">CG</text>
+            <line x1="44" y1="90" x2="84" y2="90" stroke="#4edea3" stroke-width="5" stroke-linecap="round"/>
           </svg>
-          <!-- Logo Text -->
-          <div class="flex flex-col justify-center">
-            <span class="font-bold text-gray-900 text-sm tracking-wide leading-none font-['Outfit']">
-              CG Tenders<span class="text-gray-400 font-normal lowercase">.com</span>
-            </span>
-            <div class="h-[1px] bg-blue-200 mt-1 w-full"></div>
-            <span class="text-[7.5px] text-[#1a56db] font-bold tracking-[0.08em] uppercase mt-0.5 leading-none font-['DM_Sans']">
-              PROCUREMENT - SIMPLIFIED
-            </span>
+          <div>
+            <div style="font-family:'Hanken Grotesk','Inter',sans-serif;font-weight:700;font-size:15px;color:#adc6ff;line-height:1.1;">CGTenders</div>
+            <div style="font-size:8px;color:#4edea3;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-top:2px;">Procurement · Simplified</div>
           </div>
         </a>
-        <p class="text-xs text-gray-500 leading-relaxed max-w-[200px]">
-          Chhattisgarh government tender aggregator — GeM &amp; CSPGCL in one dashboard.
+        <p style="font-size:13px;color:#8c909f;line-height:1.6;margin:0;">
+          Chhattisgarh government tender aggregator — GeM &amp; CSPGCL in one dashboard. Updated daily at 06:00 IST.
         </p>
-        <p class="text-xs text-gray-400 mt-3">Updated daily at 06:00 IST</p>
       </div>
 
-      <!-- Explore -->
-      <div>
-        <h4 class="text-xs font-semibold text-gray-900 uppercase tracking-wider mb-4">Explore</h4>
-        <ul class="space-y-2">
-          <li><a href="/tenders" class="text-sm text-gray-500 hover:text-[#1A56DB] transition">All Tenders</a></li>
-          <li><a href="/districts" class="text-sm text-gray-500 hover:text-[#1A56DB] transition">By District</a></li>
-          <li><a href="/tenders/gem" class="text-sm text-gray-500 hover:text-[#1A56DB] transition">GeM Tenders</a></li>
-          <li><a href="/tenders/cspgcl" class="text-sm text-gray-500 hover:text-[#1A56DB] transition">CSPGCL Tenders</a></li>
-        </ul>
-      </div>
-
-      <!-- Company -->
-      <div>
-        <h4 class="text-xs font-semibold text-gray-900 uppercase tracking-wider mb-4">Company</h4>
-        <ul class="space-y-2">
-          <li><a href="/about" class="text-sm text-gray-500 hover:text-[#1A56DB] transition">About</a></li>
-          <li><a href="/contact" class="text-sm text-gray-500 hover:text-[#1A56DB] transition">Contact</a></li>
-        </ul>
-      </div>
-
-      <!-- Legal -->
-      <div>
-        <h4 class="text-xs font-semibold text-gray-900 uppercase tracking-wider mb-4">Legal</h4>
-        <ul class="space-y-2">
-          <li><a href="/privacy" class="text-sm text-gray-500 hover:text-[#1A56DB] transition">Privacy Policy</a></li>
-          <li><a href="/terms" class="text-sm text-gray-500 hover:text-[#1A56DB] transition">Terms &amp; Conditions</a></li>
-        </ul>
+      <!-- Link columns -->
+      <div style="display:flex;flex-wrap:wrap;gap:40px;">
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#8c909f;margin-bottom:14px;">Explore</div>
+          <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;">
+            <li><a href="/tenders" style="font-size:13px;color:#c2c6d6;text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='#adc6ff'" onmouseout="this.style.color='#c2c6d6'">All Tenders</a></li>
+            <li><a href="/tenders?source=GEM" style="font-size:13px;color:#c2c6d6;text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='#adc6ff'" onmouseout="this.style.color='#c2c6d6'">GeM Tenders</a></li>
+            <li><a href="/tenders?source=CSPGCL" style="font-size:13px;color:#c2c6d6;text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='#adc6ff'" onmouseout="this.style.color='#c2c6d6'">CSPGCL Tenders</a></li>
+            <li><a href="/districts" style="font-size:13px;color:#c2c6d6;text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='#adc6ff'" onmouseout="this.style.color='#c2c6d6'">By District</a></li>
+          </ul>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#8c909f;margin-bottom:14px;">Company</div>
+          <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;">
+            <li><a href="/about" style="font-size:13px;color:#c2c6d6;text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='#adc6ff'" onmouseout="this.style.color='#c2c6d6'">About</a></li>
+            <li><a href="/contact" style="font-size:13px;color:#c2c6d6;text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='#adc6ff'" onmouseout="this.style.color='#c2c6d6'">Contact</a></li>
+          </ul>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#8c909f;margin-bottom:14px;">Legal</div>
+          <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;">
+            <li><a href="/privacy" style="font-size:13px;color:#c2c6d6;text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='#adc6ff'" onmouseout="this.style.color='#c2c6d6'">Privacy Policy</a></li>
+            <li><a href="/terms" style="font-size:13px;color:#c2c6d6;text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='#adc6ff'" onmouseout="this.style.color='#c2c6d6'">Terms &amp; Conditions</a></li>
+          </ul>
+        </div>
       </div>
     </div>
 
-    <div class="border-t border-gray-100 pt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-      <p class="text-xs text-gray-400">
-        © <span id="copyright-year">2026</span> CGTenders.com. Data sourced from official government portals.
-        Not affiliated with any government body.
+    <!-- Bottom row: copyright + links -->
+    <div style="border-top:1px solid #424754;padding-top:20px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;">
+      <p style="margin:0;font-size:11px;color:#8c909f;letter-spacing:0.03em;">
+        &copy; <span id="footer-year">2026</span> CGTenders.com &nbsp;·&nbsp; Government of India. Institutional Division.
+        <span style="display:block;margin-top:2px;font-size:10px;">Data sourced from official government portals. Not affiliated with any government body.</span>
       </p>
-      <div class="flex gap-4">
-        <a href="/privacy" class="text-xs text-gray-400 hover:text-gray-600 transition">Privacy</a>
-        <a href="/terms" class="text-xs text-gray-400 hover:text-gray-600 transition">Terms</a>
-        <a href="/contact" class="text-xs text-gray-400 hover:text-gray-600 transition">Contact</a>
+      <div style="display:flex;gap:20px;">
+        <a href="/privacy" style="font-size:12px;font-weight:600;color:#8c909f;text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='#adc6ff'" onmouseout="this.style.color='#8c909f'">Privacy Policy</a>
+        <a href="/terms" style="font-size:12px;font-weight:600;color:#8c909f;text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='#adc6ff'" onmouseout="this.style.color='#8c909f'">Terms of Service</a>
+        <a href="/contact" style="font-size:12px;font-weight:600;color:#8c909f;text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='#adc6ff'" onmouseout="this.style.color='#8c909f'">Contact Support</a>
       </div>
     </div>
   </div>
 </footer>
 
-<style is:global>
-  footer a { text-decoration: none; }
-  footer a:focus { outline: 2px solid #1A56DB; outline-offset: 2px; border-radius: 2px; }
-</style>
-
 <script>
-  const yearEl = document.getElementById('copyright-year');
-  if (yearEl) {
-    yearEl.textContent = new Date().getFullYear().toString();
-  }
+  const yr = document.getElementById('footer-year');
+  if (yr) yr.textContent = String(new Date().getFullYear());
 </script>

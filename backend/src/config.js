@@ -18,6 +18,9 @@ export const config = {
   skipGem: (process.env.SKIP_GEM ?? 'false') === 'true',  // set true on Render — GEM is local-only
   skipScheduler: (process.env.SKIP_SCHEDULER ?? 'false') === 'true',
   proxyUrl: process.env.PROXY_URL || null,
+  openRouterApiKey: process.env.OPENROUTER_API_KEY || '',
+  openRouterModel: process.env.OPENROUTER_MODEL || 'openai/gpt-4.1-mini:free',
+  aiExtractEnabled: (process.env.AI_EXTRACT_ENABLED ?? 'false') === 'true',
 };
 
 // 33 Chhattisgarh districts. "Unspecified" is used as a fallback bucket

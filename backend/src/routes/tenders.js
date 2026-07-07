@@ -2,15 +2,17 @@ import express from 'express';
 import fs from 'fs';
 import { prisma } from '../db.js';
 import { get as cacheGet, set as cacheSet } from '../cache.js';
+import { aiExtractTender } from '../pipeline/aiExtract.js';
+import pdfParse from 'pdf-parse/lib/pdf-parse.js';
 
 const router = express.Router();
 
 const SORT_MAP = {
-  endDate_asc: { endDate: 'asc' },
-  endDate_desc: { endDate: 'desc' },
-  bidValue_asc: { bidValue: 'asc' },
-  bidValue_desc: { bidValue: 'desc' },
-  emdAmount_asc: { emdAmount: 'asc' },
+  endDate_asc:    { endDate: 'asc' },
+  endDate_desc:   { endDate: 'desc' },
+  bidValue_asc:   { bidValue: 'asc' },
+  bidValue_desc:  { bidValue: 'desc' },
+  emdAmount_asc:  { emdAmount: 'asc' },
   emdAmount_desc: { emdAmount: 'desc' },
   fetchedAt_desc: { fetchedAt: 'desc' },
 };
@@ -75,7 +77,7 @@ router.get('/', async (req, res) => {
       if (maxEmd) where.emdAmount.lte = Number(maxEmd);
     }
 
-    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const pageNum  = Math.max(1, parseInt(page, 10)  || 1);
     const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
 
     let orderBy = SORT_MAP[sort] || SORT_MAP.endDate_asc;
@@ -99,7 +101,7 @@ router.get('/', async (req, res) => {
       let nullDateItems = [];
       if (remaining > 0) {
         const dateCount = await prisma.tender.count({ where: whereWithDate });
-        const skipNull = Math.max(0, (pageNum - 1) * limitNum - dateCount);
+        const skipNull  = Math.max(0, (pageNum - 1) * limitNum - dateCount);
         nullDateItems = await prisma.tender.findMany({
           where: whereNullDate,
           orderBy: { fetchedAt: 'desc' },
@@ -109,7 +111,7 @@ router.get('/', async (req, res) => {
       }
       tenders = [...withDate, ...nullDateItems];
     } else {
-      total = await prisma.tender.count({ where });
+      total   = await prisma.tender.count({ where });
       tenders = await prisma.tender.findMany({
         where,
         orderBy,
@@ -158,6 +160,98 @@ router.get('/:source/:bidNumber/document', async (req, res) => {
     fs.createReadStream(tender.pdfPath).pipe(res);
   } catch (e) {
     console.error('[api] GET /tenders/:source/:bidNumber/document error:', e);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * GET /api/tenders/:source/:bidNumber/ai-extract
+ *
+ * Returns the AI-structured extraction (consignees, eligibility, atc) for a GEM tender.
+ *
+ * Strategy (Option C — eager pipeline + on-demand fallback):
+ *   1. If sourceMeta.aiExtract already stored in DB → return instantly.
+ *   2. If the tender has a saved PDF but no aiExtract → run AI live,
+ *      persist to DB, then return.
+ *   3. No PDF and no stored data → 404 with explanation.
+ *
+ * Only available for GEM tenders (CSPGCL uses the built-in regex parser).
+ */
+router.get('/:source/:bidNumber/ai-extract', async (req, res) => {
+  try {
+    const { source, bidNumber } = req.params;
+
+    if (source.toUpperCase() !== 'GEM') {
+      return res.status(400).json({
+        error: 'AI extraction is only available for GEM tenders',
+        hint: 'CSPGCL tenders use the built-in table parser',
+      });
+    }
+
+    const tender = await prisma.tender.findUnique({
+      where: { source_bidNumber: { source: 'GEM', bidNumber } },
+    });
+    if (!tender) return res.status(404).json({ error: 'Tender not found' });
+
+    // ── 1. Serve stored DB result (set by pipeline) ─────────────────────────
+    const stored = tender.sourceMeta?.aiExtract;
+    if (stored && stored.extractedAt) {
+      return res.json({
+        source:    'db_cache',
+        bidNumber,
+        title:     tender.title,
+        ...stored,
+      });
+    }
+
+    // ── 2. On-demand: run AI if PDF is present ──────────────────────────────
+    if (!tender.pdfPath || !fs.existsSync(tender.pdfPath)) {
+      return res.status(404).json({
+        error:  'AI extract not yet available',
+        reason: 'No PDF downloaded for this tender yet. Wait for the next pipeline run.',
+      });
+    }
+
+    console.log(`[api] on-demand AI extraction for ${bidNumber}...`);
+
+    let rawText = '';
+    try {
+      const buf  = fs.readFileSync(tender.pdfPath);
+      const data = await pdfParse(buf);
+      rawText    = data.text || '';
+    } catch (e) {
+      console.error('[api] pdf-parse failed for on-demand extract:', e.message);
+      return res.status(500).json({ error: 'Failed to parse PDF', detail: e.message });
+    }
+
+    const aiResult = await aiExtractTender(rawText);
+    if (!aiResult) {
+      return res.status(503).json({
+        error:  'AI extraction failed',
+        reason: 'OpenRouter call failed or AI_EXTRACT_ENABLED=false. Check server logs.',
+      });
+    }
+
+    // Persist to DB so next request is instant (no repeat AI call)
+    const updatedSourceMeta = {
+      ...(tender.sourceMeta || {}),
+      aiExtract: aiResult,
+    };
+    await prisma.tender.update({
+      where: { id: tender.id },
+      data:  { sourceMeta: updatedSourceMeta },
+    });
+
+    console.log(`[api] ✓ on-demand AI extract stored to DB for ${bidNumber}`);
+
+    return res.json({
+      source:    'live',
+      bidNumber,
+      title:     tender.title,
+      ...aiResult,
+    });
+  } catch (e) {
+    console.error('[api] GET /tenders/:source/:bidNumber/ai-extract error:', e);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

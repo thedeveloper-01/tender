@@ -21,7 +21,8 @@
     "node-cron": "^3.0.3",
     "pdf-parse": "^1.1.1",
     "playwright": "^1.48.0",
-    "undici": "^8.4.1"
+    "undici": "^8.4.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "prisma": "^5.20.0"

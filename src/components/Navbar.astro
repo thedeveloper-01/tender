@@ -1,119 +1,99 @@
 ---
-const nav = [
-  { label: 'Home', href: '/' },
-  { label: 'GeM Tenders', href: '/tenders/gem' },
-  { label: 'CSPGCL Tenders', href: '/tenders/cspgcl' },
-  { label: 'By District', href: '/districts' },
-  { label: 'About', href: '/about' },
-];
 const path = Astro.url.pathname;
-
-function isActive(href: string) {
-  if (href === '/') return path === '/';
-  return path === href || path.startsWith(href + '/');
-}
 ---
 
-<header class="sticky top-0 z-50 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 shadow-sm transition-colors duration-200">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex items-center justify-between h-14 md:h-16">
+<header style="background:#051424;border-bottom:1px solid #424754;position:sticky;top:0;z-index:50;height:64px;">
+  <div style="max-width:1440px;margin:0 auto;padding:0 32px;height:100%;display:flex;align-items:center;justify-content:space-between;gap:24px;">
 
-      <a href="/" class="flex items-center gap-2.5 flex-shrink-0 group">
-        <!-- Favicon-Style Logo Mark -->
-        <svg aria-hidden="true" class="w-9 h-9 flex-shrink-0" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="8" y="8" width="112" height="112" rx="22" fill="#0b1329" stroke="#1a56db" stroke-width="5"/>
-          <text x="64" y="72" font-family="'Outfit', system-ui, -apple-system, sans-serif" font-weight="700" font-size="44" fill="#ffffff" text-anchor="middle">CG</text>
-          <line x1="48" y1="88" x2="80" y2="88" stroke="#1a56db" stroke-width="5" stroke-linecap="round"/>
-        </svg>
-        <!-- Logo Text -->
-        <div class="flex flex-col justify-center">
-          <span class="font-bold text-gray-900 dark:text-white text-base md:text-lg tracking-wide leading-none font-['Outfit']">
-            CG Tenders
-          </span>
-          <div class="h-[1.5px] bg-blue-200 dark:bg-blue-900 mt-1 w-full"></div>
-          <span class="text-[8px] md:text-[9px] text-[#1a56db] dark:text-blue-400 font-bold tracking-[0.08em] uppercase mt-0.5 leading-none font-['DM_Sans']">
-            PROCUREMENT - SIMPLIFIED
-          </span>
-        </div>
-      </a>
-
-      <nav class="hidden md:flex items-center gap-1">
-        {nav.map(({ label, href }) => (
-          <a href={href}
-            class={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
-              isActive(href)
-                ? 'bg-blue-50 text-[#1A56DB] dark:bg-blue-950/60 dark:text-blue-400'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800/60'
-            }`}>
-            {nav.indexOf({ label, href }) === nav.length - 1 ? label : label}
-          </a>
-        ))}
-      </nav>
-
-      <div class="flex items-center">
-        <!-- Theme Toggle (Moon / Sun) -->
-        <button id="theme-toggle-btn" aria-label="Toggle dark mode"
-          class="p-2 rounded-xl text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition mr-1">
-          <!-- Moon Icon -->
-          <svg id="theme-toggle-moon" class="w-5 h-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-          </svg>
-          <!-- Sun Icon -->
-          <svg id="theme-toggle-sun" class="w-5 h-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m12.728 12.728l.707.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
-          </svg>
-        </button>
-
-        <button id="mobile-menu-btn" aria-label="Open menu"
-          class="md:hidden p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-          </svg>
-        </button>
+    <!-- Brand -->
+    <a href="/" style="display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0;">
+      <svg aria-hidden="true" width="36" height="36" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="4" y="4" width="120" height="120" rx="20" fill="#122131" stroke="#4d8eff" stroke-width="6"/>
+        <text x="64" y="73" font-family="'Hanken Grotesk','Inter',system-ui" font-weight="700" font-size="46" fill="#adc6ff" text-anchor="middle">CG</text>
+        <line x1="44" y1="90" x2="84" y2="90" stroke="#4edea3" stroke-width="5" stroke-linecap="round"/>
+      </svg>
+      <div>
+        <div style="font-family:'Hanken Grotesk','Inter',sans-serif;font-weight:700;font-size:17px;color:#d4e4fa;line-height:1.1;letter-spacing:-0.01em;">CGTenders</div>
+        <div style="font-size:9px;color:#4edea3;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;margin-top:1px;">PROCUREMENT · SIMPLIFIED</div>
       </div>
+    </a>
+
+    <!-- Search bar (desktop) -->
+    <div style="flex:1;max-width:420px;position:relative;display:none;" class="md-search-wrap">
+      <span class="material-symbols-outlined" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#8c909f;font-size:20px;pointer-events:none;">search</span>
+      <input
+        id="navbar-search"
+        type="search"
+        placeholder="Search tenders, districts, or keywords…"
+        autocomplete="off"
+        style="width:100%;padding:8px 16px 8px 40px;background:#0d1c2d;border:1px solid #424754;border-radius:4px;color:#d4e4fa;font-size:14px;font-family:inherit;outline:none;transition:border-color 0.2s;"
+        onfocus="this.style.borderColor='#adc6ff'"
+        onblur="this.style.borderColor='#424754'"
+      />
     </div>
 
-    <div id="mobile-menu" class="hidden md:hidden border-t border-gray-100 dark:border-slate-800 py-2">
-      {nav.map(({ label, href }) => (
-        <a href={href}
-          class={`block px-3 py-2 rounded-md text-sm font-medium transition ${
-            isActive(href) 
-              ? 'bg-blue-50 text-[#1A56DB] dark:bg-blue-950/60 dark:text-blue-400' 
-              : 'text-gray-700 hover:bg-gray-50 dark:text-slate-300 dark:hover:bg-slate-800/60'
-          }`}>
-          {label}
-        </a>
-      ))}
+    <!-- Nav links (desktop) -->
+    <nav style="display:flex;align-items:center;gap:4px;" class="md-nav">
+      <a href="/tenders"
+        style={`padding:6px 14px;border-radius:4px;font-size:14px;font-weight:500;text-decoration:none;transition:all 0.15s;${path.startsWith('/tenders') ? 'color:#adc6ff;background:#1c2b3c;' : 'color:#c2c6d6;'}`}
+      >All Tenders</a>
+      <a href="/districts"
+        style={`padding:6px 14px;border-radius:4px;font-size:14px;font-weight:500;text-decoration:none;transition:all 0.15s;${path.startsWith('/districts') ? 'color:#adc6ff;background:#1c2b3c;' : 'color:#c2c6d6;'}`}
+      >Districts</a>
+      <a href="/about"
+        style={`padding:6px 14px;border-radius:4px;font-size:14px;font-weight:500;text-decoration:none;transition:all 0.15s;${path === '/about' ? 'color:#adc6ff;background:#1c2b3c;' : 'color:#c2c6d6;'}`}
+      >About</a>
+    </nav>
+
+    <!-- Mobile menu button -->
+    <button id="mobile-menu-btn" aria-label="Open menu"
+      style="display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:4px;border:1px solid #424754;background:transparent;color:#c2c6d6;cursor:pointer;"
+      class="md-hide"
+    >
+      <span class="material-symbols-outlined" style="font-size:22px;">menu</span>
+    </button>
+  </div>
+
+  <!-- Mobile menu -->
+  <div id="mobile-menu" style="display:none;background:#0d1c2d;border-top:1px solid #424754;padding:12px 16px;">
+    <a href="/" style="display:block;padding:10px 12px;color:#c2c6d6;font-size:15px;font-weight:500;border-radius:4px;">Home</a>
+    <a href="/tenders" style="display:block;padding:10px 12px;color:#c2c6d6;font-size:15px;font-weight:500;border-radius:4px;">All Tenders</a>
+    <a href="/districts" style="display:block;padding:10px 12px;color:#c2c6d6;font-size:15px;font-weight:500;border-radius:4px;">By District</a>
+    <a href="/about" style="display:block;padding:10px 12px;color:#c2c6d6;font-size:15px;font-weight:500;border-radius:4px;">About</a>
+    <!-- Mobile search -->
+    <div style="position:relative;margin-top:10px;">
+      <span class="material-symbols-outlined" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#8c909f;font-size:18px;pointer-events:none;">search</span>
+      <input type="search" placeholder="Search tenders…"
+        style="width:100%;padding:8px 12px 8px 38px;background:#122131;border:1px solid #424754;border-radius:4px;color:#d4e4fa;font-size:14px;outline:none;" />
     </div>
   </div>
 </header>
 
+<style>
+  @media (min-width: 768px) {
+    .md-search-wrap { display: block !important; }
+    .md-hide { display: none !important; }
+  }
+  @media (max-width: 767px) {
+    .md-nav { display: none !important; }
+  }
+  header a:hover { color: #adc6ff !important; }
+  #mobile-menu a:hover { background: #122131; color: #adc6ff !important; }
+</style>
+
 <script>
   const btn = document.getElementById('mobile-menu-btn');
   const menu = document.getElementById('mobile-menu');
-  btn?.addEventListener('click', () => menu?.classList.toggle('hidden'));
+  btn?.addEventListener('click', () => {
+    const isOpen = menu?.style.display !== 'none';
+    if (menu) menu.style.display = isOpen ? 'none' : 'block';
+  });
 
-  // Theme Toggle logic
-  const themeToggleBtn = document.getElementById('theme-toggle-btn');
-  const moonIcon = document.getElementById('theme-toggle-moon');
-  const sunIcon = document.getElementById('theme-toggle-sun');
-
-  function updateThemeIcons() {
-    const isDark = document.documentElement.classList.contains('dark');
-    if (isDark) {
-      moonIcon?.classList.add('hidden');
-      sunIcon?.classList.remove('hidden');
-    } else {
-      sunIcon?.classList.add('hidden');
-      moonIcon?.classList.remove('hidden');
+  // Navbar search → redirect to /tenders?q=...
+  const navSearch = document.getElementById('navbar-search') as HTMLInputElement | null;
+  navSearch?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && navSearch.value.trim()) {
+      window.location.href = `/tenders?q=${encodeURIComponent(navSearch.value.trim())}`;
     }
-  }
-
-  updateThemeIcons();
-
-  themeToggleBtn?.addEventListener('click', () => {
-    const isDark = document.documentElement.classList.toggle('dark');
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
-    updateThemeIcons();
   });
 </script>
