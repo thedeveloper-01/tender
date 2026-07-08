@@ -71,12 +71,21 @@ const getYearsOfExperience = (tender: any) => {
   return null;
 };
 
+const isExempt = (val: any) => {
+  if (val === true || val === 'true') return true;
+  if (typeof val === 'string') {
+    const s = val.toLowerCase().trim();
+    return s.startsWith('yes') || s.startsWith('exempt') || s === 'applicable';
+  }
+  return false;
+};
+
 const mseExempt = getMseExempt(t);
 const startupExempt = getStartupExempt(t);
 const experience = getYearsOfExperience(t);
 
-const isMseYes = mseExempt?.toLowerCase().startsWith('yes') || mseExempt?.toLowerCase().startsWith('exempt');
-const isStartupYes = startupExempt?.toLowerCase().startsWith('yes') || startupExempt?.toLowerCase().startsWith('exempt');
+const isMseYes = isExempt(mseExempt);
+const isStartupYes = isExempt(startupExempt);
 const isEmdExempt = t.emdAmount === 0 || (t.source === 'GEM' && t.emdAmount == null && (t.valueExtractionStatus === 'extracted' || t.valueExtractionStatus === 'not_found'));
 
 // Deadline color: red ≤2, amber ≤7, green otherwise

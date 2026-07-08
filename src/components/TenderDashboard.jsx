@@ -126,11 +126,20 @@ const getYearsOfExperience = (tender) => {
 
 function TenderCard({ t }) {
   const dl = daysLeft(t.endDate);
+  const isExempt = (val) => {
+    if (val === true || val === 'true') return true;
+    if (typeof val === 'string') {
+      const s = val.toLowerCase().trim();
+      return s.startsWith('yes') || s.startsWith('exempt') || s === 'applicable';
+    }
+    return false;
+  };
+
   const mseExempt = getMseExempt(t);
   const startupExempt = getStartupExempt(t);
   const experience = getYearsOfExperience(t);
-  const isMseYes = mseExempt?.toLowerCase().startsWith('yes') || mseExempt?.toLowerCase().startsWith('exempt');
-  const isStartupYes = startupExempt?.toLowerCase().startsWith('yes') || startupExempt?.toLowerCase().startsWith('exempt');
+  const isMseYes = isExempt(mseExempt);
+  const isStartupYes = isExempt(startupExempt);
 
   const hasValue = t.bidValue != null && !isNaN(t.bidValue) && t.bidValue > 0;
   const hasEmd   = t.emdAmount != null && !isNaN(t.emdAmount) && t.emdAmount > 0;
@@ -766,16 +775,29 @@ export default function TenderDashboard({
       if (t.sourceMeta?.plantId !== filters.plant) return false;
     }
     if (filters.mseStartupOnly) {
-      const mseVal = getMseExempt(t);
-      const startupVal = getStartupExempt(t);
-      const isMseExempt = mseVal?.toLowerCase().startsWith('yes') || mseVal?.toLowerCase().startsWith('exempt');
-      const isStartupExempt = startupVal?.toLowerCase().startsWith('yes') || startupVal?.toLowerCase().startsWith('exempt');
+      const isMseExempt = isExempt(getMseExempt(t));
+      const isStartupExempt = isExempt(getStartupExempt(t));
       if (!isMseExempt && !isStartupExempt) return false;
     }
     if (filters.zeroExperienceOnly) {
-      const exp = getYearsOfExperience(t)?.toLowerCase();
-      const hasExp = exp && exp !== 'not specified' && !exp.includes('0') && !exp.includes('no') && !exp.includes('not required') && !exp.includes('nil') && !exp.includes('exempt');
-      if (hasExp) return false;
+      const hasExperience = (val) => {
+        if (val == null) return false;
+        if (typeof val === 'number') return val > 0;
+        if (typeof val === 'string') {
+          const s = val.toLowerCase().trim();
+          if (s === 'not specified' || s === 'not required' || s === 'nil' || s === 'exempt' || s === 'no' || s === '0' || s.includes('0 year')) {
+            return false;
+          }
+          const match = s.match(/(\d+)/);
+          if (match) {
+            return parseInt(match[1], 10) > 0;
+          }
+          return false;
+        }
+        if (typeof val === 'boolean') return val;
+        return false;
+      };
+      if (hasExperience(getYearsOfExperience(t))) return false;
     }
     return true;
   });

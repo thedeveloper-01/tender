@@ -395,12 +395,15 @@ export const FIELD_DICTIONARY = [
   {
     key: 'pastPerformancePct',
     // pdftotext layout line: "       Past Performance 20 %"
-    // parsePercent() needs the "%" in the captured group to extract the number.
-    // Capture "20 %" so that parsePercent("20 %") → 20.
+    // First hit of "Past Performance" anchor is the CSV "Experience Criteria,Past Performance,..."
+    // which has no %. The direct regex on FULL_TEXT correctly finds the standalone line.
+    // Using section-level direct regex (not anchorSearch) via the tryExtract on sectionText path.
     section: 'FULL_TEXT',
     anchor: 'Past Performance',
-    regex: /^\s*Past\s+Performance\s+([\d.]+\s*%)/im,
-    shape: /^[\d.]+\s*%$/,
+    // This regex is run on the FULL section text directly (not just anchorSearch window),
+    // so it finds the standalone "Past Performance 20 %" line regardless of match order.
+    regex: /^\s*Past\s+Performance\s+([\d.]+)\s*%/im,
+    shape: /^[\d.]+$/,
     type: 'percent',
     required: false,
     window: 2,

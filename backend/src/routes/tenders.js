@@ -116,22 +116,43 @@ router.get('/', async (req, res) => {
         return null;
       };
 
+      const isExempt = (val) => {
+        if (val === true || val === 'true') return true;
+        if (typeof val === 'string') {
+          const s = val.toLowerCase().trim();
+          return s.startsWith('yes') || s.startsWith('exempt') || s === 'applicable';
+        }
+        return false;
+      };
+
+      const hasExperience = (val) => {
+        if (val == null) return false;
+        if (typeof val === 'number') return val > 0;
+        if (typeof val === 'string') {
+          const s = val.toLowerCase().trim();
+          if (s === 'not specified' || s === 'not required' || s === 'nil' || s === 'exempt' || s === 'no' || s === '0' || s.includes('0 year')) {
+            return false;
+          }
+          const match = s.match(/(\d+)/);
+          if (match) {
+            return parseInt(match[1], 10) > 0;
+          }
+          return false;
+        }
+        if (typeof val === 'boolean') return val;
+        return false;
+      };
+
       // 2. Perform Javascript filtering in memory
       if (mseStartupOnly === 'true') {
         candidates = candidates.filter(t => {
-          const mseVal = getMseExempt(t);
-          const startupVal = getStartupExempt(t);
-          const isMseExempt = mseVal?.toLowerCase().startsWith('yes') || mseVal?.toLowerCase().startsWith('exempt');
-          const isStartupExempt = startupVal?.toLowerCase().startsWith('yes') || startupVal?.toLowerCase().startsWith('exempt');
-          return isMseExempt || isStartupExempt;
+          return isExempt(getMseExempt(t)) || isExempt(getStartupExempt(t));
         });
       }
 
       if (zeroExperienceOnly === 'true') {
         candidates = candidates.filter(t => {
-          const exp = getYearsOfExperience(t)?.toLowerCase();
-          const hasExp = exp && exp !== 'not specified' && !exp.includes('0') && !exp.includes('no') && !exp.includes('not required') && !exp.includes('nil') && !exp.includes('exempt');
-          return !hasExp;
+          return !hasExperience(getYearsOfExperience(t));
         });
       }
 
