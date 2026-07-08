@@ -133,13 +133,16 @@ export const FIELD_DICTIONARY = [
   },
   {
     key: 'bidOfferValidityDays',
-    section: 'BID_DETAILS',
-    anchor: 'Bid Offer Validity',
-    regex: /Bid\s+Offer\s+Validity[^\n]{0,30}[:\-]?\s*(\d+)/i,
+    // pdftotext layout: "( ) /Bid Offer" [line A] + "80 (Days)" [line B] + "Validity (From End Date)" [line C]
+    // The value is on line B, BEFORE the full label on line C.
+    // Anchor on "Validity (From End Date)"; lookBehind=2 in anchorSearch brings line B into window.
+    section: 'FULL_TEXT',
+    anchor: 'Validity (From End Date)',
+    regex: /(\d+)\s*\(Days?\)/i,
     shape: /^\d+$/,
     type: 'number',
     required: false,
-    window: 4,
+    window: 1,
   },
   {
     key: 'totalQuantity',
@@ -239,10 +242,12 @@ export const FIELD_DICTIONARY = [
 
   {
     key: 'minAnnualTurnover',
-    section: 'ELIGIBILITY_CRITERIA',
+    // Appears in first-page summary table — section varies (ITEM_DETAILS / BID_DETAILS)
+    // Actual PDF text: "1 Lakh (s)" — single digit + Lakh + optional (s)
+    section: 'FULL_TEXT',
     anchor: 'Minimum Average Annual Turnover',
-    regex: /(?:Minimum|Min\.?)\s+(?:Average\s+)?Annual\s+Turnover[\s:\-]{0,5}((?:₹|Rs\.?)?\s*[\d,]+(?:\.\d+)?(?:\s*(?:Lakh|Lac|Cr|Crore))?)/i,
-    shape: /^(?:₹|Rs\.?)?\s*(?:\d{3,}|[\d.,]+\s*(?:Lakh|Lac|Cr|Crore))/i,
+    regex: /(?:Minimum|Min\.?)\s+(?:Average\s+)?Annual\s+Turnover[^\n]{0,30}?([\d,]+(?:\.\d+)?\s*(?:Lakh|Lac|Cr|Crore|K)?)/i,
+    shape: /^[\d,]+(?:\.\d+)?(?:\s*(?:Lakh|Lac|Cr|Crore|K))?/i,
     type: 'money',
     required: false,
     window: 3,
@@ -259,7 +264,19 @@ export const FIELD_DICTIONARY = [
   },
   {
     key: 'yearsOfExperience',
-    section: 'ELIGIBILITY_CRITERIA',
+    // Appears in first-page summary table — section varies (ITEM_DETAILS / BID_DETAILS)
+    section: 'FULL_TEXT',
+    anchor: 'Years of Past Experience Required',
+    regex: /Years\s+of\s+Past\s+Experience\s+Required[^\n]{0,40}(\d+(?:\.\d+)?)\s*[Yy]ear/i,
+    shape: /^\d+/,
+    type: 'number',
+    required: false,
+    window: 3,
+  },
+  {
+    // Fallback: shorter anchor form used in older PDFs
+    key: 'yearsOfExperience',
+    section: 'FULL_TEXT',
     anchor: 'Experience',
     regex: /(?:Years?\s+of\s+)?Experience\s*[:\-]?\s*(\d+(?:\.\d+)?)\s*[Yy]ears?/i,
     shape: /^\d+/,
@@ -269,12 +286,12 @@ export const FIELD_DICTIONARY = [
   },
   {
     key: 'mseExemption',
-    section: 'ELIGIBILITY_CRITERIA',
-    // Actual GeM PDF label: "MSE Relaxation for Years of Experience and Turnover"
-    // The value (Yes/No) is on the SAME line, right after "Turnover".
-    // Also handles older label variant "MSE Exemption" for backward compatibility.
-    anchor: 'MSE Relaxation for Years of Experience',
-    regex: /MSE\s+Relaxation\s+for\s+Years\s+of\s+Experience\s+and\s+Turnover[\s\S]{0,30}?\b(Yes|No)\b/i,
+    // pdftotext -layout places this in first-page summary table (ITEM_DETAILS/BID_DETAILS).
+    // Use FULL_TEXT so it is found regardless of which section the table rows fall into.
+    // Actual normalized line: "MSE Relaxation for Years Of Experience Yes | Complete"
+    section: 'FULL_TEXT',
+    anchor: 'MSE Relaxation for Years Of Experience',
+    regex: /MSE\s+Relaxation\s+for\s+Years\s+Of\s+Experience(?:[^\n]*)\b(Yes|No)\b/i,
     shape: /^(?:Yes|No)$/i,
     type: 'boolean',
     required: false,
@@ -293,11 +310,12 @@ export const FIELD_DICTIONARY = [
   },
   {
     key: 'startupExemption',
-    section: 'ELIGIBILITY_CRITERIA',
-    // Actual GeM PDF label: "Startup Relaxation for Years of Experience and Turnover"
-    // The value (Yes/No) is on the SAME line, right after "Turnover".
-    anchor: 'Startup Relaxation for Years of Experience',
-    regex: /Startup\s+Relaxation\s+for\s+Years\s+of\s+Experience\s+and\s+Turnover[\s\S]{0,30}?\b(Yes|No)\b/i,
+    // pdftotext -layout places this in first-page summary table (ITEM_DETAILS/BID_DETAILS).
+    // Actual normalized line: "Startup Relaxation for Years Of Yes | Complete"
+    // (label wraps: "Experience and Turnover" is on the next line)
+    section: 'FULL_TEXT',
+    anchor: 'Startup Relaxation for Years Of',
+    regex: /Startup\s+Relaxation\s+for\s+Years\s+Of(?:[^\n]*)\b(Yes|No)\b/i,
     shape: /^(?:Yes|No)$/i,
     type: 'boolean',
     required: false,
@@ -326,9 +344,23 @@ export const FIELD_DICTIONARY = [
   },
   {
     key: 'technicalClarificationDays',
-    section: 'ELIGIBILITY_CRITERIA',
-    anchor: 'Time for Technical Clarification',
-    regex: /(?:Time\s+for\s+)?Technical\s+Clarification[^\n]{0,30}[:\-]?\s*(\d+)\s*(?:Days?)?/i,
+    // pdftotext layout: "  Time allowed for Technical 2 Days" (label truncated mid-wrap)
+    // then "Clarifications during technical evaluation" on next line.
+    // Value "2 Days" is inline on the anchor line. Use short anchor to match the first line.
+    section: 'FULL_TEXT',
+    anchor: 'Time allowed for Technical',
+    regex: /Time\s+allowed\s+for\s+Technical[^\n]*\b(\d+)\s*Days?/i,
+    shape: /^\d+$/,
+    type: 'number',
+    required: false,
+    window: 2,
+  },
+  {
+    // Fallback: older PDF forms
+    key: 'technicalClarificationDays',
+    section: 'FULL_TEXT',
+    anchor: 'Technical Clarification',
+    regex: /Technical\s+Clarification[^\n]{0,60}\b(\d+)\s*Days?/i,
     shape: /^\d+$/,
     type: 'number',
     required: false,
@@ -336,9 +368,10 @@ export const FIELD_DICTIONARY = [
   },
   {
     key: 'typeOfBid',
-    section: 'ELIGIBILITY_CRITERIA',
+    // PDF: "Type of Bid Two Packet Bid" in second Bid Details page
+    section: 'FULL_TEXT',
     anchor: 'Type of Bid',
-    regex: /Type\s+of\s+Bid\s*[:\-]?\s*(Single\s+Packet|Two\s+Packet[^\n]{0,20})/i,
+    regex: /Type\s+of\s+Bid\s*[:\-]?\s*((?:Single|Two)\s+Packet[^\n]{0,20})/i,
     shape: /(?:Single|Two)/i,
     type: 'text',
     required: false,
@@ -346,9 +379,14 @@ export const FIELD_DICTIONARY = [
   },
   {
     key: 'inspectionRequired',
-    section: 'ELIGIBILITY_CRITERIA',
+    // pdftotext layout:
+    //   Line A: "    )/Inspection Required (By"
+    //   Line B: "                                       No"
+    //   Line C: "Empanelled Inspection Authority / Agencies"
+    // Value is on line B (next line after anchor). Use [\s\S] to cross newline.
+    section: 'FULL_TEXT',
     anchor: 'Inspection Required',
-    regex: /Inspection\s+Required[^:\n]{0,20}[:\-]?\s*(Yes|No)/i,
+    regex: /Inspection\s+Required[\s\S]{0,100}?\b(Yes|No)\b/i,
     shape: /^(?:Yes|No)$/i,
     type: 'boolean',
     required: false,
@@ -356,29 +394,34 @@ export const FIELD_DICTIONARY = [
   },
   {
     key: 'pastPerformancePct',
-    section: 'ELIGIBILITY_CRITERIA',
+    // pdftotext layout line: "       Past Performance 20 %"
+    // parsePercent() needs the "%" in the captured group to extract the number.
+    // Capture "20 %" so that parsePercent("20 %") → 20.
+    section: 'FULL_TEXT',
     anchor: 'Past Performance',
-    regex: /Past\s+Performance[^:\n]{0,30}[:\-]?\s*([\d.]+)\s*%/i,
-    shape: /^[\d.]+$/,
+    regex: /^\s*Past\s+Performance\s+([\d.]+\s*%)/im,
+    shape: /^[\d.]+\s*%$/,
     type: 'percent',
     required: false,
-    window: 3,
+    window: 2,
   },
   {
     key: 'evaluationMethod',
-    section: 'ELIGIBILITY_CRITERIA',
+    // PDF normalized line: "   Evaluation Method Total value wise evaluation"
+    // normalize.js collapses runs of spaces to 1 space, so \s{2,} won't match.
+    section: 'FULL_TEXT',
     anchor: 'Evaluation Method',
-    regex: /Evaluation\s+Method[^:\n]{0,20}[:\-]?\s*(.{3,80})/i,
-    shape: /[A-Za-z]{2}/,
+    regex: /\bEvaluation\s+Method\b\s+(.{3,80})/i,
+    shape: /[A-Za-z]{3}/,
     type: 'text',
     required: false,
     window: 2,
   },
   {
     key: 'arbitrationClause',
-    section: 'ELIGIBILITY_CRITERIA',
+    section: 'FULL_TEXT',
     anchor: 'Arbitration Clause',
-    regex: /Arbitration\s+Clause[^:\n]{0,20}[:\-]?\s*(Yes|No)/i,
+    regex: /Arbitration\s+Clause[^\n]{0,30}\b(Yes|No)\b/i,
     shape: /^(?:Yes|No)$/i,
     type: 'boolean',
     required: false,
@@ -386,9 +429,9 @@ export const FIELD_DICTIONARY = [
   },
   {
     key: 'mediationClause',
-    section: 'ELIGIBILITY_CRITERIA',
+    section: 'FULL_TEXT',
     anchor: 'Mediation Clause',
-    regex: /Mediation\s+Clause[^:\n]{0,20}[:\-]?\s*(Yes|No)/i,
+    regex: /Mediation\s+Clause[^\n]{0,30}\b(Yes|No)\b/i,
     shape: /^(?:Yes|No)$/i,
     type: 'boolean',
     required: false,
@@ -396,9 +439,12 @@ export const FIELD_DICTIONARY = [
   },
   {
     key: 'epbgRequired',
-    section: 'BID_DETAILS',
-    anchor: 'ePBG Detail',
-    regex: /ePBG[^:\n]{0,30}[:\-]?\s*(Yes|No)/i,
+    // PDF layout: "ePBG Detail" on one line, then blank, then "Required No" 3 lines later.
+    // lookBehind in anchorSearch covers the "Required No" line which is after the anchor.
+    // window:4 ensures we reach it.
+    section: 'FULL_TEXT',
+    anchor: 'ePBG',
+    regex: /ePBG[^\n]*(?:\n[^\n]*){0,4}\bRequired\s+(Yes|No)\b/i,
     shape: /^(?:Yes|No)$/i,
     type: 'boolean',
     required: false,
@@ -406,9 +452,10 @@ export const FIELD_DICTIONARY = [
   },
   {
     key: 'miiPurchasePreference',
-    section: 'ELIGIBILITY_CRITERIA',
+    // PDF: "MII Purchase Preference No" in its own section
+    section: 'FULL_TEXT',
     anchor: 'MII Purchase Preference',
-    regex: /MII\s+Purchase\s+Preference[^:\n]{0,20}[:\-]?\s*(Yes|No|Applicable|Not\s+Applicable)/i,
+    regex: /MII\s+Purchase\s+Preference[^\n]{0,30}\b(Yes|No|Applicable|Not\s+Applicable)\b/i,
     shape: /^(?:Yes|No|Applicable|Not)/i,
     type: 'boolean',
     required: false,

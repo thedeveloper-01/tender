@@ -79,8 +79,9 @@ const SECTION_ANCHORS = [
     key: 'UPLOADED_DOCS',
     patterns: [
       /^[^\w]*buyer\s+uploaded/i,
-      /^[^\w]*uploaded\s+(atc\s+)?documents/i,
-      /^[^\w]*documents?\s+uploaded/i,
+      /^[^\w]*uploaded\s+(atc\s+)?documents?\s*(?:by\s+buyer|$)/i,
+      // NOTE: do NOT match "documents uploaded by bidders" — that is a bid form question
+      /^[^\w]*buyer\s+added\s+documents/i,
     ],
   },
   {

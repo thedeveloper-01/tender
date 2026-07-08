@@ -117,17 +117,25 @@ export function cleanText(str) {
 // ── Anchor search ─────────────────────────────────────────────────────────────
 
 /**
- * anchorSearch(lines, anchor, windowSize = 4)
+ * anchorSearch(lines, anchor, windowSize = 4, lookBehind = 2)
  *
  * Finds the first line containing `anchor` (case-insensitive).
- * Returns the next `windowSize` lines joined as a string.
+ * Returns `lookBehind` lines BEFORE the anchor + the anchor line +
+ * `windowSize` lines AFTER it, all joined as a string.
+ *
+ * lookBehind is crucial for GeM PDFs: pdftotext -layout places the value
+ * on the right column of the FIRST row of a table cell, but the label
+ * can wrap down to subsequent rows. So the value appears BEFORE the full
+ * label text in the extracted stream.
+ *
  * Returns '' if anchor is not found.
  */
-export function anchorSearch(lines, anchor, windowSize = 4) {
+export function anchorSearch(lines, anchor, windowSize = 4, lookBehind = 2) {
   const lowerAnchor = anchor.toLowerCase().replace(/\s+/g, ' ');
   for (let i = 0; i < lines.length; i++) {
     if (lines[i].toLowerCase().replace(/\s+/g, ' ').includes(lowerAnchor)) {
-      return lines.slice(i, i + 1 + windowSize).join('\n');
+      const start = Math.max(0, i - lookBehind);
+      return lines.slice(start, i + 1 + windowSize).join('\n');
     }
   }
   return '';
