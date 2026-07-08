@@ -182,27 +182,6 @@ const risks = t.risks || [];
               : "background:rgba(255,183,134,0.12);color:#ffb786;border:1px solid rgba(255,183,134,0.25);"
           }`}>{t.source}</span
         >
-        {
-          isEmdExempt && (
-            <span style="font-size:10px;font-weight:700;color:#4edea3;background:rgba(78,222,163,0.1);border:1px solid rgba(78,222,163,0.2);padding:2px 7px;border-radius:2px;letter-spacing:0.05em;white-space:nowrap;">
-              ✓ EMD EXEMPT
-            </span>
-          )
-        }
-        {
-          isMseYes && (
-            <span style="font-size:10px;font-weight:700;color:#4edea3;background:rgba(78,222,163,0.1);border:1px solid rgba(78,222,163,0.2);padding:2px 7px;border-radius:2px;letter-spacing:0.05em;white-space:nowrap;">
-              ✓ MSE
-            </span>
-          )
-        }
-        {
-          isStartupYes && (
-            <span style="font-size:10px;font-weight:700;color:#4edea3;background:rgba(78,222,163,0.1);border:1px solid rgba(78,222,163,0.2);padding:2px 7px;border-radius:2px;letter-spacing:0.05em;white-space:nowrap;">
-              ✓ Startup
-            </span>
-          )
-        }
       </div>
     </div>
 
@@ -236,6 +215,20 @@ const risks = t.risks || [];
         t.sourceMeta?.isEbidding && (
           <span style="font-size:10px;font-weight:700;color:#adc6ff;background:rgba(173,198,255,0.1);border:1px solid rgba(173,198,255,0.2);padding:2px 7px;border-radius:2px;letter-spacing:0.05em;">
             e-Bidding
+          </span>
+        )
+      }
+      {
+        isMseYes && (
+          <span style="font-size:10px;font-weight:700;color:#4edea3;background:rgba(78,222,163,0.1);border:1px solid rgba(78,222,163,0.2);padding:2px 7px;border-radius:2px;letter-spacing:0.05em;">
+            ✓ MSE
+          </span>
+        )
+      }
+      {
+        isStartupYes && (
+          <span style="font-size:10px;font-weight:700;color:#4edea3;background:rgba(78,222,163,0.1);border:1px solid rgba(78,222,163,0.2);padding:2px 7px;border-radius:2px;letter-spacing:0.05em;">
+            ✓ Startup
           </span>
         )
       }
@@ -292,9 +285,9 @@ const risks = t.risks || [];
       >
         <span style="font-size:11px;color:#8c909f;font-weight:500;">EMD:</span>
         <span
-          style={`font-size:12px;font-weight:600;color:${(hasEmd || isEmdExempt) ? "var(--secondary)" : "var(--on-surface-variant)"};`}
+          style={`font-size:12px;font-weight:600;color:${hasEmd ? "var(--on-surface-variant)" : "var(--secondary)"};`}
         >
-          {isEmdExempt ? "Exempt / N/A" : (hasEmd ? formatRupee(t.emdAmount) : "N/A")}
+          {hasEmd ? formatRupee(t.emdAmount) : "N/A"}
         </span>
       </div>
     </div>
