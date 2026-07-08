@@ -270,6 +270,20 @@ export const FIELD_DICTIONARY = [
   {
     key: 'mseExemption',
     section: 'ELIGIBILITY_CRITERIA',
+    // Actual GeM PDF label: "MSE Relaxation for Years of Experience and Turnover"
+    // The value (Yes/No) is on the SAME line, right after "Turnover".
+    // Also handles older label variant "MSE Exemption" for backward compatibility.
+    anchor: 'MSE Relaxation for Years of Experience',
+    regex: /MSE\s+Relaxation\s+for\s+Years\s+of\s+Experience\s+and\s+Turnover[\s\S]{0,30}?\b(Yes|No)\b/i,
+    shape: /^(?:Yes|No)$/i,
+    type: 'boolean',
+    required: false,
+    window: 2,
+  },
+  {
+    // Fallback: older GeM PDF format that uses "MSE Exemption"
+    key: 'mseExemption',
+    section: 'ELIGIBILITY_CRITERIA',
     anchor: 'MSE Exemption',
     regex: /MSE\s+Exemption\s*[:\-]?\s*(Yes|No|Applicable|Not\s+Applicable|Exempted)/i,
     shape: /^(?:Yes|No|Applicable|Not|Exempted)/i,
@@ -278,6 +292,19 @@ export const FIELD_DICTIONARY = [
     window: 2,
   },
   {
+    key: 'startupExemption',
+    section: 'ELIGIBILITY_CRITERIA',
+    // Actual GeM PDF label: "Startup Relaxation for Years of Experience and Turnover"
+    // The value (Yes/No) is on the SAME line, right after "Turnover".
+    anchor: 'Startup Relaxation for Years of Experience',
+    regex: /Startup\s+Relaxation\s+for\s+Years\s+of\s+Experience\s+and\s+Turnover[\s\S]{0,30}?\b(Yes|No)\b/i,
+    shape: /^(?:Yes|No)$/i,
+    type: 'boolean',
+    required: false,
+    window: 2,
+  },
+  {
+    // Fallback: older GeM PDF format that uses "Startup Exemption"
     key: 'startupExemption',
     section: 'ELIGIBILITY_CRITERIA',
     anchor: 'Startup Exemption',

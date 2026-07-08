@@ -49,6 +49,17 @@ export function normalizePdfText(rawText) {
   // Also strip the Vedic Extensions block U+1CD0–U+1CFF used by some PDF renderers.
   text = text.replace(/[\u0900-\u097F\u1CD0-\u1CFF]+/g, '');
 
+  // Step 0b: Strip bilingual slash separator that GeM PDFs use between Hindi and
+  // English labels on the same line. After Devanagari removal the line starts with
+  // "/English Label  Value" — strip the leading slash so anchor regexes see clean text.
+  // Only strip a slash that appears at the start of a line (after optional whitespace).
+  text = text.replace(/^(\s*)\//gm, '$1');
+
+  // Step 0c: Strip stray ASCII corruption artifacts left at the start of lines when
+  // pdftotext partially mis-encodes Devanagari (e.g. "&", "%", "#", or lone digits).
+  // These only appear at line boundaries and are never part of an English value.
+  text = text.replace(/^(\s*)[&%#]\s*/gm, '$1');
+
   // Step 1: Apply Unicode map
   for (const [pattern, replacement] of UNICODE_MAP) {
     text = text.replace(pattern, replacement);
