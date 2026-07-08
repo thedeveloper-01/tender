@@ -98,7 +98,14 @@ function Skeleton() {
   );
 }
 
-// ─── MD3 Tender Card ─────────────────────────────────────────────────────────
+const isExempt = (val) => {
+  if (val === true || val === 'true') return true;
+  if (typeof val === 'string') {
+    const s = val.toLowerCase().trim();
+    return s.startsWith('yes') || s.startsWith('exempt') || s === 'applicable';
+  }
+  return false;
+};
 
 const getMseExempt = (tender) => {
   const eligibility = tender.sourceMeta?.aiExtract?.eligibility;
@@ -126,14 +133,6 @@ const getYearsOfExperience = (tender) => {
 
 function TenderCard({ t }) {
   const dl = daysLeft(t.endDate);
-  const isExempt = (val) => {
-    if (val === true || val === 'true') return true;
-    if (typeof val === 'string') {
-      const s = val.toLowerCase().trim();
-      return s.startsWith('yes') || s.startsWith('exempt') || s === 'applicable';
-    }
-    return false;
-  };
 
   const mseExempt = getMseExempt(t);
   const startupExempt = getStartupExempt(t);
