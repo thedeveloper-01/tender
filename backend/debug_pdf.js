@@ -1,8 +1,33 @@
-import { extractGemPdf } from './src/extractor/parser.js';
-const pdfPath = process.argv[2] || 'C:/Users/vr812/Downloads/GeM-Bidding-9518683 (1).pdf';
-const result = await extractGemPdf(pdfPath);
-const a = result.aiExtract, e = a?.eligibility;
-console.log('=== TOP-LEVEL ===');
-['bidNumber','bidEndDate','bidOpeningDate','bidType','bidToRA','bidOfferValidityDays','epbgRequired','bidValue','emdAmount','itemCategory','totalQuantity'].forEach(k=>console.log(`  ${k.padEnd(28)}: ${JSON.stringify(a?.[k])}`));
-console.log('\n=== ELIGIBILITY ===');
-['minAnnualTurnover','yearsOfExperience','mseExemption','startupExemption','msePurchasePreference','miiPurchasePreference','technicalClarificationDays','inspectionRequired','pastPerformancePct','evaluationMethod','arbitrationClause','mediationClause','typeOfBid'].forEach(k=>console.log(`  ${k.padEnd(28)}: ${JSON.stringify(e?.[k])}`));
+import fs from 'fs';
+import path from 'path';
+
+function walk(dir) {
+  let results = [];
+  const list = fs.readdirSync(dir);
+  list.forEach(file => {
+    const fullPath = path.join(dir, file);
+    const stat = fs.statSync(fullPath);
+    if (stat && stat.isDirectory()) {
+      const b = path.basename(fullPath);
+      if (b !== 'node_modules' && b !== '.git' && b !== '.astro' && b !== 'dist') {
+        results = results.concat(walk(fullPath));
+      }
+    } else {
+      results.push(fullPath);
+    }
+  });
+  return results;
+}
+
+const files = walk('.');
+files.forEach(f => {
+  if (f.startsWith('src' + path.sep) || f.startsWith('backend' + path.sep + 'src' + path.sep)) {
+    const content = fs.readFileSync(f, 'utf8');
+    content.split('\n').forEach((line, idx) => {
+      const lower = line.toLowerCase();
+      if (lower.includes('exempt')) {
+        console.log(`${f}:${idx + 1}: ${line.trim()}`);
+      }
+    });
+  }
+});

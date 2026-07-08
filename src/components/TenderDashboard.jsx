@@ -206,10 +206,20 @@ function TenderCard({ t }) {
                 : { background: 'rgba(255,183,134,0.12)', color: C.tertiary, border: '1px solid rgba(255,183,134,0.25)' }),
             }}>{t.source}</span>
 
+            {isEmdExempt && (
+              <span style={{
+                fontSize: '9px', fontWeight: 700, padding: '2px 6px', borderRadius: '2px',
+                background: 'rgba(78,222,163,0.1)', color: C.secondary, border: '1px solid rgba(78,222,163,0.2)',
+                whiteSpace: 'nowrap'
+              }}>
+                ✓ EMD EXEMPT
+              </span>
+            )}
             {isMseYes && (
               <span style={{
                 fontSize: '9px', fontWeight: 700, padding: '2px 6px', borderRadius: '2px',
-                background: 'rgba(78,222,163,0.1)', color: C.secondary, border: '1px solid rgba(78,222,163,0.2)'
+                background: 'rgba(78,222,163,0.1)', color: C.secondary, border: '1px solid rgba(78,222,163,0.2)',
+                whiteSpace: 'nowrap'
               }}>
                 ✓ MSE
               </span>
@@ -217,7 +227,8 @@ function TenderCard({ t }) {
             {isStartupYes && (
               <span style={{
                 fontSize: '9px', fontWeight: 700, padding: '2px 6px', borderRadius: '2px',
-                background: 'rgba(78,222,163,0.1)', color: C.secondary, border: '1px solid rgba(78,222,163,0.2)'
+                background: 'rgba(78,222,163,0.1)', color: C.secondary, border: '1px solid rgba(78,222,163,0.2)',
+                whiteSpace: 'nowrap'
               }}>
                 ✓ Startup
               </span>
@@ -256,8 +267,8 @@ function TenderCard({ t }) {
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '11px', color: C.outline }}>EMD:</span>
-            <span style={{ fontSize: '12px', fontWeight: 600, color: hasEmd ? C.onSurfaceVar : C.secondary }}>
-              {hasEmd ? fmt(t.emdAmount) : 'N/A'}
+            <span style={{ fontSize: '12px', fontWeight: 600, color: (hasEmd || isEmdExempt) ? C.secondary : C.onSurfaceVar }}>
+              {isEmdExempt ? 'Exempt / N/A' : (hasEmd ? fmt(t.emdAmount) : 'N/A')}
             </span>
           </div>
         </div>
