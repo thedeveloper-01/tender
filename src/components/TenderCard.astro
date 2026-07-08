@@ -1,5 +1,10 @@
 ---
-import { formatRupee, formatDate, daysLeft, tenderDetailPath } from '../lib/cities.js';
+import {
+  formatRupee,
+  formatDate,
+  daysLeft,
+  tenderDetailPath,
+} from "../lib/cities.js";
 
 export interface Props {
   tender: {
@@ -42,40 +47,44 @@ const isClosingSoon = dl !== null && dl > 2 && dl <= 7;
 const isClosed = dl !== null && dl < 0;
 
 const detailUrl = tenderDetailPath(t);
-const titleDisplay = t.title?.slice(0, 120) || 'Untitled Tender';
+const titleDisplay = t.title?.slice(0, 120) || "Untitled Tender";
 const orgDisplay = t.organization || t.department || null;
 
 const hasValue = t.bidValue != null && t.bidValue > 0;
-const hasEmd   = t.emdAmount != null && t.emdAmount > 0;
+const hasEmd = t.emdAmount != null && t.emdAmount > 0;
 
 // Helper functions for dual extraction models (legacy pdfExtract.fields and new aiExtract.eligibility)
 const getMseExempt = (tender: any) => {
   const eligibility = tender.sourceMeta?.aiExtract?.eligibility;
-  if (eligibility && eligibility.mseExemption !== undefined) return eligibility.mseExemption;
+  if (eligibility && eligibility.mseExemption !== undefined)
+    return eligibility.mseExemption;
   const fields = tender.sourceMeta?.pdfExtract?.fields;
   if (fields && fields.mseExemption) return fields.mseExemption.value;
   return null;
 };
 const getStartupExempt = (tender: any) => {
   const eligibility = tender.sourceMeta?.aiExtract?.eligibility;
-  if (eligibility && eligibility.startupExemption !== undefined) return eligibility.startupExemption;
+  if (eligibility && eligibility.startupExemption !== undefined)
+    return eligibility.startupExemption;
   const fields = tender.sourceMeta?.pdfExtract?.fields;
   if (fields && fields.startupExemption) return fields.startupExemption.value;
   return null;
 };
 const getYearsOfExperience = (tender: any) => {
   const eligibility = tender.sourceMeta?.aiExtract?.eligibility;
-  if (eligibility && eligibility.yearsOfExperience !== undefined) return eligibility.yearsOfExperience;
+  if (eligibility && eligibility.yearsOfExperience !== undefined)
+    return eligibility.yearsOfExperience;
   const fields = tender.sourceMeta?.pdfExtract?.fields;
-  if (fields && fields.experienceCriteria) return fields.experienceCriteria.value;
+  if (fields && fields.experienceCriteria)
+    return fields.experienceCriteria.value;
   return null;
 };
 
 const isExempt = (val: any) => {
-  if (val === true || val === 'true') return true;
-  if (typeof val === 'string') {
+  if (val === true || val === "true") return true;
+  if (typeof val === "string") {
     const s = val.toLowerCase().trim();
-    return s.startsWith('yes') || s.startsWith('exempt') || s === 'applicable';
+    return s.startsWith("yes") || s.startsWith("exempt") || s === "applicable";
   }
   return false;
 };
@@ -86,23 +95,37 @@ const experience = getYearsOfExperience(t);
 
 const isMseYes = isExempt(mseExempt);
 const isStartupYes = isExempt(startupExempt);
-const isEmdExempt = t.emdAmount === 0 || (t.source === 'GEM' && t.emdAmount == null && (t.valueExtractionStatus === 'extracted' || t.valueExtractionStatus === 'not_found'));
+const isEmdExempt =
+  t.emdAmount === 0 ||
+  (t.source === "GEM" &&
+    t.emdAmount == null &&
+    (t.valueExtractionStatus === "extracted" ||
+      t.valueExtractionStatus === "not_found"));
 
 // Deadline color: red ≤2, amber ≤7, green otherwise
-const dlColor = dl == null ? '#8c909f'
-  : dl < 0   ? '#8c909f'
-  : dl <= 2   ? '#ffb4ab'
-  : dl <= 7   ? '#ffb786'
-  : '#4edea3';
+const dlColor =
+  dl == null
+    ? "#8c909f"
+    : dl < 0
+      ? "#8c909f"
+      : dl <= 2
+        ? "#ffb4ab"
+        : dl <= 7
+          ? "#ffb786"
+          : "#4edea3";
 
-const dlLabel = dl == null ? ''
-  : dl < 0  ? 'Closed'
-  : dl === 0 ? 'Closes today'
-  : `${dl}d left`;
+const dlLabel =
+  dl == null
+    ? ""
+    : dl < 0
+      ? "Closed"
+      : dl === 0
+        ? "Closes today"
+        : `${dl}d left`;
 
 // Org initials avatar
 function initials(name: string | null | undefined) {
-  if (!name) return 'CG';
+  if (!name) return "CG";
   const words = name.trim().split(/\s+/);
   if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
   return (words[0][0] + words[1][0]).toUpperCase();
@@ -119,106 +142,192 @@ const risks = t.risks || [];
   <!-- Card body -->
   <div style="padding:20px;flex:1;">
     <!-- Header: org avatar + name + EMD badge -->
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;gap:12px;">
+    <div
+      style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;gap:12px;"
+    >
       <div style="display:flex;align-items:center;gap:10px;">
         <!-- Avatar -->
-        <div style="width:38px;height:38px;border-radius:4px;background:#1c2b3c;border:1px solid #424754;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <span style="font-family:'JetBrains Mono','Inter',monospace;font-weight:600;font-size:11px;color:#adc6ff;letter-spacing:0.05em;">{orgInitials}</span>
+        <div
+          style="width:38px;height:38px;border-radius:4px;background:#1c2b3c;border:1px solid #424754;display:flex;align-items:center;justify-content:center;flex-shrink:0;"
+        >
+          <span
+            style="font-family:'JetBrains Mono','Inter',monospace;font-weight:600;font-size:11px;color:#adc6ff;letter-spacing:0.05em;"
+            >{orgInitials}</span
+          >
         </div>
         <div>
-          <p style="font-weight:700;font-size:11px;color:#adc6ff;text-transform:uppercase;letter-spacing:0.06em;margin:0 0 2px;">
-            {orgDisplay || (t.source === 'GEM' ? 'GeM Portal' : 'CSPGCL')}
+          <p
+            style="font-weight:700;font-size:11px;color:#adc6ff;text-transform:uppercase;letter-spacing:0.06em;margin:0 0 2px;"
+          >
+            {orgDisplay || (t.source === "GEM" ? "GeM Portal" : "CSPGCL")}
           </p>
           <p style="font-size:11px;color:#8c909f;margin:0;">
-            {t.source === 'CSPGCL' && t.sourceMeta?.plantLabel
-              ? t.sourceMeta.plantLabel
-              : (t.locationCity || t.source)}
+            {
+              t.source === "CSPGCL" && t.sourceMeta?.plantLabel
+                ? t.sourceMeta.plantLabel
+                : t.locationCity || t.source
+            }
           </p>
         </div>
       </div>
 
       <!-- Source + EMD/exempt badge -->
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
-        <span style={`font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:2px 8px;border-radius:2px;${
-          t.source === 'GEM'
-            ? 'background:rgba(173,198,255,0.12);color:#adc6ff;border:1px solid rgba(173,198,255,0.25);'
-            : 'background:rgba(255,183,134,0.12);color:#ffb786;border:1px solid rgba(255,183,134,0.25);'
-        }`}>{t.source}</span>
-        {isEmdExempt && (
-          <span style="display:flex;align-items:center;gap:3px;background:rgba(78,222,163,0.1);color:#4edea3;border:1px solid rgba(78,222,163,0.25);font-size:10px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;padding:2px 7px;border-radius:2px;">
-            <span class="material-symbols-outlined" style="font-size:13px;">verified</span>
-            EMD Exempt
-          </span>
-        )}
+      <div
+        style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;"
+      >
+        <span
+          style={`font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:2px 8px;border-radius:2px;${
+            t.source === "GEM"
+              ? "background:rgba(173,198,255,0.12);color:#adc6ff;border:1px solid rgba(173,198,255,0.25);"
+              : "background:rgba(255,183,134,0.12);color:#ffb786;border:1px solid rgba(255,183,134,0.25);"
+          }`}>{t.source}</span
+        >
       </div>
     </div>
 
     <!-- Title -->
-    <h3 class="md3-card-title" style="font-family:'Hanken Grotesk','Inter',sans-serif;font-weight:700;font-size:16px;color:#d4e4fa;line-height:1.4;margin:0 0 14px;min-height:44px;">
-      <a href={detailUrl} style="text-decoration:none;color:inherit;transition:color 0.15s;" class="md3-title-link">{titleDisplay}</a>
+    <h3
+      class="md3-card-title"
+      style="font-family:'Hanken Grotesk','Inter',sans-serif;font-weight:700;font-size:16px;color:#d4e4fa;line-height:1.4;margin:0 0 14px;min-height:44px;"
+    >
+      <a
+        href={detailUrl}
+        style="text-decoration:none;color:inherit;transition:color 0.15s;"
+        class="md3-title-link">{titleDisplay}</a
+      >
     </h3>
 
     <!-- Meta row: bid number + optional city -->
-    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:12px;">
-      {t.locationCity && t.locationCity !== 'Unspecified' && (
-        <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:#8c909f;background:#1c2b3c;border:1px solid #424754;padding:2px 8px;border-radius:2px;">
-          <span class="material-symbols-outlined" style="font-size:13px;">location_on</span>
-          {t.locationCity}
-        </span>
-      )}
-      {t.sourceMeta?.isEbidding && (
-        <span style="font-size:10px;font-weight:700;color:#adc6ff;background:rgba(173,198,255,0.1);border:1px solid rgba(173,198,255,0.2);padding:2px 7px;border-radius:2px;letter-spacing:0.05em;">e-Bidding</span>
-      )}
-      {isMseYes && (
-        <span style="font-size:10px;font-weight:700;color:#4edea3;background:rgba(78,222,163,0.1);border:1px solid rgba(78,222,163,0.2);padding:2px 7px;border-radius:2px;letter-spacing:0.05em;">✓ MSE</span>
-      )}
-      {isStartupYes && (
-        <span style="font-size:10px;font-weight:700;color:#4edea3;background:rgba(78,222,163,0.1);border:1px solid rgba(78,222,163,0.2);padding:2px 7px;border-radius:2px;letter-spacing:0.05em;">✓ Startup</span>
-      )}
-      {t.category?.slice(0, 1).map((c: string) => (
-        <span style="font-size:10px;font-weight:600;color:#c2c6d6;background:#1c2b3c;border:1px solid #424754;padding:2px 7px;border-radius:2px;">{c}</span>
-      ))}
+    <div
+      style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:12px;"
+    >
+      {
+        t.locationCity && t.locationCity !== "Unspecified" && (
+          <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:#8c909f;background:#1c2b3c;border:1px solid #424754;padding:2px 8px;border-radius:2px;">
+            <span class="material-symbols-outlined" style="font-size:13px;">
+              location_on
+            </span>
+            {t.locationCity}
+          </span>
+        )
+      }
+      {
+        t.sourceMeta?.isEbidding && (
+          <span style="font-size:10px;font-weight:700;color:#adc6ff;background:rgba(173,198,255,0.1);border:1px solid rgba(173,198,255,0.2);padding:2px 7px;border-radius:2px;letter-spacing:0.05em;">
+            e-Bidding
+          </span>
+        )
+      }
+      {
+        isMseYes && (
+          <span style="font-size:10px;font-weight:700;color:#4edea3;background:rgba(78,222,163,0.1);border:1px solid rgba(78,222,163,0.2);padding:2px 7px;border-radius:2px;letter-spacing:0.05em;">
+            ✓ MSE
+          </span>
+        )
+      }
+      {
+        isStartupYes && (
+          <span style="font-size:10px;font-weight:700;color:#4edea3;background:rgba(78,222,163,0.1);border:1px solid rgba(78,222,163,0.2);padding:2px 7px;border-radius:2px;letter-spacing:0.05em;">
+            ✓ Startup
+          </span>
+        )
+      }
+      {
+        t.category
+          ?.slice(0, 1)
+          .map((c: string) => (
+            <span style="font-size:10px;font-weight:600;color:#c2c6d6;background:#1c2b3c;border:1px solid #424754;padding:2px 7px;border-radius:2px;">
+              {c}
+            </span>
+          ))
+      }
     </div>
 
     <!-- Financials -->
-    <div style="border-top:1px solid rgba(66,71,84,0.5);padding-top:10px;display:flex;flex-direction:column;gap:6px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <span style="font-size:11px;color:#8c909f;font-weight:500;">Tender ID:</span>
-        <span style="font-family:'JetBrains Mono','Courier New',monospace;font-size:11px;color:#c2c6d6;font-weight:500;">{t.bidNumber.length > 28 ? t.bidNumber.slice(0, 28) + '…' : t.bidNumber}</span>
+    <div
+      style="border-top:1px solid rgba(66,71,84,0.5);padding-top:10px;display:flex;flex-direction:column;gap:6px;"
+    >
+      <div
+        style="display:flex;justify-content:space-between;align-items:center;"
+      >
+        <span style="font-size:11px;color:#8c909f;font-weight:500;"
+          >Tender ID:</span
+        >
+        <span
+          style="font-family:'JetBrains Mono','Courier New',monospace;font-size:11px;color:#c2c6d6;font-weight:500;"
+          >{
+            t.bidNumber.length > 28
+              ? t.bidNumber.slice(0, 28) + "…"
+              : t.bidNumber
+          }</span
+        >
       </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <span style="font-size:11px;color:#8c909f;font-weight:500;">Est. Value:</span>
-        {hasValue
-          ? <span style="font-weight:700;font-size:14px;color:#adc6ff;">{formatRupee(t.bidValue)}</span>
-          : <span style="font-size:12px;color:#8c909f;font-style:italic;">Not available</span>
+      <div
+        style="display:flex;justify-content:space-between;align-items:center;"
+      >
+        <span style="font-size:11px;color:#8c909f;font-weight:500;"
+          >Est. Value:</span
+        >
+        {
+          hasValue ? (
+            <span style="font-weight:700;font-size:14px;color:#adc6ff;">
+              {formatRupee(t.bidValue)}
+            </span>
+          ) : (
+            <span style="font-size:12px;color:#8c909f;font-style:italic;">
+              Not available
+            </span>
+          )
         }
       </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div
+        style="display:flex;justify-content:space-between;align-items:center;"
+      >
         <span style="font-size:11px;color:#8c909f;font-weight:500;">EMD:</span>
-        <span style={`font-size:12px;font-weight:600;color:${hasEmd ? 'var(--on-surface-variant)' : 'var(--secondary)'};`}>
-          {hasEmd ? formatRupee(t.emdAmount) : 'Exempt / N/A'}
+        <span
+          style={`font-size:12px;font-weight:600;color:${hasEmd ? "var(--on-surface-variant)" : "var(--secondary)"};`}
+        >
+          {hasEmd ? formatRupee(t.emdAmount) : "N/A"}
         </span>
       </div>
     </div>
 
     <!-- Risk flags (compact) -->
-    {risks.length > 0 && (
-      <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:5px;">
-        {risks.slice(0, 2).map((r: string) => (
-          <span style="font-size:10px;background:rgba(255,180,171,0.1);color:#ffb4ab;border:1px solid rgba(255,180,171,0.2);padding:2px 7px;border-radius:2px;font-weight:600;">{r}</span>
-        ))}
-      </div>
-    )}
+    {
+      risks.length > 0 && (
+        <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:5px;">
+          {risks.slice(0, 2).map((r: string) => (
+            <span style="font-size:10px;background:rgba(255,180,171,0.1);color:#ffb4ab;border:1px solid rgba(255,180,171,0.2);padding:2px 7px;border-radius:2px;font-weight:600;">
+              {r}
+            </span>
+          ))}
+        </div>
+      )
+    }
   </div>
 
   <!-- Card footer -->
-  <div style="background:rgba(39,54,71,0.5);border-top:1px solid #424754;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
-    <span style="display:flex;align-items:center;gap:6px;font-size:12px;color:#8c909f;">
-      <span class="material-symbols-outlined" style="font-size:15px;">timer</span>
-      Closes:&nbsp;<span style={`font-weight:600;color:${dlColor};`}>{formatDate(t.endDate)}</span>
-      {dlLabel && (
-        <span style={`font-size:10px;font-weight:700;color:${dlColor};margin-left:2px;`}>({dlLabel})</span>
-      )}
+  <div
+    style="background:rgba(39,54,71,0.5);border-top:1px solid #424754;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;"
+  >
+    <span
+      style="display:flex;align-items:center;gap:6px;font-size:12px;color:#8c909f;"
+    >
+      <span class="material-symbols-outlined" style="font-size:15px;"
+        >timer</span
+      >
+      Closes:&nbsp;<span style={`font-weight:600;color:${dlColor};`}
+        >{formatDate(t.endDate)}</span
+      >
+      {
+        dlLabel && (
+          <span
+            style={`font-size:10px;font-weight:700;color:${dlColor};margin-left:2px;`}
+          >
+            ({dlLabel})
+          </span>
+        )
+      }
     </span>
     <a
       href={detailUrl}
@@ -228,15 +337,17 @@ const risks = t.risks || [];
       aria-label={`View details for ${titleDisplay}`}
     >
       View Details
-      <span class="material-symbols-outlined" style="font-size:17px;">chevron_right</span>
+      <span class="material-symbols-outlined" style="font-size:17px;"
+        >chevron_right</span
+      >
     </a>
   </div>
 </article>
 
 <style>
   .md3-tender-card:hover {
-    border-color: rgba(173,198,255,0.5) !important;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    border-color: rgba(173, 198, 255, 0.5) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   }
   .md3-tender-card:hover .md3-card-title .md3-title-link {
     color: #adc6ff !important;
