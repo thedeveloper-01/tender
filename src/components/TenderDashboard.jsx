@@ -257,7 +257,7 @@ function TenderCard({ t }) {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '11px', color: C.outline }}>EMD:</span>
             <span style={{ fontSize: '12px', fontWeight: 600, color: hasEmd ? C.onSurfaceVar : C.secondary }}>
-              {hasEmd ? fmt(t.emdAmount) : 'Exempt / N/A'}
+              {hasEmd ? fmt(t.emdAmount) : 'N/A'}
             </span>
           </div>
         </div>
