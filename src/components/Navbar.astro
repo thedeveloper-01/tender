@@ -36,12 +36,9 @@ const path = Astro.url.pathname;
     <div style="display:flex;align-items:center;gap:16px;">
       <!-- Nav links (desktop) -->
       <nav style="display:flex;align-items:center;gap:4px;" class="md-nav">
-        <a href="/tenders/gem"
-          style={`padding:6px 14px;border-radius:4px;font-size:14px;font-weight:500;text-decoration:none;transition:all 0.15s;${path === '/tenders/gem' ? 'color:var(--primary);background:var(--surface-container-high);' : 'color:var(--on-surface-variant);'}`}
-        >GeM Tenders</a>
-        <a href="/tenders/cspgcl"
-          style={`padding:6px 14px;border-radius:4px;font-size:14px;font-weight:500;text-decoration:none;transition:all 0.15s;${path === '/tenders/cspgcl' ? 'color:var(--primary);background:var(--surface-container-high);' : 'color:var(--on-surface-variant);'}`}
-        >CSPGCL Tenders</a>
+        <a href="/"
+          style={`padding:6px 14px;border-radius:4px;font-size:14px;font-weight:500;text-decoration:none;transition:all 0.15s;${path === '/' ? 'color:var(--primary);background:var(--surface-container-high);' : 'color:var(--on-surface-variant);'}`}
+        >All Tenders</a>
         <a href="/districts"
           style={`padding:6px 14px;border-radius:4px;font-size:14px;font-weight:500;text-decoration:none;transition:all 0.15s;${path.startsWith('/districts') ? 'color:var(--primary);background:var(--surface-container-high);' : 'color:var(--on-surface-variant);'}`}
         >Districts</a>
@@ -77,8 +74,6 @@ const path = Astro.url.pathname;
   <!-- Mobile menu -->
   <div id="mobile-menu" style="display:none;background:var(--surface-container-low);border-top:1px solid var(--outline-variant);padding:12px 16px;transition:background-color 0.2s, border-color 0.2s;">
     <a href="/" style="display:block;padding:10px 12px;color:var(--on-surface-variant);font-size:15px;font-weight:500;border-radius:4px;text-decoration:none;">Home</a>
-    <a href="/tenders/gem" style="display:block;padding:10px 12px;color:var(--on-surface-variant);font-size:15px;font-weight:500;border-radius:4px;text-decoration:none;">GeM Tenders</a>
-    <a href="/tenders/cspgcl" style="display:block;padding:10px 12px;color:var(--on-surface-variant);font-size:15px;font-weight:500;border-radius:4px;text-decoration:none;">CSPGCL Tenders</a>
     <a href="/districts" style="display:block;padding:10px 12px;color:var(--on-surface-variant);font-size:15px;font-weight:500;border-radius:4px;text-decoration:none;">By District</a>
     <a href="/about" style="display:block;padding:10px 12px;color:var(--on-surface-variant);font-size:15px;font-weight:500;border-radius:4px;text-decoration:none;">About</a>
     <!-- Mobile search -->
@@ -135,18 +130,18 @@ const path = Astro.url.pathname;
     updateThemeIcons();
   });
 
-  // Navbar search → redirect to /tenders/gem?q=...
+  // Navbar search → redirect to /?q=...
   const navSearch = document.getElementById('navbar-search') as HTMLInputElement | null;
   navSearch?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && navSearch.value.trim()) {
-      window.location.href = `/tenders/gem?q=${encodeURIComponent(navSearch.value.trim())}`;
+      window.location.href = `/?q=${encodeURIComponent(navSearch.value.trim())}`;
     }
   });
 
   const navSearchMobile = document.getElementById('navbar-search-mobile') as HTMLInputElement | null;
   navSearchMobile?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && navSearchMobile.value.trim()) {
-      window.location.href = `/tenders/gem?q=${encodeURIComponent(navSearchMobile.value.trim())}`;
+      window.location.href = `/?q=${encodeURIComponent(navSearchMobile.value.trim())}`;
     }
   });
 </script>

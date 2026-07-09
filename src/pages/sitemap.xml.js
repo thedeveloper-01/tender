@@ -75,8 +75,8 @@ export async function GET(context) {
   // ── Static pages ──────────────────────────────────────────────────────────
   const staticPages = [
     urlEntry('/', { priority: '1.0', freq: 'daily' }),
-    urlEntry('/tenders/gem', { priority: '0.85', freq: 'daily' }),
-    urlEntry('/tenders/cspgcl', { priority: '0.85', freq: 'daily' }),
+    urlEntry('/gem', { priority: '0.85', freq: 'daily' }),
+    urlEntry('/cspgcl', { priority: '0.85', freq: 'daily' }),
     urlEntry('/districts', { priority: '0.8', freq: 'daily' }),
     urlEntry('/about', { priority: '0.5', freq: 'monthly' }),
     urlEntry('/contact', { priority: '0.4', freq: 'monthly' }),
