@@ -44,7 +44,10 @@ export function normalizeGem(raw) {
   // Location: use fetchedState (from API call context) as the authoritative state.
   // City: prefer gemCity/gemDistrict fields directly from Solr, fall back to
   // locationText-based resolution only when those fields are absent.
-  const locationState = raw.fetchedState || 'Chhattisgarh';
+  // fetchedState is now set by every GEM_STATES loop iteration (see fetchers/gem.js
+  // and fetchers/gem_browser.js); 'Unspecified' only hits if a record slips through
+  // without one, so we never mis-bucket other states' records as Chhattisgarh.
+  const locationState = raw.fetchedState || 'Unspecified';
   let locationCity = 'Unspecified';
 
   if (raw.gemCity) {

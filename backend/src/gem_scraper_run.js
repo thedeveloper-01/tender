@@ -12,7 +12,8 @@
  * ─────────────
  * 1. Launches Playwright Chromium (headless) to scrape GeM bidplus.gem.gov.in
  *    — bypasses bot-detection that blocks raw fetch() / axios calls.
- * 2. Iterates all paginated results for state=CHHATTISGARH.
+ * 2. Iterates all paginated results for every Indian state/UT, one state
+ *    selector at a time (see fetchers/gem_browser.js GEM_STATES loop).
  * 3. Normalises raw Solr docs → unified Tender shape (normalizeGem).
  * 4. Runs the shared rule-based analysis engine (categorize, viabilityScore,
  *    identifyRisks).
