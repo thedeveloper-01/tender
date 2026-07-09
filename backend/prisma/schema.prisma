@@ -22,21 +22,28 @@ model Tender {
   quantity              String?
   bidValue              Float?
   emdAmount             Float?
-  valueExtractionStatus String    @default("not_attempted") // extracted | not_found | not_attempted
-  viabilityScore        Int?      // 1-10
-  risks                 String[]
-  pdfPath               String?
-  bidLink               String
-  status                String    // "open" | "closed"
-  fetchedAt             DateTime
-  sourceMeta            Json?
-  rawJson               Json?
+  valueExtractionStatus  String    @default("not_attempted") // extracted | not_found | not_attempted
+  viabilityScore         Int?      // 1-10
+  risks                  String[]
+  pdfPath                String?
+  bidLink                String
+  status                 String    // "open" | "closed"
+  fetchedAt              DateTime
+  sourceMeta             Json?
+  rawJson                Json?
+  // ── Eligibility flags (promoted from sourceMeta for fast DB filtering) ──
+  mseExemption           Boolean?  // true = MSE exemption confirmed in PDF
+  startupExemption       Boolean?  // true = Startup exemption confirmed in PDF
+  yearsOfExperienceZero  Boolean?  // true = no prior experience required
 
   @@unique([source, bidNumber])
   @@index([locationCity, status, endDate])
   @@index([status, endDate])
   @@index([source, status, endDate])
   @@index([fetchedAt])
+  @@index([mseExemption, status, endDate])
+  @@index([startupExemption, status, endDate])
+  @@index([yearsOfExperienceZero, status, endDate])
 }
 
 model FetchLog {

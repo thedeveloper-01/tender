@@ -10,6 +10,32 @@ import { extractValueAndEmd } from './extract.js';
 import { runCleanup } from './cleanup.js';
 import { clear as clearCache } from '../cache.js';
 
+// ── Eligibility flag helpers ──────────────────────────────────────────────────
+// Resolve mseExemption / startupExemption string values → Boolean | null
+function resolveExemptionFlag(val) {
+  if (val === true || val === false) return val;
+  if (val == null) return null;
+  const s = String(val).toLowerCase().trim();
+  if (s.startsWith('yes') || s === 'applicable' || s.startsWith('exempt')) return true;
+  if (s === 'no' || s === 'not specified' || s === 'not applicable' || s === 'na') return false;
+  return null; // unknown — don't store false positives
+}
+
+// Resolve yearsOfExperience → Boolean (true = zero/not required)
+function resolveYearsZero(val) {
+  if (val == null) return null;
+  if (typeof val === 'number') return val === 0;
+  if (typeof val === 'string') {
+    const s = val.toLowerCase().trim();
+    if (s === 'not specified' || s === 'not required' || s === 'nil' || s === 'no' ||
+        s === '0' || s.includes('0 year') || s === 'exempt') return true;
+    const match = s.match(/(\d+)/);
+    if (match) return parseInt(match[1], 10) === 0;
+    return null;
+  }
+  return null;
+}
+
 /**
  * runPipeline() → FetchLog row
  *
@@ -316,24 +342,36 @@ export async function runPipeline() {
           emdAmount: result.emdAmount,
         });
 
+        // Resolve eligibility flags → top-level Boolean columns for fast DB filtering
+        const elig = result.aiExtract?.eligibility ?? {};
+        const mseFlag     = resolveExemptionFlag(elig.mseExemption);
+        const startupFlag = resolveExemptionFlag(elig.startupExemption);
+        const yearsZero   = resolveYearsZero(elig.yearsOfExperience);
+
         await prisma.tender.update({
           where: { id: tender.id },
           data: {
-            pdfPath:              pdfPath || tender.pdfPath,
-            bidValue:             result.bidValue,
-            emdAmount:            result.emdAmount,
+            pdfPath:               pdfPath || tender.pdfPath,
+            bidValue:              result.bidValue,
+            emdAmount:             result.emdAmount,
             valueExtractionStatus: result.status,
-            locationCity:         updatedCity,
-            viabilityScore:       reanalyzed.viabilityScore,
-            risks:                reanalyzed.risks,
+            locationCity:          updatedCity,
+            viabilityScore:        reanalyzed.viabilityScore,
+            risks:                 reanalyzed.risks,
             sourceMeta,
+            // Eligibility flags — top-level for DB-indexed filtering (replaces in-memory JS scan)
+            ...(mseFlag     !== null && { mseExemption:          mseFlag     }),
+            ...(startupFlag !== null && { startupExemption:      startupFlag }),
+            ...(yearsZero   !== null && { yearsOfExperienceZero: yearsZero   }),
           },
         });
 
         if (result.aiExtract) {
           console.log(
             `[pipeline] [${pdfCount}/${changedTenders.length}] ✓ AI data synced to DB for ${tender.bidNumber}: ` +
-            `${result.aiExtract.consignees.length} consignees, ${result.aiExtract.atc.length} ATC clauses`
+            `${result.aiExtract.consignees.length} consignees, ${result.aiExtract.atc.length} ATC clauses` +
+            (mseFlag !== null ? ` mse=${mseFlag}` : '') +
+            (startupFlag !== null ? ` startup=${startupFlag}` : '')
           );
         }
       }

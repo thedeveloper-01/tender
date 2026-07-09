@@ -84,113 +84,31 @@ router.get('/', async (req, res) => {
     const pageNum  = Math.max(1, parseInt(page, 10)  || 1);
     const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
 
-    const isJsonFiltering = mseStartupOnly === 'true' || zeroExperienceOnly === 'true';
+    // ── MSE / Startup / Zero-Experience filters ──────────────────────────────
+    // These used to load ALL records into JS memory (OOM on 25k records).
+    // Now they hit indexed Boolean columns in the DB — zero extra memory cost.
+    if (mseStartupOnly === 'true') {
+      // Match tenders where MSE OR Startup exemption is confirmed
+      const mseOr = [];
+      mseOr.push({ mseExemption:     true });
+      mseOr.push({ startupExemption: true });
+      // Merge with any existing OR clauses (e.g. from keyword search)
+      if (where.OR) {
+        where.AND = [{ OR: where.OR }, { OR: mseOr }];
+        delete where.OR;
+      } else {
+        where.OR = mseOr;
+      }
+    }
+
+    if (zeroExperienceOnly === 'true') {
+      where.yearsOfExperienceZero = true;
+    }
+
     let tenders, total;
 
-    if (isJsonFiltering) {
-      // 1. Fetch all matching candidates from the database (unpaginated)
-      let candidates = await prisma.tender.findMany({
-        where,
-      });
-
-      // Helpers to safely read both standard aiExtract and legacy pdfExtract structures
-      const getMseExempt = (tender) => {
-        const eligibility = tender.sourceMeta?.aiExtract?.eligibility;
-        if (eligibility && eligibility.mseExemption !== undefined) return eligibility.mseExemption;
-        const fields = tender.sourceMeta?.pdfExtract?.fields;
-        if (fields && fields.mseExemption) return fields.mseExemption.value;
-        return null;
-      };
-
-      const getStartupExempt = (tender) => {
-        const eligibility = tender.sourceMeta?.aiExtract?.eligibility;
-        if (eligibility && eligibility.startupExemption !== undefined) return eligibility.startupExemption;
-        const fields = tender.sourceMeta?.pdfExtract?.fields;
-        if (fields && fields.startupExemption) return fields.startupExemption.value;
-        return null;
-      };
-
-      const getYearsOfExperience = (tender) => {
-        const eligibility = tender.sourceMeta?.aiExtract?.eligibility;
-        if (eligibility && eligibility.yearsOfExperience !== undefined) return eligibility.yearsOfExperience;
-        const fields = tender.sourceMeta?.pdfExtract?.fields;
-        if (fields && fields.experienceCriteria) return fields.experienceCriteria.value;
-        return null;
-      };
-
-      const isExempt = (val) => {
-        if (val === true || val === 'true') return true;
-        if (typeof val === 'string') {
-          const s = val.toLowerCase().trim();
-          return s.startsWith('yes') || s.startsWith('exempt') || s === 'applicable';
-        }
-        return false;
-      };
-
-      const hasExperience = (val) => {
-        if (val == null) return false;
-        if (typeof val === 'number') return val > 0;
-        if (typeof val === 'string') {
-          const s = val.toLowerCase().trim();
-          if (s === 'not specified' || s === 'not required' || s === 'nil' || s === 'exempt' || s === 'no' || s === '0' || s.includes('0 year')) {
-            return false;
-          }
-          const match = s.match(/(\d+)/);
-          if (match) {
-            return parseInt(match[1], 10) > 0;
-          }
-          return false;
-        }
-        if (typeof val === 'boolean') return val;
-        return false;
-      };
-
-      // 2. Perform Javascript filtering in memory
-      if (mseStartupOnly === 'true') {
-        candidates = candidates.filter(t => {
-          return isExempt(getMseExempt(t)) || isExempt(getStartupExempt(t));
-        });
-      }
-
-      if (zeroExperienceOnly === 'true') {
-        candidates = candidates.filter(t => {
-          return !hasExperience(getYearsOfExperience(t));
-        });
-      }
-
-      total = candidates.length;
-
-      // 3. Sort (matching standard sorting rules)
-      if (sort === 'endDate_asc' || !sort) {
-        // Sort ascending, placing null endDates at the end
-        candidates.sort((a, b) => {
-          if (a.endDate && b.endDate) return new Date(a.endDate) - new Date(b.endDate);
-          if (a.endDate) return -1;
-          if (b.endDate) return 1;
-          return new Date(b.fetchedAt) - new Date(a.fetchedAt);
-        });
-      } else {
-        const orderBy = SORT_MAP[sort] || SORT_MAP.endDate_asc;
-        const key = Object.keys(orderBy)[0];
-        const dir = orderBy[key];
-        candidates.sort((a, b) => {
-          const valA = a[key];
-          const valB = b[key];
-          if (valA == null && valB == null) return 0;
-          if (valA == null) return 1;
-          if (valB == null) return -1;
-          if (typeof valA === 'string') {
-            return dir === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
-          }
-          return dir === 'asc' ? valA - valB : valB - valA;
-        });
-      }
-
-      // 4. Skip & Take pagination slice
-      tenders = candidates.slice((pageNum - 1) * limitNum, pageNum * limitNum);
-
-    } else {
-      // Standard database pagination query (highly optimized, unchanged)
+    // Standard database pagination — handles all filter combinations
+    {
       let orderBy = SORT_MAP[sort] || SORT_MAP.endDate_asc;
 
       if (sort === 'endDate_asc' || !sort) {
