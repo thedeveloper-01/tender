@@ -1,4 +1,4 @@
 node_modules/
 .env
-documents/*.pdf
+documents/
 .DS_Store

@@ -5,3 +5,8 @@ dist/
 .DS_Store
 .wrangler/
 ~/.claude
+backend/documents/
+html_tenders.html
+gem_tenders.json
+scrape_log.jsonl
+*.zip
