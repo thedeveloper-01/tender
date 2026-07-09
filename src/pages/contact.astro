@@ -9,57 +9,57 @@ const description = 'Get in touch with our team. We are here to help with any qu
 
 <TenderLayout {title} {description}>
   <Navbar />
-  <div class="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-8 md:py-12">
-    <div class="max-w-3xl mx-auto">
+  <div style="max-width:1200px;margin:0 auto;padding:48px 32px 64px;color:#c2c6d6;font-family:'Inter',sans-serif;">
+    <div style="max-width:800px;margin:0 auto;">
       <!-- Header -->
-      <div class="mb-12">
-        <a href="/" class="inline-flex items-center gap-2 text-[#1A56DB] hover:text-blue-700 mb-4 transition">
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M15 19l-7-7 7-7" />
+      <div style="margin-bottom:36px;">
+        <a href="/" style="display:inline-flex;align-items:center;gap:8px;color:#adc6ff;text-decoration:none;font-size:14px;font-weight:600;transition:color 0.15s;" onmouseover="this.style.color='#d8e2ff'" onmouseout="this.style.color='#adc6ff'">
+          <svg style="width:16px;height:16px;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
           </svg>
           Back to Dashboard
         </a>
-        <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2">Contact Us</h1>
-        <p class="text-gray-600">We'd love to hear from you. Send us a message and we'll respond as soon as possible.</p>
+        <h1 style="font-family:'Hanken Grotesk','Inter',sans-serif;font-weight:800;font-size:36px;color:#d4e4fa;margin:16px 0 6px;letter-spacing:-0.02em;">Contact Us</h1>
+        <p style="font-size:15px;color:#8c909f;margin:0;">We'd love to hear from you. Send us a message and we'll respond as soon as possible.</p>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-12">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:16px;margin-bottom:40px;">
         <!-- Contact Info Cards -->
-        <div class="bg-white rounded-lg border border-gray-100 p-6 shadow-sm">
-          <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-            <svg class="w-6 h-6 text-[#1A56DB]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div style="background:#122131;border:1px solid #424754;border-radius:6px;padding:24px;">
+          <div style="width:40px;height:40px;background:rgba(173,198,255,0.08);border-radius:6px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
+            <svg style="width:20px;height:20px;color:#adc6ff;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
           </div>
-          <h3 class="font-semibold text-gray-900 mb-2">Email</h3>
-          <p class="text-sm text-gray-600 mb-3">For general inquiries</p>
-          <a href="mailto:info@cgtenders.com" class="text-[#1A56DB] hover:text-blue-700 font-medium text-sm transition">
+          <h3 style="font-family:'Hanken Grotesk','Inter',sans-serif;font-weight:700;font-size:16px;color:#d4e4fa;margin:0 0 4px;">Email</h3>
+          <p style="font-size:13px;color:#8c909f;margin:0 0 12px;">For general inquiries</p>
+          <a href="mailto:info@cgtenders.com" style="color:#adc6ff;text-decoration:none;font-weight:600;font-size:13px;transition:color 0.15s;" onmouseover="this.style.color='#d8e2ff'" onmouseout="this.style.color='#adc6ff'">
             info@cgtenders.com
           </a>
         </div>
 
-        <div class="bg-white rounded-lg border border-gray-100 p-6 shadow-sm">
-          <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-            <svg class="w-6 h-6 text-[#057A55]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div style="background:#122131;border:1px solid #424754;border-radius:6px;padding:24px;">
+          <div style="width:40px;height:40px;background:rgba(78,222,163,0.06);border-radius:6px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
+            <svg style="width:20px;height:20px;color:#4edea3;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
           </div>
-          <h3 class="font-semibold text-gray-900 mb-2">Support</h3>
-          <p class="text-sm text-gray-600 mb-3">Technical & data support</p>
-          <a href="mailto:support@cgtenders.com" class="text-[#057A55] hover:text-green-700 font-medium text-sm transition">
+          <h3 style="font-family:'Hanken Grotesk','Inter',sans-serif;font-weight:700;font-size:16px;color:#d4e4fa;margin:0 0 4px;">Support</h3>
+          <p style="font-size:13px;color:#8c909f;margin:0 0 12px;">Technical &amp; data support</p>
+          <a href="mailto:support@cgtenders.com" style="color:#4edea3;text-decoration:none;font-weight:600;font-size:13px;transition:color 0.15s;" onmouseover="this.style.color='#76ecc0'" onmouseout="this.style.color='#4edea3'">
             support@cgtenders.com
           </a>
         </div>
 
-        <div class="bg-white rounded-lg border border-gray-100 p-6 shadow-sm">
-          <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
-            <svg class="w-6 h-6 text-[#C27803]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div style="background:#122131;border:1px solid #424754;border-radius:6px;padding:24px;">
+          <div style="width:40px;height:40px;background:rgba(255,183,134,0.06);border-radius:6px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
+            <svg style="width:20px;height:20px;color:#ffb786;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
           </div>
-          <h3 class="font-semibold text-gray-900 mb-2">Location</h3>
-          <p class="text-sm text-gray-600">
+          <h3 style="font-family:'Hanken Grotesk','Inter',sans-serif;font-weight:700;font-size:16px;color:#d4e4fa;margin:0 0 4px;">Location</h3>
+          <p style="font-size:13px;color:#8c909f;margin:0;">
             CGTenders Head Office<br/>
             Central India
           </p>
@@ -67,13 +67,13 @@ const description = 'Get in touch with our team. We are here to help with any qu
       </div>
 
       <!-- Contact Form -->
-      <div class="bg-white rounded-lg border border-gray-100 p-6 md:p-8 shadow-sm mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-6">Send us a Message</h2>
+      <div style="background:#122131;border:1px solid #424754;border-radius:6px;padding:32px;margin-bottom:32px;">
+        <h2 style="font-family:'Hanken Grotesk','Inter',sans-serif;font-weight:800;font-size:22px;color:#d4e4fa;margin:0 0 24px;">Send us a Message</h2>
         
-        <form class="space-y-5">
+        <form style="display:flex;flex-direction:column;gap:20px;">
           <!-- Name Field -->
           <div>
-            <label for="name" class="block text-sm font-medium text-gray-900 mb-2">
+            <label for="name" style="display:block;font-size:13px;font-weight:700;color:#8c909f;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">
               Full Name
             </label>
             <input 
@@ -81,14 +81,16 @@ const description = 'Get in touch with our team. We are here to help with any qu
               id="name" 
               name="name"
               required
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:border-[#1A56DB] focus:ring-1 focus:ring-[#1A56DB] outline-none transition text-gray-900"
+              style="width:100%;padding:10px 14px;background:#0d1c2d;border:1px solid #424754;border-radius:4px;color:#d4e4fa;font-size:14px;outline:none;"
+              onfocus="this.style.borderColor='#adc6ff'"
+              onblur="this.style.borderColor='#424754'"
               placeholder="Your full name"
             />
           </div>
 
           <!-- Email Field -->
           <div>
-            <label for="email" class="block text-sm font-medium text-gray-900 mb-2">
+            <label for="email" style="display:block;font-size:13px;font-weight:700;color:#8c909f;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">
               Email Address
             </label>
             <input 
@@ -96,47 +98,56 @@ const description = 'Get in touch with our team. We are here to help with any qu
               id="email" 
               name="email"
               required
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:border-[#1A56DB] focus:ring-1 focus:ring-[#1A56DB] outline-none transition text-gray-900"
+              style="width:100%;padding:10px 14px;background:#0d1c2d;border:1px solid #424754;border-radius:4px;color:#d4e4fa;font-size:14px;outline:none;"
+              onfocus="this.style.borderColor='#adc6ff'"
+              onblur="this.style.borderColor='#424754'"
               placeholder="your.email@company.com"
             />
           </div>
 
           <!-- Organization Field -->
           <div>
-            <label for="organization" class="block text-sm font-medium text-gray-900 mb-2">
+            <label for="organization" style="display:block;font-size:13px;font-weight:700;color:#8c909f;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">
               Organization / Company
             </label>
             <input 
               type="text" 
               id="organization" 
               name="organization"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:border-[#1A56DB] focus:ring-1 focus:ring-[#1A56DB] outline-none transition text-gray-900"
+              style="width:100%;padding:10px 14px;background:#0d1c2d;border:1px solid #424754;border-radius:4px;color:#d4e4fa;font-size:14px;outline:none;"
+              onfocus="this.style.borderColor='#adc6ff'"
+              onblur="this.style.borderColor='#424754'"
               placeholder="Your organization"
             />
           </div>
 
           <!-- Subject Field -->
           <div>
-            <label for="subject" class="block text-sm font-medium text-gray-900 mb-2">
+            <label for="subject" style="display:block;font-size:13px;font-weight:700;color:#8c909f;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">
               Subject
             </label>
-            <select 
-              id="subject" 
-              name="subject"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:border-[#1A56DB] focus:ring-1 focus:ring-[#1A56DB] outline-none transition text-gray-900"
-            >
-              <option value="">Select a subject</option>
-              <option value="support">Technical Support</option>
-              <option value="feedback">Feedback</option>
-              <option value="partnership">Partnership Inquiry</option>
-              <option value="bug">Report a Bug</option>
-              <option value="other">Other</option>
-            </select>
+            <div style="position:relative;">
+              <select 
+                id="subject" 
+                name="subject"
+                style="width:100%;padding:10px 14px;background:#0d1c2d;border:1px solid #424754;border-radius:4px;color:#d4e4fa;font-size:14px;outline:none;appearance:none;"
+                onfocus="this.style.borderColor='#adc6ff'"
+                onblur="this.style.borderColor='#424754'"
+              >
+                <option value="" style="background:#0d1c2d;">Select a subject</option>
+                <option value="support" style="background:#0d1c2d;">Technical Support</option>
+                <option value="feedback" style="background:#0d1c2d;">Feedback</option>
+                <option value="partnership" style="background:#0d1c2d;">Partnership Inquiry</option>
+                <option value="bug" style="background:#0d1c2d;">Report a Bug</option>
+                <option value="other" style="background:#0d1c2d;">Other</option>
+              </select>
+              <span class="material-symbols-outlined" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#8c909f;font-size:20px;pointer-events:none;">expand_more</span>
+            </div>
           </div>
 
           <!-- Message Field -->
           <div>
-            <label for="message" class="block text-sm font-medium text-gray-900 mb-2">
+            <label for="message" style="display:block;font-size:13px;font-weight:700;color:#8c909f;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">
               Message
             </label>
             <textarea 
@@ -144,29 +155,33 @@ const description = 'Get in touch with our team. We are here to help with any qu
               name="message"
               rows={6}
               required
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:border-[#1A56DB] focus:ring-1 focus:ring-[#1A56DB] outline-none transition text-gray-900 resize-none"
+              style="width:100%;padding:10px 14px;background:#0d1c2d;border:1px solid #424754;border-radius:4px;color:#d4e4fa;font-size:14px;outline:none;resize:none;font-family:inherit;"
+              onfocus="this.style.borderColor='#adc6ff'"
+              onblur="this.style.borderColor='#424754'"
               placeholder="Tell us how we can help..."
             />
           </div>
 
           <!-- Checkbox -->
-          <div class="flex items-start">
+          <div style="display:flex;align-items:flex-start;gap:10px;">
             <input 
               type="checkbox" 
               id="consent" 
               name="consent"
-              class="mt-1 rounded border-gray-300 text-[#1A56DB] focus:ring-[#1A56DB]"
+              style="margin-top:3px;cursor:pointer;"
             />
-            <label for="consent" class="ml-3 text-sm text-gray-600">
+            <label for="consent" style="font-size:13px;color:#8c909f;cursor:pointer;">
               I agree to be contacted about my inquiry and accept the privacy policy
             </label>
           </div>
 
           <!-- Submit Button -->
-          <div class="pt-4">
+          <div style="margin-top:10px;">
             <button 
               type="submit"
-              class="w-full bg-[#1A56DB] text-white font-medium py-3 rounded-lg hover:bg-blue-700 transition focus:outline-none focus:ring-2 focus:ring-[#1A56DB] focus:ring-offset-2"
+              style="width:100%;padding:12px;background:#adc6ff;color:#002e6a;border:none;border-radius:4px;font-weight:700;font-size:14px;cursor:pointer;transition:filter 0.15s;"
+              onmouseover="this.style.filter='brightness(1.1)'"
+              onmouseout="this.style.filter='brightness(1)'"
             >
               Send Message
             </button>
@@ -174,34 +189,34 @@ const description = 'Get in touch with our team. We are here to help with any qu
         </form>
 
         <!-- Note -->
-        <p class="text-xs text-gray-500 mt-4 text-center">
+        <p style="font-size:11px;color:#8c909f;margin:16px 0 0;text-align:center;">
           We'll get back to you within 24-48 business hours. Thank you for reaching out!
         </p>
       </div>
 
       <!-- FAQ Section -->
-      <div class="bg-blue-50 border border-blue-100 rounded-lg p-6 md:p-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-6">Frequently Asked Questions</h2>
+      <div style="background:rgba(173,198,255,0.04);border:1px solid #424754;border-radius:6px;padding:32px;">
+        <h2 style="font-family:'Hanken Grotesk','Inter',sans-serif;font-weight:800;font-size:22px;color:#d4e4fa;margin:0 0 24px;">Frequently Asked Questions</h2>
         
-        <div class="space-y-4">
+        <div style="display:flex;flex-direction:column;gap:24px;">
           <div>
-            <h3 class="font-semibold text-gray-900 mb-2">How often is the tender data updated?</h3>
-            <p class="text-sm text-gray-700">Our system updates tender data daily from both the GeM and CSPGCL portals, ensuring you always have the latest information.</p>
+            <h3 style="font-family:'Hanken Grotesk','Inter',sans-serif;font-weight:700;font-size:16px;color:#adc6ff;margin:0 0 8px;">How often is the tender data updated?</h3>
+            <p style="font-size:14px;color:#8c909f;margin:0;line-height:1.5;">Our system updates tender data daily from both the GeM and CSPGCL portals, ensuring you always have the latest information.</p>
           </div>
           
           <div>
-            <h3 class="font-semibold text-gray-900 mb-2">Is my data secure?</h3>
-            <p class="text-sm text-gray-700">Yes, we implement enterprise-grade security measures. Please review our Privacy Policy for detailed information.</p>
+            <h3 style="font-family:'Hanken Grotesk','Inter',sans-serif;font-weight:700;font-size:16px;color:#adc6ff;margin:0 0 8px;">Is my data secure?</h3>
+            <p style="font-size:14px;color:#8c909f;margin:0;line-height:1.5;">Yes, we implement enterprise-grade security measures. Please review our Privacy Policy for detailed information.</p>
           </div>
           
           <div>
-            <h3 class="font-semibold text-gray-900 mb-2">How can I get technical support?</h3>
-            <p class="text-sm text-gray-700">You can reach our support team via email. We also have a help center with comprehensive documentation.</p>
+            <h3 style="font-family:'Hanken Grotesk','Inter',sans-serif;font-weight:700;font-size:16px;color:#adc6ff;margin:0 0 8px;">How can I get technical support?</h3>
+            <p style="font-size:14px;color:#8c909f;margin:0;line-height:1.5;">You can reach our support team via email. We also have a help center with comprehensive documentation.</p>
           </div>
           
           <div>
-            <h3 class="font-semibold text-gray-900 mb-2">Can I export tender data?</h3>
-            <p class="text-sm text-gray-700">Yes, you can export tender data in various formats. Contact support for export options and guidelines.</p>
+            <h3 style="font-family:'Hanken Grotesk','Inter',sans-serif;font-weight:700;font-size:16px;color:#adc6ff;margin:0 0 8px;">Can I export tender data?</h3>
+            <p style="font-size:14px;color:#8c909f;margin:0;line-height:1.5;">Yes, you can export tender data in various formats. Contact support for export options and guidelines.</p>
           </div>
         </div>
       </div>

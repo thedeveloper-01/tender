@@ -417,18 +417,18 @@ const riskMeterColor = riskLevel === 'Low' ? 'text-emerald-500'
 
   {isCityRoute ? (
     <main class="transition-colors duration-200">
-      <div class="bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800 py-6">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div style="background:#0d1c2d;border-bottom:1px solid #424754;padding:20px 32px 18px;">
+        <div style="max-width:1440px;margin:0 auto;">
           <!-- Issue #8 — HTML Breadcrumb -->
-          <nav aria-label="Breadcrumb" class="mb-2">
-            <ol class="flex items-center gap-1.5 text-xs text-gray-400">
-              <li><a href="/" class="hover:text-[#1A56DB] dark:hover:text-blue-400 transition">Home</a></li>
-              <li aria-hidden="true">›</li>
-              <li class="text-gray-600 dark:text-slate-300 font-medium">{city}</li>
+          <nav aria-label="Breadcrumb" style="margin-bottom:8px;">
+            <ol style="display:flex;align-items:center;gap:6px;list-style:none;margin:0;padding:0;font-size:12px;color:#636878;">
+              <li><a href="/" style="color:#636878;text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='#adc6ff'" onmouseout="this.style.color='#636878'">Home</a></li>
+              <li aria-hidden="true" style="color:#424754;">›</li>
+              <li style="color:#8c909f;font-weight:600;">{city}</li>
             </ol>
           </nav>
-          <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white font-['Outfit']">{city} Tenders</h1>
-          <p class="text-sm text-gray-500 dark:text-slate-400 mt-1">
+          <h1 style="font-family:'Hanken Grotesk','Inter',sans-serif;font-weight:800;font-size:28px;color:#d4e4fa;margin:0 0 4px;letter-spacing:-0.02em;">{city} Tenders</h1>
+          <p style="font-size:13px;color:#8c909f;margin:0;">
             Open government tenders in {city} district, Chhattisgarh — sourced from GeM and CSPGCL portals.
           </p>
         </div>
