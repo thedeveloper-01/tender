@@ -1,4 +1,4 @@
-import { CG_CITIES, CITY_ALIASES } from '../config.js';
+import { CG_CITIES, CITY_ALIASES, STATE_DISTRICTS } from '../config.js';
 
 /** CSPGCL plant-level location rules (ported from src/lib/plants.js) */
 const CSPGCL_LOCATION_RULES = [
@@ -96,29 +96,55 @@ export function resolveCityByPin(pin) {
 }
 
 /**
- * Resolve a free-text location string (from GeM listings) to one of the
- * 33 CG districts via case-insensitive substring / alias matching.
+ * Resolve a free-text location string (from GeM listings / PDF body text)
+ * to a city/district, scoped by the state the tender was fetched under.
+ *
+ * GeM PDFs rarely carry reliable, structured location data, so this is a
+ * best-effort text match against whatever address/body text we could pull
+ * from the PDF (and any Solr location hints) — run AFTER we already know
+ * which state the tender belongs to (from the state-scoped fetch/folder),
+ * so we only match against that state's own district/city list. This
+ * avoids false-positive matches across states (e.g. a "Raipur" in Uttar
+ * Pradesh clashing with Chhattisgarh's "Raipur").
+ *
+ * @param {string} locationText - free text to search (title, address, PDF body, etc.)
+ * @param {string} [state] - state name (any case) the tender was fetched under.
+ *                            Defaults to Chhattisgarh for backward compatibility.
  */
-export function resolveCityForGem(locationText) {
+export function resolveCityForGem(locationText, state) {
   if (!locationText) return 'Unspecified';
 
-  // 1. Try extracting and matching 6-digit PIN code
-  const pinMatch = locationText.match(/\b(49\d{4})\b/);
-  if (pinMatch) {
-    const resolvedPinCity = resolveCityByPin(pinMatch[1]);
-    if (resolvedPinCity) return resolvedPinCity;
-  }
-
+  const stateName = (state || 'Chhattisgarh').trim();
+  const isCG = /chhattisgarh/i.test(stateName);
   const text = locationText.toLowerCase();
 
-  // 2. Direct district name match (handles multi-word names like "Baloda Bazar")
-  for (const city of CG_CITIES) {
-    if (text.includes(city.toLowerCase())) return city;
+  // 1. PIN code check — only reliable for Chhattisgarh's dedicated 49xxxx map
+  if (isCG) {
+    const pinMatch = locationText.match(/\b(49\d{4})\b/);
+    if (pinMatch) {
+      const resolvedPinCity = resolveCityByPin(pinMatch[1]);
+      if (resolvedPinCity) return resolvedPinCity;
+    }
   }
 
-  // 3. Alias / alternate-name match
-  for (const [alias, city] of Object.entries(CITY_ALIASES)) {
-    if (text.includes(alias)) return city;
+  // 2. District/city list for the tender's own state (longest names first,
+  //    so e.g. "East Godavari" matches before a bare "Godavari" would).
+  const districtList = isCG
+    ? CG_CITIES
+    : STATE_DISTRICTS[stateName.toLowerCase()] || null;
+
+  if (districtList) {
+    const sorted = [...districtList].sort((a, b) => b.length - a.length);
+    for (const city of sorted) {
+      if (text.includes(city.toLowerCase())) return city;
+    }
+  }
+
+  // 3. Alias / alternate-name match — Chhattisgarh-specific aliases only
+  if (isCG) {
+    for (const [alias, city] of Object.entries(CITY_ALIASES)) {
+      if (text.includes(alias)) return city;
+    }
   }
 
   return 'Unspecified';
