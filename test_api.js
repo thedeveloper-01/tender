@@ -1,5 +1,5 @@
 async function run() {
-  const url = 'https://cgtenders-com.onrender.com/api/tenders?status=open&limit=100';
+  const url = 'https://cgtenders-com.onrender.com/api/tenders?status=open&source=GEM&limit=100&mseStartupOnly=true';
   console.log(`Fetching API: ${url}`);
   const start = Date.now();
   try {

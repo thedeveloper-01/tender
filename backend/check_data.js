@@ -5,48 +5,42 @@ dotenv.config();
 const prisma = new PrismaClient();
 
 async function main() {
-  const openGemMseCount = await prisma.tender.count({
+  const cgTotal = await prisma.tender.count({
     where: {
       source: 'GEM',
-      status: 'open',
-      OR: [
-        { mseExemption: true },
-        { startupExemption: true }
-      ]
+      locationState: 'Chhattisgarh'
     }
   });
 
-  const allOpenGemCount = await prisma.tender.count({
+  const cgWithMeta = await prisma.tender.count({
     where: {
       source: 'GEM',
-      status: 'open'
+      locationState: 'Chhattisgarh',
+      sourceMeta: { not: null }
     }
   });
 
-  console.log('Total Open GeM tenders in DB:', allOpenGemCount);
-  console.log('Open GeM tenders with MSE/Startup true:', openGemMseCount);
+  console.log('Total GeM tenders in CG:', cgTotal);
+  console.log('GeM tenders in CG with sourceMeta:', cgWithMeta);
 
-  // Let's print the first 5 open GeM tenders with MSE/Startup true
-  const samples = await prisma.tender.findMany({
+  // Let's count how many have aiExtract manually
+  const allCg = await prisma.tender.findMany({
     where: {
       source: 'GEM',
-      status: 'open',
-      OR: [
-        { mseExemption: true },
-        { startupExemption: true }
-      ]
+      locationState: 'Chhattisgarh'
     },
-    take: 5
+    select: {
+      sourceMeta: true
+    }
   });
 
-  console.log('Sample Open GeM tenders with exemption:', samples.map(s => ({
-    bidNumber: s.bidNumber,
-    mseExemption: s.mseExemption,
-    startupExemption: s.startupExemption,
-    locationState: s.locationState,
-    locationCity: s.locationCity,
-    endDate: s.endDate
-  })));
+  let withAi = 0;
+  for (const t of allCg) {
+    if (t.sourceMeta?.aiExtract) {
+      withAi++;
+    }
+  }
+  console.log('GeM tenders in CG with aiExtract:', withAi);
 
   await prisma.$disconnect();
 }
