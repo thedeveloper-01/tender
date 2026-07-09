@@ -40,24 +40,7 @@ export function normalizeGem(raw) {
   const rawTitle = raw.title || '';
   const categoryId = raw.category || '';
   const title = cleanTitle(rawTitle, categoryId);
-
-  // Location: use fetchedState (from API call context) as the authoritative state.
-  // City: prefer gemCity/gemDistrict fields directly from Solr, fall back to
-  // locationText-based resolution only when those fields are absent.
-  const locationState = raw.fetchedState || 'Chhattisgarh';
-  let locationCity = 'Unspecified';
-
-  if (raw.gemCity) {
-    // Direct city from Solr — most reliable
-    locationCity = raw.gemCity;
-  } else if (raw.gemDistrict) {
-    locationCity = raw.gemDistrict;
-  } else {
-    // Fall back to text-based resolution against the full location hint string
-    const searchStr = `${title} ${raw.department || ''} ${raw.organization || ''} ${raw.locationText || ''}`;
-    locationCity = resolveCityForGem(searchStr, locationState);
-  }
-
+  const searchStr = `${title} ${raw.department || ''} ${raw.organization || ''} ${raw.locationText || ''}`;
   return {
     source: 'GEM',
     bidNumber: raw.bidNumber,
@@ -65,8 +48,8 @@ export function normalizeGem(raw) {
     department: raw.department || null,
     organization: raw.organization || null,
     category: [], // filled in by analysis step
-    locationState,
-    locationCity,
+    locationState: 'Chhattisgarh',
+    locationCity: resolveCityForGem(searchStr),
     startDate: raw.startDate ? new Date(raw.startDate) : null,
     endDate,
     quantity: raw.quantity || null,
@@ -79,14 +62,7 @@ export function normalizeGem(raw) {
     bidLink: raw.bidLink,
     status: deriveStatus(endDate),
     fetchedAt: new Date(),
-    sourceMeta: {
-      locationTextRaw: raw.locationText || null,
-      gemId: raw.gemId ?? null,
-      fetchedState: raw.fetchedState || null,
-      gemCity: raw.gemCity || null,
-      gemDistrict: raw.gemDistrict || null,
-      gemPincode: raw.gemPincode || null,
-    },
+    sourceMeta: { locationTextRaw: raw.locationText || null, gemId: raw.gemId ?? null },
     rawJson: raw,
   };
 }

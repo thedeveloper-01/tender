@@ -243,7 +243,7 @@ export async function fetchGemTendersForState(stateName) {
     return results;
 
   } finally {
-    if (browser) await browser.close().catch(() => {});
+    if (browser) await browser.close().catch(() => { });
   }
 }
 
