@@ -104,7 +104,6 @@ export async function fetchCspgclTenders() {
         };
 
         const closingDate = parseCspgclDate(text(tds[6]));
-        if (!isTenderActive(closingDate)) return;
 
         const scopeRaw = text(tds[3]);
         const tenderNoticeNo = text(tds[2]);
