@@ -1,0 +1,124 @@
+---
+import TenderLayout from "../../layouts/TenderLayout.astro";
+import Navbar from "../../components/Navbar.astro";
+import Footer from "../../components/Footer.astro";
+import TenderDashboard from "../../components/TenderDashboard.jsx";
+import TenderCard from "../../components/TenderCard.astro";
+import { fetchStatsCached, fetchTendersCached } from '../../lib/api.js';
+
+let stats: { totalOpenTenders: number; totalEstimatedValue: number; bySource: Record<string, number>; lastFetchAt: string | null } = { totalOpenTenders: 0, totalEstimatedValue: 0, bySource: {}, lastFetchAt: null };
+let initialTenders = null;
+let initialTotal = 0;
+
+try {
+  const [statsData, tendersData] = await Promise.all([
+    fetchStatsCached(Astro.locals),
+    fetchTendersCached({ status: 'open', source: 'GEM', limit: 100 }, Astro.locals)
+  ]);
+  stats = statsData;
+  initialTenders = tendersData.tenders || [];
+  initialTotal = tendersData.total || 0;
+} catch (e: any) {
+  console.error('[tenders-gem] SSR fetch error:', e.message);
+}
+
+const lastUpdated = stats.lastFetchAt
+  ? new Date(stats.lastFetchAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+  : null;
+
+const gemCount = stats.bySource?.GEM || initialTotal || 0;
+
+const year = new Date().getFullYear();
+const metaTitle = `GeM Tenders Chhattisgarh ${year} - Live Open Bids & eProcurement | CGTenders.com`;
+const metaDesc = `Browse ${gemCount} open GeM (Government e-Marketplace) tenders in Chhattisgarh ${year}. Filter by district, category, EMD & closing date. CG GeM bid notices updated daily.`;
+
+// Issue #7 — BreadcrumbList JSON-LD
+const breadcrumbLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://cgtenders.com/' },
+    { '@type': 'ListItem', position: 2, name: 'GeM Tenders', item: 'https://cgtenders.com/tenders/gem' },
+  ],
+};
+
+// SSR tender list (first 20 for Googlebot)
+const ssrTenders = (initialTenders || []).slice(0, 20);
+---
+
+<TenderLayout
+  title={metaTitle}
+  description={metaDesc}
+  canonical="/tenders/gem"
+  jsonLd={breadcrumbLd}
+>
+  <Navbar />
+  <main>
+    <!-- Issue #8 — HTML Breadcrumb -->
+    <nav aria-label="Breadcrumb" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+      <ol class="flex items-center gap-1.5 text-xs text-gray-400">
+        <li><a href="/" class="hover:text-[#1A56DB] transition">Home</a></li>
+        <li aria-hidden="true">›</li>
+        <li class="text-gray-600 font-medium">GeM Tenders</li>
+      </ol>
+    </nav>
+
+    <div class="bg-white border-b border-gray-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 md:py-6">
+        <div
+          class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4"
+        >
+          <div>
+            <h1
+              class="text-2xl md:text-3xl font-bold text-gray-900 font-['Outfit']"
+            >
+              GeM Tenders
+            </h1>
+            <p class="text-sm text-gray-500 mt-0.5">
+              Government e-Marketplace open tenders in Chhattisgarh
+              {lastUpdated && <span class="text-gray-400"> · Updated {lastUpdated}</span>}
+            </p>
+          </div>
+          <div class="flex items-center gap-3 flex-wrap">
+            <div
+              class="flex items-center gap-2 bg-violet-50 border border-violet-100 rounded-xl px-3 py-2"
+            >
+              <span
+                class="text-xl font-extrabold text-violet-700 font-['Outfit'] leading-none"
+                >{gemCount}</span
+              >
+              <span class="text-xs text-violet-600 font-medium leading-tight"
+                >GeM Tenders<br />Open</span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SSR tender list — always rendered in HTML so Googlebot indexes real content -->
+    <!-- The React TenderDashboard below hydrates on top for interactive filtering    -->
+    {ssrTenders.length > 0 && (
+      <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-2" id="ssr-gem-list">
+        <p class="text-xs text-gray-400 dark:text-slate-500 mb-4">{initialTotal.toLocaleString()} open GeM tenders in Chhattisgarh — showing first {ssrTenders.length}</p>
+        <div class="flex flex-col gap-3">
+          {ssrTenders.map((t: any) => (
+            <TenderCard tender={t} />
+          ))}
+        </div>
+        {initialTotal > ssrTenders.length && (
+          <p class="text-xs text-gray-400 dark:text-slate-500 mt-3 text-center">Showing {ssrTenders.length} of {initialTotal.toLocaleString()} open GeM tenders — use filters below to narrow results</p>
+        )}
+      </section>
+    )}
+
+    <!-- JS-hydrated dashboard -->
+    <TenderDashboard 
+      client:load 
+      initialSource="GEM" 
+      initialTenders={initialTenders} 
+      initialTotal={initialTotal} 
+    />
+  </main>
+  <Footer />
+</TenderLayout>

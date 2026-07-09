@@ -124,7 +124,7 @@ const withoutTenders = cities.filter(c => c.openCount === 0).sort((a,b) => a.nam
             
             return (
               <g class="group cursor-pointer">
-                <a href={`/districts`}>
+                <a href={`/tenders/${c.slug}`}>
                   {/* Hover ring */}
                   <circle cx={coords.x} cy={coords.y} r={r + 5}
                     class="fill-transparent group-hover:fill-blue-500/10 dark:group-hover:fill-blue-400/10 transition duration-150" />
@@ -176,7 +176,7 @@ const withoutTenders = cities.filter(c => c.openCount === 0).sort((a,b) => a.nam
             <h2 class="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-4">Districts with Open Tenders</h2>
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {withTenders.map(c => (
-                <a href={`/districts`}
+                <a href={`/tenders/${c.slug}`}
                   class="flex flex-col items-center justify-center gap-1 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl p-4 hover:border-blue-500/40 hover:shadow-md transition text-center group">
                   <span class="text-2xl font-extrabold text-[#1A56DB] dark:text-blue-400 font-['Outfit'] group-hover:scale-110 transition-transform">{c.openCount}</span>
                   <span class="text-xs font-bold text-gray-700 dark:text-slate-200 leading-tight">{c.name}</span>
@@ -191,7 +191,7 @@ const withoutTenders = cities.filter(c => c.openCount === 0).sort((a,b) => a.nam
           <h2 class="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-4">All Other Districts</h2>
           <div class="flex flex-wrap gap-2">
             {withoutTenders.map(c => (
-              <a href={`/districts`}
+              <a href={`/tenders/${c.slug}`}
                 class="inline-flex items-center px-3.5 py-1.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-full text-xs font-semibold text-gray-500 dark:text-slate-400 hover:border-blue-500/40 hover:text-[#1A56DB] dark:hover:text-blue-400 transition">
                 {c.name}
               </a>
