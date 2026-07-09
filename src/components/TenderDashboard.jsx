@@ -20,6 +20,58 @@ const CG_CITIES = [
   'Unspecified',
 ];
 
+const INDIAN_STATES = [
+  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
+  'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand',
+  'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur',
+  'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab',
+  'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura',
+  'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
+  'Andaman & Nicobar Islands', 'Chandigarh', 'Dadra & Nagar Haveli', 'Daman & Diu',
+  'Delhi', 'Jammu & Kashmir', 'Ladakh', 'Lakshadweep', 'Puducherry',
+];
+
+// Key districts for each state (major procurement hubs)
+const DISTRICTS_BY_STATE = {
+  'Andhra Pradesh': ['Visakhapatnam', 'Vijayawada', 'Guntur', 'Nellore', 'Kurnool', 'Tirupati', 'Rajahmundry', 'Kakinada', 'Anantapur', 'Kadapa'],
+  'Arunachal Pradesh': ['Itanagar', 'Naharlagun', 'Pasighat', 'Tawang', 'Ziro', 'Bomdila'],
+  'Assam': ['Guwahati', 'Dibrugarh', 'Silchar', 'Jorhat', 'Nagaon', 'Tinsukia', 'Sivasagar', 'Tezpur', 'Bongaigaon', 'Karimganj'],
+  'Bihar': ['Patna', 'Gaya', 'Bhagalpur', 'Muzaffarpur', 'Darbhanga', 'Ara', 'Begusarai', 'Purnia', 'Katihar', 'Bihar Sharif'],
+  'Chhattisgarh': CG_CITIES.filter(c => c !== 'Unspecified'),
+  'Goa': ['Panaji', 'Margao', 'Vasco', 'Mapusa', 'Ponda', 'Bicholim'],
+  'Gujarat': ['Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Bhavnagar', 'Jamnagar', 'Junagadh', 'Gandhinagar', 'Anand', 'Bharuch', 'Mehsana', 'Navsari'],
+  'Haryana': ['Gurugram', 'Faridabad', 'Ambala', 'Hisar', 'Rohtak', 'Karnal', 'Panipat', 'Sonipat', 'Panchkula', 'Yamunanagar'],
+  'Himachal Pradesh': ['Shimla', 'Dharamshala', 'Solan', 'Mandi', 'Kullu', 'Hamirpur', 'Nahan', 'Bilaspur', 'Chamba', 'Kinnaur'],
+  'Jharkhand': ['Ranchi', 'Jamshedpur', 'Dhanbad', 'Bokaro', 'Hazaribagh', 'Deoghar', 'Dumka', 'Giridih', 'Chaibasa', 'Ramgarh'],
+  'Karnataka': ['Bengaluru', 'Mysuru', 'Mangaluru', 'Hubballi', 'Dharwad', 'Belagavi', 'Davangere', 'Ballari', 'Tumakuru', 'Shivamogga', 'Kalaburagi', 'Vijayapura'],
+  'Kerala': ['Thiruvananthapuram', 'Kochi', 'Kozhikode', 'Thrissur', 'Kollam', 'Malappuram', 'Palakkad', 'Kannur', 'Alappuzha', 'Kottayam'],
+  'Madhya Pradesh': ['Bhopal', 'Indore', 'Jabalpur', 'Gwalior', 'Ujjain', 'Sagar', 'Dewas', 'Satna', 'Ratlam', 'Rewa', 'Murwara', 'Singrauli'],
+  'Maharashtra': ['Mumbai', 'Pune', 'Nagpur', 'Thane', 'Nashik', 'Aurangabad', 'Solapur', 'Amravati', 'Kolhapur', 'Nanded', 'Latur', 'Satara', 'Navi Mumbai'],
+  'Manipur': ['Imphal', 'Thoubal', 'Bishnupur', 'Churachandpur', 'Ukhrul'],
+  'Meghalaya': ['Shillong', 'Tura', 'Jowai', 'Nongstoin', 'Williamnagar'],
+  'Mizoram': ['Aizawl', 'Lunglei', 'Champhai', 'Serchhip'],
+  'Nagaland': ['Kohima', 'Dimapur', 'Mokokchung', 'Tuensang', 'Wokha'],
+  'Odisha': ['Bhubaneswar', 'Cuttack', 'Rourkela', 'Berhampur', 'Sambalpur', 'Puri', 'Balasore', 'Brahmapur', 'Jharsuguda', 'Baripada'],
+  'Punjab': ['Chandigarh', 'Amritsar', 'Ludhiana', 'Jalandhar', 'Patiala', 'Bathinda', 'Hoshiarpur', 'Mohali', 'Firozpur', 'Gurdaspur'],
+  'Rajasthan': ['Jaipur', 'Jodhpur', 'Udaipur', 'Kota', 'Bikaner', 'Ajmer', 'Bhilwara', 'Alwar', 'Bharatpur', 'Sikar', 'Barmer', 'Pali'],
+  'Sikkim': ['Gangtok', 'Namchi', 'Mangan', 'Gyalshing'],
+  'Tamil Nadu': ['Chennai', 'Coimbatore', 'Madurai', 'Tiruchirappalli', 'Salem', 'Tirunelveli', 'Tiruppur', 'Vellore', 'Erode', 'Thoothukudi', 'Thanjavur', 'Dindigul'],
+  'Telangana': ['Hyderabad', 'Warangal', 'Nizamabad', 'Karimnagar', 'Khammam', 'Ramagundam', 'Secunderabad', 'Mahbubnagar'],
+  'Tripura': ['Agartala', 'Dharmanagar', 'Udaipur', 'Kailasahar', 'Belonia'],
+  'Uttar Pradesh': ['Lucknow', 'Kanpur', 'Agra', 'Varanasi', 'Allahabad', 'Meerut', 'Noida', 'Ghaziabad', 'Gorakhpur', 'Bareilly', 'Aligarh', 'Moradabad', 'Saharanpur', 'Mathura'],
+  'Uttarakhand': ['Dehradun', 'Haridwar', 'Nainital', 'Roorkee', 'Rishikesh', 'Haldwani', 'Rudrapur', 'Kashipur', 'Kotdwar'],
+  'West Bengal': ['Kolkata', 'Asansol', 'Siliguri', 'Durgapur', 'Bardhaman', 'Malda', 'Baharampur', 'Howrah', 'Jalpaiguri', 'Kharagpur'],
+  'Delhi': ['New Delhi', 'Central Delhi', 'North Delhi', 'South Delhi', 'East Delhi', 'West Delhi', 'Noida Extension'],
+  'Chandigarh': ['Chandigarh'],
+  'Jammu & Kashmir': ['Srinagar', 'Jammu', 'Anantnag', 'Baramulla', 'Pulwama', 'Sopore', 'Kathua'],
+  'Ladakh': ['Leh', 'Kargil'],
+  'Puducherry': ['Puducherry', 'Karaikal', 'Mahe', 'Yanam'],
+  'Andaman & Nicobar Islands': ['Port Blair'],
+  'Dadra & Nagar Haveli': ['Silvassa'],
+  'Daman & Diu': ['Daman', 'Diu'],
+  'Lakshadweep': ['Kavaratti'],
+};
+
 // ─── MD3 Design Tokens ────────────────────────────────────────────────────────
 const C = {
   surface: '#051424',
@@ -338,28 +390,115 @@ function GemSidebar({ filters, onChange, onReset, total, loading }) {
     }
   }
 
+  const isIndia = filters.gemScope === 'india';
+  const selectedState = filters.gemState || 'all';
+  const districtOptions = isIndia && selectedState !== 'all'
+    ? (DISTRICTS_BY_STATE[selectedState] || [])
+    : [];
+
+  function handleScopeToggle(scope) {
+    onChange('gemScope', scope);
+    onChange('gemState', 'all');
+    onChange('city', 'all');
+  }
+
+  // Shared select style
+  const selectStyle = {
+    width: '100%', padding: '8px 12px',
+    background: C.surfaceContainer, border: `1px solid ${C.outlineVariant}`,
+    borderRadius: '2px', color: C.onSurface, fontSize: '13px',
+    outline: 'none', appearance: 'none',
+    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%238c909f' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E")`,
+    backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center',
+  };
+
   const sidebarContent = (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
-      {/* District */}
+      {/* ── Scope Toggle: Chhattisgarh / All India ── */}
       <div>
-        <FilterLabel>District</FilterLabel>
-        <select
-          value={filters.city}
-          onChange={e => onChange('city', e.target.value)}
-          style={{
-            width: '100%', padding: '8px 12px',
-            background: C.surfaceContainer, border: `1px solid ${C.outlineVariant}`,
-            borderRadius: '2px', color: C.onSurface, fontSize: '13px',
-            outline: 'none', appearance: 'none',
-            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%238c909f' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E")`,
-            backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center',
-          }}
-        >
-          <option value="all">All Chhattisgarh</option>
-          {CG_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
-        </select>
+        <FilterLabel>Location Scope</FilterLabel>
+        <div style={{
+          display: 'grid', gridTemplateColumns: '1fr 1fr',
+          border: `1px solid ${C.outlineVariant}`, borderRadius: '4px', overflow: 'hidden',
+        }}>
+          {[{ key: 'cg', label: 'Chhattisgarh' }, { key: 'india', label: '🇮🇳 All India' }].map(({ key, label }) => {
+            const active = (filters.gemScope || 'cg') === key;
+            return (
+              <button
+                key={key}
+                onClick={() => handleScopeToggle(key)}
+                style={{
+                  padding: '8px 4px',
+                  background: active ? C.primaryContainer : 'transparent',
+                  color: active ? '#002e6a' : C.onSurfaceVar,
+                  border: 'none',
+                  borderRight: key === 'cg' ? `1px solid ${C.outlineVariant}` : 'none',
+                  fontSize: '11px', fontWeight: active ? 700 : 500,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                  transition: 'all 0.15s', letterSpacing: '0.01em',
+                }}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
       </div>
+
+      {/* ── Chhattisgarh District Filter ── */}
+      {!isIndia && (
+        <div>
+          <FilterLabel>District</FilterLabel>
+          <select
+            value={filters.city}
+            onChange={e => onChange('city', e.target.value)}
+            style={selectStyle}
+          >
+            <option value="all">All Chhattisgarh</option>
+            {CG_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+      )}
+
+      {/* ── All India: State + District Cascade ── */}
+      {isIndia && (
+        <>
+          <div>
+            <FilterLabel>State</FilterLabel>
+            <select
+              value={selectedState}
+              onChange={e => {
+                onChange('gemState', e.target.value);
+                onChange('city', 'all'); // reset district when state changes
+              }}
+              style={selectStyle}
+            >
+              <option value="all">All States</option>
+              {INDIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <FilterLabel>District</FilterLabel>
+            <select
+              value={filters.city}
+              onChange={e => onChange('city', e.target.value)}
+              disabled={selectedState === 'all' || districtOptions.length === 0}
+              style={{
+                ...selectStyle,
+                opacity: selectedState === 'all' ? 0.5 : 1,
+                cursor: selectedState === 'all' ? 'not-allowed' : 'pointer',
+              }}
+            >
+              <option value="all">
+                {selectedState === 'all' ? 'Select a state first' : `All ${selectedState}`}
+              </option>
+              {districtOptions.map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </div>
+        </>
+      )}
 
       {/* Category */}
       <div>
@@ -648,6 +787,7 @@ function CspgclFilterBar({ filters, onChange, onApply }) {
 
 const DEFAULT_FILTERS = {
   source: 'GEM', status: 'open', city: 'all', plant: 'all',
+  gemScope: 'cg', gemState: 'all',
   category: '', minValue: '', maxValue: '', minEmd: '', maxEmd: '',
   mseStartupOnly: false,
   zeroExperienceOnly: false,
@@ -696,6 +836,10 @@ export default function TenderDashboard({
       if (currentFilters.source !== 'all') params.set('source', currentFilters.source);
       if (currentFilters.status !== 'all') params.set('status', currentFilters.status);
       if (currentFilters.city !== 'all') params.set('city', currentFilters.city);
+      // Pass state filter when All India scope is active with a specific state selected
+      if (currentFilters.source === 'GEM' && currentFilters.gemScope === 'india' && currentFilters.gemState && currentFilters.gemState !== 'all') {
+        params.set('state', currentFilters.gemState);
+      }
       if (currentFilters.category) params.set('category', currentFilters.category);
       let minValToUse = currentFilters.minValue;
       if (currentFilters.highValueOnly) minValToUse = '10000000';
@@ -751,7 +895,7 @@ export default function TenderDashboard({
 
   const switchTab = (tab) => {
     setActiveTab(tab);
-    setFilters(f => ({ ...DEFAULT_FILTERS, source: tab, city: 'all' }));
+    setFilters(f => ({ ...DEFAULT_FILTERS, source: tab, city: 'all', gemScope: 'cg', gemState: 'all' }));
     setQ('');
     setSort('endDate_asc');
     setPage(1);
@@ -827,6 +971,22 @@ export default function TenderDashboard({
             <button style={tabStyle('GEM')} onClick={() => switchTab('GEM')}>GeM Tenders</button>
             <button style={tabStyle('CSPGCL')} onClick={() => switchTab('CSPGCL')}>CSPGCL Tenders</button>
           </div>
+          {/* All India breadcrumb indicator under tab bar — only for GEM scope india */}
+          {isGem && filters.gemScope === 'india' && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              padding: '6px 0 5px', borderTop: `1px solid rgba(66,71,84,0.2)`,
+              fontSize: '11px', color: C.outline,
+            }}>
+              <span style={{ color: C.primary, fontWeight: 700 }}>🇮🇳 All India</span>
+              {filters.gemState && filters.gemState !== 'all' && (
+                <><span style={{ color: C.outlineVariant }}>›</span><span style={{ color: C.onSurfaceVar, fontWeight: 600 }}>{filters.gemState}</span></>
+              )}
+              {filters.city && filters.city !== 'all' && (
+                <><span style={{ color: C.outlineVariant }}>›</span><span style={{ color: C.onSurfaceVar }}>{filters.city}</span></>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -922,7 +1082,11 @@ export default function TenderDashboard({
                   fontWeight: 700, fontSize: '26px', color: C.onSurface,
                   margin: '0 0 4px', letterSpacing: '-0.01em',
                 }}>
-                  {isGem ? 'GeM Tenders' : 'CSPGCL Tenders'}
+                  {isGem
+                    ? (filters.gemScope === 'india'
+                        ? (filters.gemState !== 'all' ? `GeM Tenders — ${filters.gemState}` : 'GeM Tenders — All India')
+                        : 'GeM Tenders')
+                    : 'CSPGCL Tenders'}
                 </h1>
                 <p style={{ fontSize: '13px', color: C.onSurfaceVar, margin: 0 }}>
                   {loading ? 'Loading tenders…'
