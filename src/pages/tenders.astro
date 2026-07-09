@@ -1,61 +1,84 @@
-﻿---
-import TenderLayout from '../layouts/TenderLayout.astro';
-import Navbar from '../components/Navbar.astro';
-import Footer from '../components/Footer.astro';
-import TenderDashboard from '../components/TenderDashboard.jsx';
-import TenderCard from '../components/TenderCard.astro';
-import { fetchStatsCached, fetchTendersCached } from '../lib/api.js';
-import { formatRupee } from '../lib/cities.js';
+---
+import TenderLayout from "../layouts/TenderLayout.astro";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+import TenderDashboard from "../components/TenderDashboard.jsx";
+import { fetchStatsCached, fetchTendersCached } from "../lib/api.js";
 
 const url = new URL(Astro.request.url);
-const sourceParam = url.searchParams.get('source') || 'all';
+const sourceParam = url.searchParams.get("source") || "all";
 
 // Issue #5 — Redirect canonical duplicate URLs
-if (sourceParam === 'GEM') {
-  return Astro.redirect('/tenders/gem', 301);
+if (sourceParam === "GEM") {
+  return Astro.redirect("/tenders/gem", 301);
 }
-if (sourceParam === 'CSPGCL') {
-  return Astro.redirect('/tenders/cspgcl', 301);
+if (sourceParam === "CSPGCL") {
+  return Astro.redirect("/tenders/cspgcl", 301);
 }
 
-const city = url.searchParams.get('city') || 'all';
+const city = url.searchParams.get("city") || "all";
 
-let stats: { totalOpenTenders: number; totalEstimatedValue: number; bySource: Record<string, number>; lastFetchAt: string | null } = { totalOpenTenders: 0, totalEstimatedValue: 0, bySource: {}, lastFetchAt: null };
+let stats: {
+  totalOpenTenders: number;
+  totalEstimatedValue: number;
+  bySource: Record<string, number>;
+  lastFetchAt: string | null;
+} = {
+  totalOpenTenders: 0,
+  totalEstimatedValue: 0,
+  bySource: {},
+  lastFetchAt: null,
+};
 let initialTenders = null;
 let initialTotal = 0;
 
 try {
   const [statsData, tendersData] = await Promise.all([
     fetchStatsCached(Astro.locals),
-    fetchTendersCached({ status: 'open', source: 'all', city, limit: 100 }, Astro.locals)
+    fetchTendersCached(
+      { status: "open", source: "all", city, limit: 100 },
+      Astro.locals,
+    ),
   ]);
   stats = statsData;
   initialTenders = tendersData.tenders || [];
   initialTotal = tendersData.total || 0;
 } catch (e) {
-  console.error('[tenders] SSR fetch error:', (e as Error).message);
+  console.error("[tenders] SSR fetch error:", (e as Error).message);
 }
 
 const lastUpdated = stats.lastFetchAt
-  ? new Date(stats.lastFetchAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+  ? new Date(stats.lastFetchAt).toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
   : null;
 
 // Issue #6 — keyword-rich meta
 const metaTitle = `Chhattisgarh Government Tenders ${new Date().getFullYear()} - All Open GeM & CSPGCL Bids | CGTenders.com`;
-const metaDesc = `Browse ${stats.totalOpenTenders || 'open'} open government tenders in Chhattisgarh - GeM & CSPGCL eProcurement bids. Filter by district, category, bid value, EMD & closing date. Updated daily.`;
+const metaDesc = `Browse ${stats.totalOpenTenders || "open"} open government tenders in Chhattisgarh - GeM & CSPGCL eProcurement bids. Filter by district, category, bid value, EMD & closing date. Updated daily.`;
 
 // Issue #7 — BreadcrumbList JSON-LD
 const breadcrumbLd = {
-  '@context': 'https://schema.org',
-  '@type': 'BreadcrumbList',
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
   itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://cgtenders.com/' },
-    { '@type': 'ListItem', position: 2, name: 'All Tenders', item: 'https://cgtenders.com/tenders' },
+    {
+      "@type": "ListItem",
+      position: 1,
+      name: "Home",
+      item: "https://cgtenders.com/",
+    },
+    {
+      "@type": "ListItem",
+      position: 2,
+      name: "All Tenders",
+      item: "https://cgtenders.com/tenders",
+    },
   ],
 };
 
-// SSR tender list (first 20 for Google)
-const ssrTenders = (initialTenders || []).slice(0, 20);
 ---
 
 <TenderLayout
@@ -67,64 +90,91 @@ const ssrTenders = (initialTenders || []).slice(0, 20);
   <Navbar />
   <main>
     <!-- Issue #8 — HTML Breadcrumb -->
-    <nav aria-label="Breadcrumb" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
-      <ol class="flex items-center gap-1.5 text-xs text-gray-400">
-        <li><a href="/" class="hover:text-[#1A56DB] transition">Home</a></li>
-        <li aria-hidden="true">›</li>
-        <li class="text-gray-600 font-medium">All Tenders</li>
+    <nav
+      aria-label="Breadcrumb"
+      style="max-width:1440px;margin:0 auto;padding:12px 32px 0;"
+    >
+      <ol
+        style="display:flex;align-items:center;gap:6px;list-style:none;margin:0;padding:0;font-size:12px;color:#636878;"
+      >
+        <li>
+          <a
+            href="/"
+            style="color:#636878;text-decoration:none;transition:color 0.15s;"
+            onmouseover="this.style.color='#adc6ff'"
+            onmouseout="this.style.color='#636878'">Home</a>
+        </li>
+        <li aria-hidden="true" style="color:#424754;">›</li>
+        <li style="color:#8c909f;font-weight:600;">All Tenders</li>
       </ol>
     </nav>
 
-    <div class="bg-white border-b border-gray-200">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 md:py-6">
-        <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+    <div style="background:#0d1c2d;border-bottom:1px solid #424754;">
+      <div style="max-width:1440px;margin:0 auto;padding:20px 32px 18px;">
+        <div
+          style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;"
+        >
           <div>
-            <h1 class="text-2xl md:text-3xl font-bold text-gray-900 font-['Outfit']">All Tenders</h1>
-            <p class="text-sm text-gray-500 mt-0.5">
-              GeM and CSPGCL open tenders in Chhattisgarh
-              {lastUpdated && <span class="text-gray-400"> · Updated {lastUpdated}</span>}
+            <h1
+              style="font-family:'Hanken Grotesk','Inter',sans-serif;font-weight:800;font-size:28px;color:#d4e4fa;margin:0 0 4px;letter-spacing:-0.02em;"
+            >
+              All Tenders
+            </h1>
+            <p style="font-size:13px;color:#8c909f;margin:0;">
+              GeM &amp; CSPGCL open tenders in Chhattisgarh{
+                lastUpdated && ` · Updated ${lastUpdated}`
+              }
             </p>
           </div>
-          <div class="flex items-center gap-3 flex-wrap">
-            <div class="flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-xl px-3 py-2">
-              <span class="text-xl font-extrabold text-[#1A56DB] font-['Outfit'] leading-none">{stats.totalOpenTenders}</span>
-              <span class="text-xs text-blue-600 font-medium leading-tight">Open<br/>Tenders</span>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <div
+              style="display:flex;align-items:center;gap:10px;background:rgba(173,198,255,0.08);border:1px solid rgba(173,198,255,0.18);border-radius:6px;padding:10px 16px;"
+            >
+              <span
+                style="font-family:'Hanken Grotesk','Inter',sans-serif;font-weight:800;font-size:22px;color:#adc6ff;line-height:1;"
+                >{stats.totalOpenTenders}</span
+              >
+              <span
+                style="font-size:11px;color:#8c9fc2;font-weight:600;line-height:1.3;"
+                >Open<br />Tenders</span
+              >
             </div>
-            <div class="flex items-center gap-2 bg-violet-50 border border-violet-100 rounded-xl px-3 py-2">
-              <span class="text-xl font-extrabold text-violet-700 font-['Outfit'] leading-none">{stats.bySource?.GEM || 0}</span>
-              <span class="text-xs text-violet-600 font-medium leading-tight">GeM</span>
+            <div
+              style="display:flex;align-items:center;gap:10px;background:rgba(173,198,255,0.06);border:1px solid rgba(173,198,255,0.12);border-radius:6px;padding:10px 16px;"
+            >
+              <span
+                style="font-family:'Hanken Grotesk','Inter',sans-serif;font-weight:800;font-size:22px;color:#adc6ff;line-height:1;"
+                >{stats.bySource?.GEM || 0}</span
+              >
+              <span
+                style="font-size:11px;color:#8c9fc2;font-weight:600;line-height:1.3;"
+                >GeM</span
+              >
             </div>
-            <div class="flex items-center gap-2 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2">
-              <span class="text-xl font-extrabold text-amber-700 font-['Outfit'] leading-none">{stats.bySource?.CSPGCL || 0}</span>
-              <span class="text-xs text-amber-600 font-medium leading-tight">CSPGCL</span>
+            <div
+              style="display:flex;align-items:center;gap:10px;background:rgba(255,183,134,0.07);border:1px solid rgba(255,183,134,0.18);border-radius:6px;padding:10px 16px;"
+            >
+              <span
+                style="font-family:'Hanken Grotesk','Inter',sans-serif;font-weight:800;font-size:22px;color:#ffb786;line-height:1;"
+                >{stats.bySource?.CSPGCL || 0}</span
+              >
+              <span
+                style="font-size:11px;color:#c2a280;font-weight:600;line-height:1.3;"
+                >CSPGCL</span
+              >
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- SSR tender list — always rendered in HTML so Googlebot indexes real content -->
-    {ssrTenders.length > 0 && (
-      <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-2" id="ssr-tenders-list">
-        <p class="text-xs text-gray-400 dark:text-slate-500 mb-4">{initialTotal.toLocaleString()} open tenders in Chhattisgarh — showing first {ssrTenders.length}</p>
-        <div class="flex flex-col gap-3">
-          {ssrTenders.map((t: any) => (
-            <TenderCard tender={t} />
-          ))}
-        </div>
-        {initialTotal > ssrTenders.length && (
-          <p class="text-xs text-gray-400 dark:text-slate-500 mt-3 text-center">Showing {ssrTenders.length} of {initialTotal.toLocaleString()} tenders — use filters below to narrow results</p>
-        )}
-      </section>
-    )}
-
     <!-- JS-hydrated dashboard (interactive filters, pagination, search) -->
-    <TenderDashboard 
-      client:load 
-      initialSource={sourceParam} 
-      initialCity={city} 
-      initialTenders={initialTenders} 
-      initialTotal={initialTotal} 
+    <TenderDashboard
+      client:load
+      initialSource={sourceParam}
+      initialCity={city}
+      initialTenders={initialTenders}
+      initialTotal={initialTotal}
     />
   </main>
   <Footer />
