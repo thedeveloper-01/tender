@@ -1,17 +1,16 @@
-import * as cheerio from 'cheerio';
 import { config } from '../config.js';
+
 
 /**
  * fetchGemTenders() -> raw record array
  *
  * In mock mode (USE_MOCK_GEM=true) returns realistic sample data.
- * In live mode calls the real GeM /search-bids JSON API with full pagination.
- *
- * API discovered via network inspection:
- *   POST https://bidplus.gem.gov.in/search-bids
- *   Payload: state_name_con=CHHATTISGARH&city_name_con=&page_no=N&csrf_bd_gem_nk=<token>
- *   Returns Solr-style JSON: { response: { response: { numFound, docs: [...] } } }
- *   10 records per page.
+ * In live mode iterates through ALL Indian states sequentially:
+ *   - Fetches all pages for state 1 -> then state 2, etc.
+ *   - Each tender record is tagged with `fetchedState` so the pipeline
+ *     can correctly set locationState even though PDFs lack location data.
+ *   - City/district is also read directly from Solr fields (ba_city_name,
+ *     ba_district_name, ba_pincode) where available — more reliable than PDF.
  */
 export async function fetchGemTenders() {
   if (config.useMockGem) {
@@ -21,141 +20,215 @@ export async function fetchGemTenders() {
 }
 
 // ─────────────────────────────────────────────
-// Live fetcher
+// All Indian States / UTs as GeM portal expects
+// ─────────────────────────────────────────────
+
+export const GEM_STATES = [
+  'ANDHRA PRADESH',
+  'ARUNACHAL PRADESH',
+  'ASSAM',
+  'BIHAR',
+  'CHHATTISGARH',
+  'GOA',
+  'GUJARAT',
+  'HARYANA',
+  'HIMACHAL PRADESH',
+  'JHARKHAND',
+  'KARNATAKA',
+  'KERALA',
+  'MADHYA PRADESH',
+  'MAHARASHTRA',
+  'MANIPUR',
+  'MEGHALAYA',
+  'MIZORAM',
+  'NAGALAND',
+  'ODISHA',
+  'PUNJAB',
+  'RAJASTHAN',
+  'SIKKIM',
+  'TAMIL NADU',
+  'TELANGANA',
+  'TRIPURA',
+  'UTTAR PRADESH',
+  'UTTARAKHAND',
+  'WEST BENGAL',
+  'ANDAMAN AND NICOBAR ISLANDS',
+  'CHANDIGARH',
+  'DADRA AND NAGAR HAVELI AND DAMAN AND DIU',
+  'DELHI',
+  'JAMMU AND KASHMIR',
+  'LADAKH',
+  'LAKSHADWEEP',
+  'PUDUCHERRY',
+];
+
+
+// ─────────────────────────────────────────────
+// Helpers
 // ─────────────────────────────────────────────
 
 const GEM_BASE = 'https://bidplus.gem.gov.in';
 const PER_PAGE = 10;
-const MAX_PAGES = 200; // safety cap (2000 records)
+const MAX_PAGES_PER_STATE = 500; // safety cap: 5000 records per state
 
-async function fetchGemTendersLive() {
-  // Step 1 — get a session cookie + CSRF token from the advance-search page
-  let cookies = '';
-  let csrf = '';
-  try {
-    const init = await fetch(`${GEM_BASE}/advance-search`, {
-      headers: {
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-IN,en;q=0.9',
-      },
-      signal: AbortSignal.timeout(20000),
-    });
-    // Collect Set-Cookie headers with fallback for older Node environments
-    let setCookies = [];
-    if (typeof init.headers.getSetCookie === 'function') {
-      setCookies = init.headers.getSetCookie();
-    } else {
-      const rawCookie = init.headers.get('set-cookie');
-      if (rawCookie) {
-        setCookies = rawCookie.split(/,\s*(?=[a-zA-Z0-9_\-]+[=])/);
-      }
-    }
-    cookies = setCookies.map((c) => c.split(';')[0]).join('; ');
-
-    const html = await init.text();
-    const csrfMatch = html.match(/csrf_bd_gem_nk['"]?\s*:\s*['"]([a-f0-9]+)['"]/);
-    csrf = csrfMatch?.[1] ?? '';
-    console.log('[gem-live] session ready, csrf:', csrf.substring(0, 8) + '...');
-  } catch (e) {
-    console.error('[gem-live] failed to initialise session:', e.message);
-    throw e;
+/** Get a fresh session cookie + CSRF token from GeM advance-search page */
+async function getSessionAndCsrf() {
+  const init = await fetch(`${GEM_BASE}/advance-search`, {
+    headers: {
+      'User-Agent':
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+      Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      'Accept-Language': 'en-IN,en;q=0.9',
+    },
+    signal: AbortSignal.timeout(20000),
+  });
+  let setCookies = [];
+  if (typeof init.headers.getSetCookie === 'function') {
+    setCookies = init.headers.getSetCookie();
+  } else {
+    const rawCookie = init.headers.get('set-cookie');
+    if (rawCookie) setCookies = rawCookie.split(/,\s*(?=[a-zA-Z0-9_\-]+[=])/);
   }
+  const cookies = setCookies.map((c) => c.split(';')[0]).join('; ');
+  const html = await init.text();
+  const csrfMatch = html.match(/csrf_bd_gem_nk['"']?\s*:\s*['"']([a-f0-9]+)['"']/);
+  const csrf = csrfMatch?.[1] ?? '';
+  return { cookies, csrf };
+}
 
-  if (!csrf) {
-    throw new Error('[gem-live] could not extract CSRF token from GeM page');
-  }
-
-  // Step 2 — paginate through all results
-  const results = [];
-  let totalFound = null;
-  let page = 1;
-
-  while (page <= MAX_PAGES) {
-    try {
-      const payload = new URLSearchParams({
-        searchType: 'location',
-        state_name_con: 'CHHATTISGARH',
-        city_name_con: '',
-        bidEndDateFrom: '',
-        bidEndDateTo: '',
-        page_no: String(page),
-        csrf_bd_gem_nk: csrf,
-      });
-
-      const resp = await fetch(`${GEM_BASE}/search-bids`, {
-        method: 'POST',
-        headers: {
-          'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-          Accept: 'application/json, text/javascript, */*; q=0.01',
-          'Accept-Language': 'en-IN,en;q=0.9',
-          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-          'X-Requested-With': 'XMLHttpRequest',
-          Origin: GEM_BASE,
-          Referer: `${GEM_BASE}/advance-search`,
-          Cookie: cookies,
-        },
-        body: payload.toString(),
-        signal: AbortSignal.timeout(25000),
-      });
-
-      if (!resp.ok) {
-        console.error(`[gem-live] page ${page} -> HTTP ${resp.status}`);
-        break;
-      }
-
-      const json = await resp.json();
-      const solr = json?.response?.response;
-      if (!solr) {
-        console.error('[gem-live] unexpected response shape on page', page);
-        break;
-      }
-
-      // Capture total on first page
-      if (totalFound === null) {
-        totalFound = solr.numFound ?? 0;
-        const maxExpected = Math.min(totalFound, MAX_PAGES * PER_PAGE);
-        console.log(`[gem-live] totalFound=${totalFound}, will fetch up to ${maxExpected} records`);
-      }
-
-      const docs = solr.docs ?? [];
-      if (docs.length === 0) break;
-
-      for (const doc of docs) {
-        const record = normalizeDoc(doc);
-        if (record) results.push(record);
-      }
-
-      console.log(`[gem-live] page ${page}: +${docs.length} → total so far: ${results.length}`);
-
-      // Check if we've fetched everything
-      if (results.length >= Math.min(totalFound, MAX_PAGES * PER_PAGE)) break;
-      if (docs.length < PER_PAGE) break; // last page
-
-      page++;
-      // Polite delay between pages (500 ms)
-      await new Promise((r) => setTimeout(r, 500));
-    } catch (e) {
-      console.error(`[gem-live] error on page ${page}:`, e.message);
-      break;
-    }
-  }
-
-  console.log(`[gem-live] done — fetched ${results.length} records`);
-  return results;
+/** "UTTAR PRADESH" -> "Uttar Pradesh" */
+function titleCase(str) {
+  return str
+    .toLowerCase()
+    .split(' ')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
 }
 
 // ─────────────────────────────────────────────
-// Normalise a Solr doc from /search-bids into our standard shape
+// Live fetcher — iterates every state in sequence
+// ─────────────────────────────────────────────
+
+async function fetchGemTendersLive() {
+  const allResults = [];
+
+  for (let si = 0; si < GEM_STATES.length; si++) {
+    const stateName = GEM_STATES[si];
+    console.log(`[gem-live] ─── State ${si + 1}/${GEM_STATES.length}: ${stateName} ───`);
+
+    // Get a fresh session + CSRF for each state
+    let cookies = '';
+    let csrf = '';
+    try {
+      ({ cookies, csrf } = await getSessionAndCsrf());
+      console.log(`[gem-live] [${stateName}] session ready, csrf: ${csrf.substring(0, 8)}...`);
+    } catch (e) {
+      console.error(`[gem-live] [${stateName}] session init failed:`, e.message);
+      console.warn(`[gem-live] Skipping state ${stateName}...`);
+      continue;
+    }
+
+    if (!csrf) {
+      console.warn(`[gem-live] [${stateName}] no CSRF token — skipping`);
+      continue;
+    }
+
+    const stateResults = [];
+    let totalFound = null;
+    let page = 1;
+
+    while (page <= MAX_PAGES_PER_STATE) {
+      try {
+        const payload = new URLSearchParams({
+          searchType: 'location',
+          state_name_con: stateName,
+          city_name_con: '',
+          bidEndDateFrom: '',
+          bidEndDateTo: '',
+          page_no: String(page),
+          csrf_bd_gem_nk: csrf,
+        });
+
+        const resp = await fetch(`${GEM_BASE}/search-bids`, {
+          method: 'POST',
+          headers: {
+            'User-Agent':
+              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            Accept: 'application/json, text/javascript, */*; q=0.01',
+            'Accept-Language': 'en-IN,en;q=0.9',
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            'X-Requested-With': 'XMLHttpRequest',
+            Origin: GEM_BASE,
+            Referer: `${GEM_BASE}/advance-search`,
+            Cookie: cookies,
+          },
+          body: payload.toString(),
+          signal: AbortSignal.timeout(25000),
+        });
+
+        if (!resp.ok) {
+          console.error(`[gem-live] [${stateName}] page ${page} -> HTTP ${resp.status}`);
+          break;
+        }
+
+        const json = await resp.json();
+        const solr = json?.response?.response;
+        if (!solr) {
+          console.error(`[gem-live] [${stateName}] unexpected response shape on page`, page);
+          break;
+        }
+
+        if (totalFound === null) {
+          totalFound = solr.numFound ?? 0;
+          const maxExpected = Math.min(totalFound, MAX_PAGES_PER_STATE * PER_PAGE);
+          console.log(`[gem-live] [${stateName}] totalFound=${totalFound}, fetching up to ${maxExpected}`);
+          if (totalFound === 0) break;
+        }
+
+        const docs = solr.docs ?? [];
+        if (docs.length === 0) break;
+
+        for (const doc of docs) {
+          const record = normalizeDoc(doc, stateName);
+          if (record) stateResults.push(record);
+        }
+
+        console.log(
+          `[gem-live] [${stateName}] page ${page}: +${docs.length} -> ${stateResults.length}/${totalFound}`
+        );
+
+        if (stateResults.length >= Math.min(totalFound, MAX_PAGES_PER_STATE * PER_PAGE)) break;
+        if (docs.length < PER_PAGE) break;
+
+        page++;
+        await new Promise((r) => setTimeout(r, 500)); // polite inter-page delay
+      } catch (e) {
+        console.error(`[gem-live] [${stateName}] error on page ${page}:`, e.message);
+        break;
+      }
+    }
+
+    console.log(`[gem-live] [${stateName}] complete — ${stateResults.length} records`);
+    allResults.push(...stateResults);
+
+    // 1 second pause between states to be polite to GeM server
+    if (si < GEM_STATES.length - 1) {
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+  }
+
+  console.log(`[gem-live] ALL STATES DONE — Total: ${allResults.length} records`);
+  return allResults;
+}
+
+// ─────────────────────────────────────────────
+// Normalise a Solr doc -> our standard raw record shape
 // ─────────────────────────────────────────────
 function arr(v) {
-  // Solr wraps values in arrays; unwrap to first element
   return Array.isArray(v) ? v[0] : v;
 }
 
-function normalizeDoc(doc) {
+function normalizeDoc(doc, fetchedState) {
   const bidNumber = arr(doc.b_bid_number);
   if (!bidNumber) return null;
 
@@ -163,16 +236,26 @@ function normalizeDoc(doc) {
     arr(doc.bd_category_name) || arr(doc.b_category_name) || bidNumber;
 
   const startDate = arr(doc.final_start_date_sort) ?? null;
-  const endDate = arr(doc.final_end_date_sort) ?? null;
+  const endDate   = arr(doc.final_end_date_sort)   ?? null;
 
-  // b_status: 1 = open/active, 0 = closed (approximate — use endDate for accuracy)
+  // b_status: 1 = open/active, 0 = closed
   const status = arr(doc.b_status);
 
-  const ministry = arr(doc.ba_official_details_minName) ?? null;
+  const ministry   = arr(doc.ba_official_details_minName)  ?? null;
   const department = arr(doc.ba_official_details_deptName) ?? null;
 
   const bidType = arr(doc.b_bid_type); // 1=Bid, 2=RA
-  const typeLabel = bidType === 2 ? 'Reverse Auction' : 'Bid';
+
+  // City / district directly from Solr — authoritative, no PDF needed for location
+  const gemCity     = arr(doc.ba_city_name)     || arr(doc.b_city_name)     || null;
+  const gemDistrict = arr(doc.ba_district_name) || arr(doc.b_district_name) || null;
+  const gemPincode  = arr(doc.ba_pincode)        || arr(doc.b_pincode)       || null;
+
+  // Build a location hint string for downstream city resolution
+  const stateTitleCase = titleCase(fetchedState);
+  const locationText = [gemCity, gemDistrict, gemPincode, stateTitleCase]
+    .filter(Boolean)
+    .join(', ');
 
   return {
     bidNumber,
@@ -182,16 +265,21 @@ function normalizeDoc(doc) {
     category: arr(doc.b_cat_id) ?? 'General',
     quantity: arr(doc.b_total_quantity) != null ? String(arr(doc.b_total_quantity)) : null,
     startDate: startDate ? new Date(startDate).toISOString() : null,
-    endDate: endDate ? new Date(endDate).toISOString() : null,
-    locationText: 'Chhattisgarh',
-    bidValue: null, // not in search results; extracted from detail page
-    emdAmount: null, // not in search results
-    bidLink: `${GEM_BASE}/showbidDocument/${encodeURIComponent(bidNumber)}`,
-    isActive: status === 1,
-    bidTypeLabel: typeLabel,
+    endDate:   endDate   ? new Date(endDate).toISOString()   : null,
+    locationText,
+    gemCity,
+    gemDistrict,
+    gemPincode,
+    fetchedState: stateTitleCase,    // "CHHATTISGARH" -> "Chhattisgarh"
+    bidValue:  null,                 // not in search results; extracted from PDF
+    emdAmount: null,
+    bidLink:   `${GEM_BASE}/showbidDocument/${encodeURIComponent(bidNumber)}`,
+    isActive:  status === 1,
+    bidTypeLabel: bidType === 2 ? 'Reverse Auction' : 'Bid',
     gemId: arr(doc.b_id) ?? null,
   };
 }
+
 
 // ─────────────────────────────────────────────
 // Mock data (used when USE_MOCK_GEM=true)

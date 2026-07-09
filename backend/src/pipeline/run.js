@@ -292,7 +292,7 @@ export async function runPipeline() {
           // Use address from AI consignees or raw text for city resolution
           const addressText = result.aiExtract?.consignees?.[0]?.address || '';
           const fullText    = result.extractedText || '';
-          const resolved    = resolveCityForGem(`${addressText} ${fullText}`, tender.locationState);
+          const resolved    = resolveCityForGem(`${addressText} ${fullText}`);
           if (resolved && resolved !== 'Unspecified') {
             updatedCity = resolved;
             console.log(`[pipeline] [${pdfCount}/${changedTenders.length}] city resolved → "${resolved}"`);

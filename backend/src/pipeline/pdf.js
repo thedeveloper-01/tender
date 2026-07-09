@@ -22,14 +22,31 @@ function ensureDir(dir) {
 /**
  * downloadPdf(tender) -> relative filePath | null
  * tender: normalized unified tender object (pre-save)
+ *
+ * For GEM tenders, PDFs are stored in state-scoped subdirectories:
+ *   documents/GEM/CHHATTISGARH/<filename>.pdf
+ *   documents/GEM/MAHARASHTRA/<filename>.pdf
+ * This is critical because GeM PDFs lack reliable location data internally,
+ * so folder organization is the source of truth for state assignment.
  */
 export async function downloadPdf(tender) {
   ensureDir(config.documentsDir);
-  const filename = `${tender.source}-${sanitize(tender.bidNumber)}.pdf`;
-  const filePath = path.join(config.documentsDir, filename);
+
+  let filePath;
+  if (tender.source === 'GEM') {
+    // State-scoped folder: documents/GEM/<STATE_UPPER>/
+    const stateName = (tender.locationState || 'UNKNOWN').toUpperCase().replace(/\s+/g, '_');
+    const stateDir = path.join(config.documentsDir, 'GEM', stateName);
+    ensureDir(stateDir);
+    const filename = `GEM-${sanitize(tender.bidNumber)}.pdf`;
+    filePath = path.join(stateDir, filename);
+  } else {
+    const filename = `${tender.source}-${sanitize(tender.bidNumber)}.pdf`;
+    filePath = path.join(config.documentsDir, filename);
+  }
 
   if (fs.existsSync(filePath)) {
-    console.log(`[pdf] file already exists, skipping download: ${filename}`);
+    console.log(`[pdf] file already exists, skipping download: ${filePath}`);
     return filePath;
   }
 

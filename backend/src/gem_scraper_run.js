@@ -10,29 +10,18 @@
  *
  * What it does
  * ─────────────
- * Iterates EVERY Indian state/UT (see fetchers/gem.js#GEM_STATES) ONE AT A
- * TIME, fully finishing each state before moving to the next:
- *   For each state:
- *     1. Launches Playwright Chromium (headless) to scrape GeM
- *        bidplus.gem.gov.in for that state only — bypasses bot-detection
- *        that blocks raw fetch()/axios calls, and works around GeM's state
- *        dropdown needing a live browser session.
- *     2. Normalises raw Solr docs → unified Tender shape (normalizeGem),
- *        tagging each record with the state it was fetched under.
- *     3. Runs the shared rule-based analysis engine (categorize,
- *        viabilityScore, identifyRisks) and upserts each tender keyed on
- *        [source, bidNumber]. Schema is never altered.
- *     4. Downloads tender PDFs into a state-scoped folder
- *        (documents/GEM/<STATE>/...) and extracts bidValue/emdAmount +
- *        resolves the tender's city against THAT state's own district
- *        list (GeM PDFs don't reliably carry location data on their own,
- *        so processing one state fully before starting the next is what
- *        keeps folder + city attribution correct).
- * After all states are done:
- *   5. Bulk-corrects open/closed status based on endDate.
- *   6. Runs cleanup/archiving.
- *   7. Writes a single aggregated FetchLog row.
- *   8. Prints a clean summary and exits with code 0 on success, 1 on failure.
+ * 1. Launches Playwright Chromium (headless) to scrape GeM bidplus.gem.gov.in
+ *    — bypasses bot-detection that blocks raw fetch() / axios calls.
+ * 2. Iterates all paginated results for state=CHHATTISGARH.
+ * 3. Normalises raw Solr docs → unified Tender shape (normalizeGem).
+ * 4. Runs the shared rule-based analysis engine (categorize, viabilityScore,
+ *    identifyRisks).
+ * 5. Upserts each tender keyed on [source, bidNumber] — new records are
+ *    INSERTed, existing ones UPDATEd. Schema is never altered.
+ * 6. Downloads tender PDFs (if available) and extracts bidValue / emdAmount.
+ * 7. Bulk-corrects open/closed status based on endDate.
+ * 8. Writes a FetchLog row.
+ * 9. Prints a clean summary and exits with code 0 on success, 1 on failure.
  *
  * All DB writes use the existing Prisma client and schema — no overrides.
  */
@@ -62,8 +51,7 @@ import { extractValueAndEmd } from './pipeline/extract.js';
 import { runCleanup }        from './pipeline/cleanup.js';
 
 // ── Browser-based fetcher (new – bypasses bot-detection) ────────────────────
-import { fetchGemTendersForState } from './fetchers/gem_browser.js';
-import { GEM_STATES } from './fetchers/gem.js';
+import { fetchGemTendersBrowser } from './fetchers/gem_browser.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -127,204 +115,172 @@ async function main() {
   let cleanedRecords = 0;
   let cleanedFiles   = 0;
 
-  // Full-run tender list (across all states) — kept only for the data-log dump.
-  const allNormalizedTenders = [];
-
-  // ── 1-4. Fetch + normalise + upsert + PDF/extract — ONE STATE AT A TIME ───
-  // We deliberately finish everything for state N (fetch -> normalize ->
-  // upsert -> download PDFs into documents/GEM/<STATE>/ -> extract value/EMD
-  // -> resolve city against THAT state's own district list) before ever
-  // touching state N+1. GeM's PDFs don't reliably carry location data, so
-  // the state used for this session/folder is the only trustworthy signal —
-  // interleaving states would risk mixing up which folder/city a PDF belongs to.
-  log(`STEP 1-4 — Processing ${GEM_STATES.length} states sequentially (fetch → DB → PDFs → extraction per state)...`);
-
-  for (let si = 0; si < GEM_STATES.length; si++) {
-    const stateName = GEM_STATES[si];
-    const sIdx = `[state ${si + 1}/${GEM_STATES.length}]`;
-    banner(`${stateName}  ${sIdx}`);
-
-    // ── 1. Fetch this state via Playwright ──────────────────────────────────
-    log(`${sIdx} STEP 1/4 — Fetching GEM tenders for ${stateName} via headless browser...`);
-    let gemRaw = [];
-    try {
-      gemRaw = await fetchGemTendersForState(stateName);
-      found += gemRaw.length;
-      log(`${sIdx} Fetched ${gemRaw.length} raw records for ${stateName}`);
-    } catch (e) {
-      const msg = `GEM browser-fetch failed for ${stateName}: ${e.message}`;
-      log(`${sIdx} ERROR: ${msg}`);
-      errors.push(msg);
-      // Skip this state entirely, move on to the next one.
-      continue;
-    }
-
-    if (gemRaw.length === 0) {
-      log(`${sIdx} No tenders found for ${stateName} — skipping to next state`);
-      continue;
-    }
-
-    // ── 2. Normalise ─────────────────────────────────────────────────────────
-    log(`${sIdx} STEP 2/4 — Normalising ${gemRaw.length} records for ${stateName}...`);
-    const normalized = [];
-    for (const raw of gemRaw) {
-      try {
-        normalized.push(normalizeGem(raw));
-      } catch (e) {
-        const msg = `Normalize error (${stateName}/${raw?.bidNumber}): ${e.message}`;
-        log(`  WARN: ${msg}`);
-        errors.push(msg);
-      }
-    }
-    log(`${sIdx} Normalised: ${normalized.length}/${gemRaw.length}`);
-
-    // Dedup within this state's page results (pagination overlap safety)
-    const uniqueNormalizedMap = new Map();
-    for (const tender of normalized) {
-      if (tender && tender.bidNumber) {
-        uniqueNormalizedMap.set(tender.bidNumber, tender);
-      }
-    }
-    const uniqueNormalized = Array.from(uniqueNormalizedMap.values());
-    if (normalized.length !== uniqueNormalized.length) {
-      log(`${sIdx}  ⚠ ${normalized.length - uniqueNormalized.length} pagination duplicates collapsed`);
-    }
-    allNormalizedTenders.push(...uniqueNormalized);
-
-    // ── 3. Analyse + Upsert ───────────────────────────────────────────────────
-    log(`${sIdx} STEP 3/4 — Analysing & upserting ${uniqueNormalized.length} unique tenders for ${stateName}...`);
-    const changedTenders = []; // needs PDF / extract pass, this state only
-
-    for (let i = 0; i < uniqueNormalized.length; i++) {
-      const tender = uniqueNormalized[i];
-      if ((i + 1) % 50 === 0 || i === uniqueNormalized.length - 1) {
-        log(`${sIdx}  upsert progress: ${i + 1}/${uniqueNormalized.length}`);
-      }
-      try {
-        const analyzed = analyzeTender(tender);
-        const data     = { ...tender, ...analyzed };
-
-        const existing = await prisma.tender.findUnique({
-          where: { source_bidNumber: { source: data.source, bidNumber: data.bidNumber } },
-        });
-
-        const updateData = { ...data };
-        if (existing) {
-          if (existing.valueExtractionStatus && existing.valueExtractionStatus !== 'not_attempted' && data.valueExtractionStatus === 'not_attempted') {
-            delete updateData.valueExtractionStatus;
-            delete updateData.bidValue;
-            delete updateData.emdAmount;
-            delete updateData.pdfPath;
-          }
-        }
-
-        const saved = await prisma.tender.upsert({
-          where:  { source_bidNumber: { source: data.source, bidNumber: data.bidNumber } },
-          create: data,
-          update: updateData,
-        });
-
-        if (!existing) {
-          newCount++;
-          changedTenders.push(saved);
-        } else {
-          updatedCount++;
-          const needsPdf =
-            existing.valueExtractionStatus === 'not_attempted' ||
-            !existing.valueExtractionStatus ||
-            existing.endDate?.getTime() !== data.endDate?.getTime();
-          if (needsPdf) changedTenders.push(saved);
-        }
-      } catch (e) {
-        const msg = `Upsert error (${tender.source}/${tender.bidNumber}): ${e.message}`;
-        log(`  WARN: ${msg}`);
-        errors.push(msg);
-      }
-    }
-    log(`${sIdx} Upsert done. New: ${newCount}  Updated: ${updatedCount}  PDF queue for ${stateName}: ${changedTenders.length}`);
-
-    // ── 4. PDF download + value/EMD extraction — this state only ─────────────
-    // downloadPdf() (pipeline/pdf.js) saves into documents/GEM/<STATE>/,
-    // keyed off tender.locationState (== this loop's stateName), so every
-    // PDF downloaded here lands in the correct per-state folder before we
-    // ever move on to the next state.
-    log(`${sIdx} STEP 4/4 — PDF download + extraction for ${changedTenders.length} tenders in ${stateName}...`);
-    for (let i = 0; i < changedTenders.length; i++) {
-      const tender = changedTenders[i];
-      const idx    = `${sIdx} [${i + 1}/${changedTenders.length}]`;
-      try {
-        const pdfPath = await downloadPdf(tender);
-        if (pdfPath) {
-          pdfsDownloaded++;
-          log(`  ${idx} PDF saved: ${path.basename(pdfPath)}`);
-        } else {
-          log(`  ${idx} PDF not available for ${tender.bidNumber}`);
-        }
-
-        const result = await extractValueAndEmd(tender, pdfPath);
-        if (!pdfPath && result.status !== 'extracted') result.status = 'failed_download';
-
-        if (result.status === 'extracted')                      extractionOk++;
-        else if (['not_found','failed_download'].includes(result.status)) extractionFail++;
-
-        // City resolution is scoped to THIS state's own district/city list —
-        // see pipeline/locationResolve.js#resolveCityForGem — since GeM PDFs
-        // don't reliably carry location data on their own.
-        let updatedCity = tender.locationCity;
-        if (!updatedCity || updatedCity === 'Unspecified') {
-          const addressText = result.aiExtract?.consignees?.[0]?.address || '';
-          const fullText = result.extractedText || '';
-          const resolved = resolveCityForGem(`${addressText} ${fullText}`, tender.locationState || stateName);
-          if (resolved && resolved !== 'Unspecified') {
-            updatedCity = resolved;
-            log(`  [location] resolved city to "${resolved}" for ${tender.bidNumber} (${stateName})`);
-          }
-        }
-
-        const sourceMeta = {
-          ...(tender.sourceMeta || {}),
-          pdfExtract:  { text: result.extractedText },
-          aiExtract:   result.aiExtract ?? null,   // full AI-structured payload (consignees, eligibility, atc)
-        };
-
-        await prisma.tender.update({
-          where: { id: tender.id },
-          data: {
-            pdfPath:              pdfPath || tender.pdfPath,
-            bidValue:             result.bidValue,
-            emdAmount:            result.emdAmount,
-            valueExtractionStatus: result.status,
-            locationCity:         updatedCity,
-            sourceMeta,
-          },
-        });
-      } catch (e) {
-        const msg = `PDF/extract error (${tender.source}/${tender.bidNumber}): ${e.message}`;
-        log(`  WARN: ${msg}`);
-        errors.push(msg);
-        extractionFail++;
-        // Still mark as failed_download in DB so the tender is visible and
-        // won't be re-queued for PDF retry on every future run.
-        try {
-          await prisma.tender.update({
-            where: { id: tender.id },
-            data: { valueExtractionStatus: 'failed_download' },
-          });
-        } catch (_) { /* ignore secondary DB error */ }
-      }
-    }
-    log(`${sIdx} PDF pass done for ${stateName}. Total so far — Downloaded: ${pdfsDownloaded}  OK: ${extractionOk}  Fail: ${extractionFail}`);
-
-    // Polite pause before moving to the next state's fresh browser session.
-    if (si < GEM_STATES.length - 1) {
-      await new Promise((r) => setTimeout(r, 1500));
-    }
+  // ── 1. Fetch via Playwright ───────────────────────────────────────────────
+  log('STEP 1/7 — Fetching GEM tenders via headless browser...');
+  let gemRaw = [];
+  try {
+    gemRaw = await fetchGemTendersBrowser();
+    found  = gemRaw.length;
+    log(`Fetched ${found} raw records from GeM portal`);
+  } catch (e) {
+    const msg = `GEM browser-fetch failed: ${e.message}`;
+    log(`ERROR: ${msg}`);
+    errors.push(msg);
+    // Abort early — nothing to process
+    await writeLog(runAt, found, newCount, updatedCount, pdfsDownloaded,
+                   extractionOk, extractionFail, cleanedRecords, cleanedFiles, errors);
+    process.exit(1);
   }
 
-  log(`ALL STATES DONE — found=${found} new=${newCount} updated=${updatedCount} pdfs=${pdfsDownloaded} extractedOk=${extractionOk} extractFail=${extractionFail}`);
+  // ── 2. Normalise ──────────────────────────────────────────────────────────
+  log(`STEP 2/7 — Normalising ${found} records...`);
+  const normalized = [];
+  for (const raw of gemRaw) {
+    try {
+      normalized.push(normalizeGem(raw));
+    } catch (e) {
+      const msg = `Normalize error (${raw?.bidNumber}): ${e.message}`;
+      log(`  WARN: ${msg}`);
+      errors.push(msg);
+    }
+  }
+  log(`Normalised: ${normalized.length}/${found}`);
+
+  // ── 3. Analyse + Upsert ───────────────────────────────────────────────────
+  // Diagnose before dedup: count nulls and true unique bid numbers
+  const nullBidCount = normalized.filter(t => !t?.bidNumber).length;
+  const rawUniqueBidNos = new Set(normalized.filter(t => t?.bidNumber).map(t => t.bidNumber));
+  log(`Before dedup: ${normalized.length} records | ${rawUniqueBidNos.size} unique bidNumbers | ${nullBidCount} with null/empty bidNumber`);
+  if (normalized.length !== rawUniqueBidNos.size) {
+    const dupCount = normalized.length - rawUniqueBidNos.size - nullBidCount;
+    log(`  ⚠ ${dupCount} records are GeM pagination duplicates (same bidNumber on multiple pages) — will be collapsed`);
+  }
+
+  const uniqueNormalizedMap = new Map();
+  for (const tender of normalized) {
+    if (tender && tender.bidNumber) {
+      uniqueNormalizedMap.set(tender.bidNumber, tender);
+    }
+  }
+  const uniqueNormalized = Array.from(uniqueNormalizedMap.values());
+  log(`STEP 3/7 — Analysing & upserting ${uniqueNormalized.length} unique tenders (from ${normalized.length} total)...`);
+  const changedTenders = []; // needs PDF / extract pass
+
+  for (let i = 0; i < uniqueNormalized.length; i++) {
+    const tender = uniqueNormalized[i];
+    if ((i + 1) % 50 === 0 || i === uniqueNormalized.length - 1) {
+      log(`  upsert progress: ${i + 1}/${uniqueNormalized.length}`);
+    }
+    try {
+      const analyzed = analyzeTender(tender);
+      const data     = { ...tender, ...analyzed };
+
+      const existing = await prisma.tender.findUnique({
+        where: { source_bidNumber: { source: data.source, bidNumber: data.bidNumber } },
+      });
+
+      const updateData = { ...data };
+      if (existing) {
+        if (existing.valueExtractionStatus && existing.valueExtractionStatus !== 'not_attempted' && data.valueExtractionStatus === 'not_attempted') {
+          delete updateData.valueExtractionStatus;
+          delete updateData.bidValue;
+          delete updateData.emdAmount;
+          delete updateData.pdfPath;
+        }
+      }
+
+      const saved = await prisma.tender.upsert({
+        where:  { source_bidNumber: { source: data.source, bidNumber: data.bidNumber } },
+        create: data,
+        update: updateData,
+      });
+
+      if (!existing) {
+        newCount++;
+        changedTenders.push(saved);
+      } else {
+        updatedCount++;
+        const needsPdf =
+          existing.valueExtractionStatus === 'not_attempted' ||
+          !existing.valueExtractionStatus ||
+          existing.endDate?.getTime() !== data.endDate?.getTime();
+        if (needsPdf) changedTenders.push(saved);
+      }
+    } catch (e) {
+      const msg = `Upsert error (${tender.source}/${tender.bidNumber}): ${e.message}`;
+      log(`  WARN: ${msg}`);
+      errors.push(msg);
+    }
+  }
+  log(`Upsert done. New: ${newCount}  Updated: ${updatedCount}  PDF queue: ${changedTenders.length}`);
+
+  // ── 4. PDF download + value/EMD extraction ────────────────────────────────
+  log(`STEP 4/7 — PDF download + extraction for ${changedTenders.length} tenders...`);
+  for (let i = 0; i < changedTenders.length; i++) {
+    const tender = changedTenders[i];
+    const idx    = `[${i + 1}/${changedTenders.length}]`;
+    try {
+      const pdfPath = await downloadPdf(tender);
+      if (pdfPath) {
+        pdfsDownloaded++;
+        log(`  ${idx} PDF saved: ${path.basename(pdfPath)}`);
+      } else {
+        log(`  ${idx} PDF not available for ${tender.bidNumber}`);
+      }
+
+      const result = await extractValueAndEmd(tender, pdfPath);
+      if (!pdfPath && result.status !== 'extracted') result.status = 'failed_download';
+
+      if (result.status === 'extracted')                      extractionOk++;
+      else if (['not_found','failed_download'].includes(result.status)) extractionFail++;
+
+      let updatedCity = tender.locationCity;
+      if (!updatedCity || updatedCity === 'Unspecified') {
+        const addressText = result.aiExtract?.consignees?.[0]?.address || '';
+        const fullText = result.extractedText || '';
+        const resolved = resolveCityForGem(`${addressText} ${fullText}`);
+        if (resolved && resolved !== 'Unspecified') {
+          updatedCity = resolved;
+          log(`  [location] resolved city to "${resolved}" for ${tender.bidNumber}`);
+        }
+      }
+
+      const sourceMeta = {
+        ...(tender.sourceMeta || {}),
+        pdfExtract:  { text: result.extractedText },
+        aiExtract:   result.aiExtract ?? null,   // full AI-structured payload (consignees, eligibility, atc)
+      };
+
+      await prisma.tender.update({
+        where: { id: tender.id },
+        data: {
+          pdfPath:              pdfPath || tender.pdfPath,
+          bidValue:             result.bidValue,
+          emdAmount:            result.emdAmount,
+          valueExtractionStatus: result.status,
+          locationCity:         updatedCity,
+          sourceMeta,
+        },
+      });
+    } catch (e) {
+      const msg = `PDF/extract error (${tender.source}/${tender.bidNumber}): ${e.message}`;
+      log(`  WARN: ${msg}`);
+      errors.push(msg);
+      extractionFail++;
+      // Still mark as failed_download in DB so the tender is visible and
+      // won't be re-queued for PDF retry on every future run.
+      try {
+        await prisma.tender.update({
+          where: { id: tender.id },
+          data: { valueExtractionStatus: 'failed_download' },
+        });
+      } catch (_) { /* ignore secondary DB error */ }
+    }
+  }
+  log(`PDF pass done. Downloaded: ${pdfsDownloaded}  OK: ${extractionOk}  Fail: ${extractionFail}`);
 
   // ── 5. Bulk status correction (open / closed) ─────────────────────────────
-  log('STEP 5/6 — Bulk status update...');
+  log('STEP 5/7 — Bulk status update...');
   const now = new Date();
   try {
     const closed = await prisma.tender.updateMany({
@@ -343,7 +299,7 @@ async function main() {
   }
 
   // ── 6. Cleanup / archive ──────────────────────────────────────────────────
-  log('STEP 6/6 — Cleanup & archiving...');
+  log('STEP 6/7 — Cleanup & archiving...');
   try {
     const cleanup = await runCleanup(prisma);
     cleanedRecords = cleanup.cleanedRecords;
@@ -356,7 +312,7 @@ async function main() {
   }
 
   // ── 7. Write FetchLog ─────────────────────────────────────────────────────
-  log('STEP 7 — Writing FetchLog to DB...');
+  log('STEP 7/7 — Writing FetchLog to DB...');
   const fetchLog = await writeLog(
     runAt, found, newCount, updatedCount, pdfsDownloaded,
     extractionOk, extractionFail, cleanedRecords, cleanedFiles, errors,
@@ -382,7 +338,7 @@ async function main() {
       errorCount:     errors.length,
       errors,
     },
-    allNormalizedTenders,
+    uniqueNormalized,
   );
 
   // ── Summary ───────────────────────────────────────────────────────────────

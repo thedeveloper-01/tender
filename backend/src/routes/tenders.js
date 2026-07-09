@@ -33,6 +33,7 @@ router.get('/', async (req, res) => {
 
     const {
       city,
+      state,
       q,
       category,
       status = 'open',
@@ -51,6 +52,7 @@ router.get('/', async (req, res) => {
     const where = {};
 
     if (city && city !== 'all') where.locationCity = city;
+    if (state && state !== 'all') where.locationState = state;
     if (source && source !== 'all') where.source = source.toUpperCase();
     if (status && status !== 'all') where.status = status;
 
