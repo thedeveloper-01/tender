@@ -2,10 +2,10 @@ import * as cheerio from 'cheerio';
 
 /** CSPGCL tender portal — Central Offices + one page per power station. */
 export const PLANTS = [
-  { id: 'central', paramflag: 1, label: 'Central Offices' },
+  { id: 'central',    paramflag: 1, label: 'Central Offices' },
   { id: 'korba-west', paramflag: 2, label: 'Hasdeo TPS — Korba West' },
-  { id: 'dspm', paramflag: 3, label: 'Dr. Shyama Prasad Mukharjee TPS' },
-  { id: 'marwa', paramflag: 5, label: 'Marwa Tendubhata TPS' },
+  { id: 'dspm',      paramflag: 3, label: 'Dr. Shyama Prasad Mukharjee TPS' },
+  { id: 'marwa',     paramflag: 4, label: 'Atal Bihari Vajpayee TPS — Marwa' },
 ];
 
 const PORTAL_BASE = 'https://cspc.co.in/cspgcl_tendernotices/CSPGCL_Tender.aspx';
