@@ -34,7 +34,10 @@ const GEM_BASE = 'https://bidplus.gem.gov.in';
 const SEARCH_URL = `${GEM_BASE}/advance-search`;
 const BIDS_URL = `${GEM_BASE}/search-bids`;
 const PER_PAGE = 10;
+const MAX_PAGES = 200;      // safety cap per state (~2 000 records)
 const NAV_TIMEOUT = 90_000;  // ms — page navigation
+const BETWEEN_MS = 1_200;   // polite inter-page delay (ms)
+const BETWEEN_STATES_MS = 1_500; // polite delay between states (ms)
 
 export async function fetchGemTendersBrowser() {
   let browser;
@@ -128,7 +131,7 @@ export async function fetchGemTendersBrowser() {
         console.error(`[gem-browser] [${stateName}] failed:`, e.message);
       }
 
-      if (si < GEM_STATES.length - 1) { /* no inter-state delay */ }
+      if (si < GEM_STATES.length - 1) await delay(BETWEEN_STATES_MS);
     }
 
     console.log(`[gem-browser] ALL STATES DONE — ${allResults.length} total records`);
@@ -220,7 +223,7 @@ async function scrapeState(page, csrf, stateName) {
   // ── Paginate (pages 2-N) using session-scoped fetch ─────────────────────
   // After the form submit above, the server session is scoped to this state.
   // We send page_no + csrf + state_name_con — belt-and-braces against session drift.
-  for (let pageNo = startPageNo; ; pageNo++) {
+  for (let pageNo = startPageNo; pageNo <= MAX_PAGES; pageNo++) {
     let json;
     try {
       json = await page.evaluate(
@@ -303,9 +306,14 @@ async function scrapeState(page, csrf, stateName) {
       console.log(`[gem-browser] [${stateName}] collected all expected records — done`);
       break;
     }
+    // Hard cap safety
+    if (results.length >= MAX_PAGES * PER_PAGE) break;
+
     // NOTE: Do NOT break on docs.length < PER_PAGE — a partial page can
     // occur mid-run (transient / rate-limit) and still have more pages after.
     // Only break on a truly empty page (handled above).
+
+    await delay(BETWEEN_MS);
   }
 
   return results;

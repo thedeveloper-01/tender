@@ -69,6 +69,7 @@ export const GEM_STATES = [
 
 const GEM_BASE = 'https://bidplus.gem.gov.in';
 const PER_PAGE = 10;
+const MAX_PAGES_PER_STATE = 500; // safety cap: 5000 records per state
 
 /** Get a fresh session cookie + CSRF token from GeM advance-search page */
 async function getSessionAndCsrf() {
@@ -136,7 +137,7 @@ async function fetchGemTendersLive() {
     let totalFound = null;
     let page = 1;
 
-    while (true) {
+    while (page <= MAX_PAGES_PER_STATE) {
       try {
         const payload = new URLSearchParams({
           searchType: 'location',
@@ -179,7 +180,8 @@ async function fetchGemTendersLive() {
 
         if (totalFound === null) {
           totalFound = solr.numFound ?? 0;
-          console.log(`[gem-live] [${stateName}] totalFound=${totalFound}`);
+          const maxExpected = Math.min(totalFound, MAX_PAGES_PER_STATE * PER_PAGE);
+          console.log(`[gem-live] [${stateName}] totalFound=${totalFound}, fetching up to ${maxExpected}`);
           if (totalFound === 0) break;
         }
 
@@ -195,10 +197,11 @@ async function fetchGemTendersLive() {
           `[gem-live] [${stateName}] page ${page}: +${docs.length} -> ${stateResults.length}/${totalFound}`
         );
 
-        if (stateResults.length >= totalFound) break;
+        if (stateResults.length >= Math.min(totalFound, MAX_PAGES_PER_STATE * PER_PAGE)) break;
         if (docs.length < PER_PAGE) break;
 
         page++;
+        await new Promise((r) => setTimeout(r, 500)); // polite inter-page delay
       } catch (e) {
         console.error(`[gem-live] [${stateName}] error on page ${page}:`, e.message);
         break;
