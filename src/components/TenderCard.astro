@@ -42,6 +42,9 @@ export interface Props {
 const { tender: t } = Astro.props;
 
 const dl = daysLeft(t.endDate);
+const isUrgent = dl !== null && dl >= 0 && dl <= 2;
+const isClosingSoon = dl !== null && dl > 2 && dl <= 7;
+const isClosed = dl !== null && dl < 0;
 
 const detailUrl = tenderDetailPath(t);
 const titleDisplay = t.title?.slice(0, 120) || "Untitled Tender";
@@ -67,6 +70,15 @@ const getStartupExempt = (tender: any) => {
   if (fields && fields.startupExemption) return fields.startupExemption.value;
   return null;
 };
+const getYearsOfExperience = (tender: any) => {
+  const eligibility = tender.sourceMeta?.aiExtract?.eligibility;
+  if (eligibility && eligibility.yearsOfExperience !== undefined)
+    return eligibility.yearsOfExperience;
+  const fields = tender.sourceMeta?.pdfExtract?.fields;
+  if (fields && fields.experienceCriteria)
+    return fields.experienceCriteria.value;
+  return null;
+};
 
 const isExempt = (val: any) => {
   if (val === true || val === "true") return true;
@@ -79,9 +91,16 @@ const isExempt = (val: any) => {
 
 const mseExempt = getMseExempt(t);
 const startupExempt = getStartupExempt(t);
+const experience = getYearsOfExperience(t);
 
 const isMseYes = isExempt(mseExempt);
 const isStartupYes = isExempt(startupExempt);
+const isEmdExempt =
+  t.emdAmount === 0 ||
+  (t.source === "GEM" &&
+    t.emdAmount == null &&
+    (t.valueExtractionStatus === "extracted" ||
+      t.valueExtractionStatus === "not_found"));
 
 // Deadline color: red ≤2, amber ≤7, green otherwise
 const dlColor =

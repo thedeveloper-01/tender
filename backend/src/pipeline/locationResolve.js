@@ -111,40 +111,14 @@ export function resolveCityForGem(locationText) {
 
   const text = locationText.toLowerCase();
 
-  // 2. Direct district name match (handles multi-word names like "Baloda Bazar" and Balod substring collision)
-  // Sort cities by length descending to match longer names first
-  const sortedCities = [...CG_CITIES].sort((a, b) => b.length - a.length);
-  for (const city of sortedCities) {
-    const cityLower = city.toLowerCase();
-    
-    // For Korea CG district, prevent false positives from Korea country origins
-    if (cityLower === 'korea') {
-      if (/\b(south\s+korea|korean|made\s+in\s+korea|origin\s*:?\s*korea|import\w*\s+from\s+korea)\b/i.test(text)) {
-        continue;
-      }
-    }
-    
-    const escaped = city.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-    const regex = new RegExp(`\\b${escaped}\\b`, 'i');
-    if (regex.test(text)) return city;
+  // 2. Direct district name match (handles multi-word names like "Baloda Bazar")
+  for (const city of CG_CITIES) {
+    if (text.includes(city.toLowerCase())) return city;
   }
 
   // 3. Alias / alternate-name match
-  // Sort aliases by length descending
-  const sortedAliases = Object.keys(CITY_ALIASES).sort((a, b) => b.length - a.length);
-  for (const alias of sortedAliases) {
-    const city = CITY_ALIASES[alias];
-    const aliasLower = alias.toLowerCase();
-    
-    if (aliasLower === 'koriya') {
-      if (/\b(south\s+korea|korean|made\s+in\s+korea|origin\s*:?\s*korea|import\w*\s+from\s+korea)\b/i.test(text)) {
-        continue;
-      }
-    }
-    
-    const escaped = alias.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-    const regex = new RegExp(`\\b${escaped}\\b`, 'i');
-    if (regex.test(text)) return city;
+  for (const [alias, city] of Object.entries(CITY_ALIASES)) {
+    if (text.includes(alias)) return city;
   }
 
   return 'Unspecified';
