@@ -9,14 +9,27 @@
 const CATEGORY_KEYWORDS = {
   'Civil Works': ['civil', 'construction', 'building', 'road', 'concrete', 'excavation', 'masonry', 'foundation', 'retaining', 'drainage', 'bridge', 'boundary', 'repair', 'renovation', 'plaster', 'rcc', 'r.c.c'],
   Mechanical: ['mechanical', 'turbine', 'boiler', 'pump', 'compressor', 'valve', 'condenser', 'fan', 'mill', 'crusher', 'conveyor', 'bearing', 'gear', 'motor', 'engine', 'shaft', 'pipe', 'piping', 'welding', 'fabrication', 'overhauling', 'overhaul'],
-  Electrical: ['electrical', 'transformer', 'switchgear', 'cable', 'wiring', 'panel', 'relay', 'generator', 'battery', 'lighting', 'ht ', 'lt ', 'h.t.', 'l.t.', 'substation'],
+  Electrical: ['electrical', 'transformer', 'switchgear', 'cable', 'wiring', 'panel', 'relay', 'generator', 'battery', 'lighting', 'ht', 'lt', 'h.t.', 'l.t.', 'substation'],
   Manpower: ['manpower', 'labour', 'labor', 'outsourc', 'housekeep', 'security', 'guard', 'cleaning', 'sweeping', 'canteen', 'catering', 'staffing', 'personnel', 'deployment'],
   Procurement: ['supply', 'procurement', 'purchase', 'spare', 'material', 'chemical', 'lubricant', 'oil', 'fuel', 'diesel', 'coal', 'consumable', 'equipment', 'instrument'],
   Environment: ['environment', 'pollution', 'ash', 'effluent', 'emission', 'waste', 'disposal', 'plantation', 'tree', 'green', 'ecology', 'etp', 'stp'],
   EPC: ['epc', 'turnkey', 'erection', 'commissioning', 'installation'],
-  'IT & Software': ['software', 'computer', 'it ', 'i.t.', 'server', 'network', 'cctv', 'camera', 'website', 'digital'],
+  'IT & Software': ['software', 'computer', 'it', 'i.t.', 'server', 'network', 'cctv', 'camera', 'website', 'digital'],
   Transport: ['transport', 'vehicle', 'truck', 'loader', 'crane', 'dumper', 'jcb', 'excavator', 'dozer', 'tipper', 'hiring'],
 };
+
+/**
+ * Checks if a keyword matches the text. For short words or words containing
+ * punctuation/spaces, checks on word boundaries (\b) using regex.
+ */
+function matchKeyword(lowerText, kw) {
+  if (kw.length <= 3 || kw.includes('.') || kw.includes(' ')) {
+    const escaped = kw.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const regex = new RegExp(`\\b${escaped}\\b`, 'i');
+    return regex.test(lowerText);
+  }
+  return lowerText.includes(kw);
+}
 
 /** categorize(title) -> string[] */
 export function categorize(title) {
@@ -25,7 +38,7 @@ export function categorize(title) {
 
   for (const [category, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
     for (const kw of keywords) {
-      if (lower.includes(kw)) {
+      if (matchKeyword(lower, kw)) {
         matched.push(category);
         break;
       }

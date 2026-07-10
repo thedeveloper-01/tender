@@ -2,6 +2,10 @@ import dotenv from 'dotenv';
 import { setGlobalDispatcher, ProxyAgent } from 'undici';
 dotenv.config();
 
+if (!process.env.ADMIN_TOKEN) {
+  throw new Error('FATAL: ADMIN_TOKEN environment variable is not defined!');
+}
+
 export const config = {
   mongoUri: process.env.MONGODB_URI,
   fetchTime: process.env.FETCH_TIME || '06:00', // HH:MM, 24h
