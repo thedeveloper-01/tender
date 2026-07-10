@@ -904,34 +904,10 @@ export default function TenderDashboard({
     setPage(1);
   };
 
-  // Client-side plant filter + MSE/experience filters
+  // Client-side plant filter fallback (other filters handled server-side)
   const displayedTenders = tenders.filter(t => {
     if (filters.source === 'CSPGCL' && filters.plant && filters.plant !== 'all') {
       if (t.plantId !== filters.plant && t.sourceMeta?.plantId !== filters.plant) return false;
-    }
-    if (filters.mseStartupOnly) {
-      const isMseExempt = isExempt(getMseExempt(t));
-      if (!isMseExempt) return false;
-    }
-    if (filters.zeroExperienceOnly) {
-      const hasExperience = (val) => {
-        if (val == null) return false;
-        if (typeof val === 'number') return val > 0;
-        if (typeof val === 'string') {
-          const s = val.toLowerCase().trim();
-          if (s === 'not specified' || s === 'not required' || s === 'nil' || s === 'exempt' || s === 'no' || s === '0' || s.includes('0 year')) {
-            return false;
-          }
-          const match = s.match(/(\d+)/);
-          if (match) {
-            return parseInt(match[1], 10) > 0;
-          }
-          return false;
-        }
-        if (typeof val === 'boolean') return val;
-        return false;
-      };
-      if (hasExperience(getYearsOfExperience(t))) return false;
     }
     return true;
   });
@@ -1157,26 +1133,71 @@ export default function TenderDashboard({
                       }}
                     >← Previous</button>
 
-                    {[...Array(Math.min(totalPages, 5))].map((_, i) => {
-                      const p = i + 1;
-                      return (
-                        <button
-                          key={p}
-                          onClick={() => setPage(p)}
-                          style={{
-                            width: '36px', height: '36px',
-                            border: `1px solid ${page === p ? C.primary : C.outlineVariant}`,
-                            borderRadius: '2px',
-                            background: page === p ? C.primaryContainer : 'transparent',
-                            color: page === p ? '#002e6a' : C.onSurfaceVar,
-                            fontSize: '13px', fontWeight: page === p ? 700 : 400,
-                            cursor: 'pointer', fontFamily: 'inherit',
-                          }}
-                        >{p}</button>
-                      );
-                    })}
+                    {(() => {
+                      const maxButtons = 5;
+                      let startPage = Math.max(1, page - 2);
+                      let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+                      if (endPage - startPage < maxButtons - 1) {
+                        startPage = Math.max(1, endPage - maxButtons + 1);
+                      }
+                      
+                      const pages = [];
+                      for (let p = startPage; p <= endPage; p++) {
+                        pages.push(p);
+                      }
 
-                    {totalPages > 5 && <span style={{ color: C.outline }}>…</span>}
+                      return (
+                        <>
+                          {startPage > 1 && (
+                            <>
+                              <button
+                                onClick={() => setPage(1)}
+                                style={{
+                                  width: '36px', height: '36px',
+                                  border: `1px solid ${C.outlineVariant}`,
+                                  borderRadius: '2px',
+                                  background: 'transparent',
+                                  color: C.onSurfaceVar,
+                                  fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit',
+                                }}
+                              >1</button>
+                              {startPage > 2 && <span style={{ color: C.outline }}>…</span>}
+                            </>
+                          )}
+                          {pages.map(p => (
+                            <button
+                              key={p}
+                              onClick={() => setPage(p)}
+                              style={{
+                                width: '36px', height: '36px',
+                                border: `1px solid ${page === p ? C.primary : C.outlineVariant}`,
+                                borderRadius: '2px',
+                                background: page === p ? C.primaryContainer : 'transparent',
+                                color: page === p ? '#002e6a' : C.onSurfaceVar,
+                                fontSize: '13px', fontWeight: page === p ? 700 : 400,
+                                cursor: 'pointer', fontFamily: 'inherit',
+                              }}
+                            >{p}</button>
+                          ))}
+                          {endPage < totalPages && (
+                            <>
+                              {endPage < totalPages - 1 && <span style={{ color: C.outline }}>…</span>}
+                              <button
+                                onClick={() => setPage(totalPages)}
+                                style={{
+                                  width: '36px', height: '36px',
+                                  border: `1px solid ${C.outlineVariant}`,
+                                  borderRadius: '2px',
+                                  background: 'transparent',
+                                  color: C.onSurfaceVar,
+                                  fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit',
+                                }}
+                              >{totalPages}</button>
+                            </>
+                          )}
+                        </>
+                      );
+                    })()}
 
                     <button
                       disabled={page >= totalPages}

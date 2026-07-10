@@ -2,6 +2,10 @@ import dotenv from 'dotenv';
 import { setGlobalDispatcher, ProxyAgent } from 'undici';
 dotenv.config();
 
+if (!process.env.ADMIN_TOKEN) {
+  throw new Error('FATAL: ADMIN_TOKEN environment variable is not defined!');
+}
+
 export const config = {
   mongoUri: process.env.MONGODB_URI,
   fetchTime: process.env.FETCH_TIME || '06:00', // HH:MM, 24h
@@ -9,7 +13,7 @@ export const config = {
   autoDeleteClosedAfterDays: Number(process.env.AUTO_DELETE_CLOSED_AFTER_DAYS || 2),
   archiveMode: (process.env.ARCHIVE_MODE ?? 'true') === 'true',
   useMockGem: (process.env.USE_MOCK_GEM ?? 'false') === 'true',
-  adminToken: process.env.ADMIN_TOKEN || 'admin_dev_token_123',
+  adminToken: process.env.ADMIN_TOKEN,
   siteUrl: process.env.SITE_URL || 'https://cgtenders.com/',
   port: Number(process.env.PORT || 4000),
   corsOrigin: process.env.CORS_ORIGIN || '*',
