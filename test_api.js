@@ -16,11 +16,7 @@ async function run() {
     console.log('Tenders count:', data.tenders?.length);
     console.log('Total count:', data.total);
     if (data.tenders && data.tenders.length > 0) {
-      console.log('First tender example:', {
-        bidNumber: data.tenders[0].bidNumber,
-        title: data.tenders[0].title,
-        source: data.tenders[0].source
-      });
+      console.log('First tender example:', JSON.stringify(data.tenders[0], null, 2));
     }
   } catch (e) {
     console.error('Error fetching API:', e.message);

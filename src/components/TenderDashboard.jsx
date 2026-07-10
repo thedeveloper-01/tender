@@ -160,6 +160,7 @@ const isExempt = (val) => {
 };
 
 const getMseExempt = (tender) => {
+  if (tender.mseExemption !== undefined && tender.mseExemption !== null) return tender.mseExemption;
   const eligibility = tender.sourceMeta?.aiExtract?.eligibility;
   if (eligibility && eligibility.mseExemption !== undefined) return eligibility.mseExemption;
   const fields = tender.sourceMeta?.pdfExtract?.fields;
@@ -168,6 +169,7 @@ const getMseExempt = (tender) => {
 };
 
 const getStartupExempt = (tender) => {
+  if (tender.startupExemption !== undefined && tender.startupExemption !== null) return tender.startupExemption;
   const eligibility = tender.sourceMeta?.aiExtract?.eligibility;
   if (eligibility && eligibility.startupExemption !== undefined) return eligibility.startupExemption;
   const fields = tender.sourceMeta?.pdfExtract?.fields;

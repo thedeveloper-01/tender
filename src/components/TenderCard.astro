@@ -24,6 +24,8 @@ export interface Props {
     fetchedAt?: string;
     valueExtractionStatus?: string | null;
     bidLink?: string;
+    mseExemption?: boolean | null;
+    startupExemption?: boolean | null;
     sourceMeta?: {
       isEbidding?: boolean;
       plantLabel?: string;
@@ -52,6 +54,8 @@ const hasEmd = t.emdAmount != null && t.emdAmount > 0;
 
 // Helper functions for dual extraction models (legacy pdfExtract.fields and new aiExtract.eligibility)
 const getMseExempt = (tender: any) => {
+  if (tender.mseExemption !== undefined && tender.mseExemption !== null)
+    return tender.mseExemption;
   const eligibility = tender.sourceMeta?.aiExtract?.eligibility;
   if (eligibility && eligibility.mseExemption !== undefined)
     return eligibility.mseExemption;
@@ -60,6 +64,8 @@ const getMseExempt = (tender: any) => {
   return null;
 };
 const getStartupExempt = (tender: any) => {
+  if (tender.startupExemption !== undefined && tender.startupExemption !== null)
+    return tender.startupExemption;
   const eligibility = tender.sourceMeta?.aiExtract?.eligibility;
   if (eligibility && eligibility.startupExemption !== undefined)
     return eligibility.startupExemption;
