@@ -42,6 +42,7 @@ router.get('/', async (req, res) => {
       minEmd,
       maxEmd,
       source,
+      plant,
       mseStartupOnly,
       zeroExperienceOnly,
       sort = 'endDate_asc',
@@ -55,6 +56,7 @@ router.get('/', async (req, res) => {
     if (state && state !== 'all') where.locationState = state;
     if (source && source !== 'all') where.source = source.toUpperCase();
     if (status && status !== 'all') where.status = status;
+    if (plant && plant !== 'all') where.plantId = plant;
 
     if (q) {
       where.OR = [
@@ -82,7 +84,7 @@ router.get('/', async (req, res) => {
     }
 
     const pageNum  = Math.max(1, parseInt(page, 10)  || 1);
-    const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
+    const limitNum = Math.min(10000, Math.max(1, parseInt(limit, 10) || 20));
 
     // ── MSE / Startup / Zero-Experience filters ──────────────────────────────
     // These used to load ALL records into JS memory (OOM on 25k records).

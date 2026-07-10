@@ -840,6 +840,9 @@ export default function TenderDashboard({
       if (currentFilters.source === 'GEM' && currentFilters.gemScope === 'india' && currentFilters.gemState && currentFilters.gemState !== 'all') {
         params.set('state', currentFilters.gemState);
       }
+      if (currentFilters.source === 'CSPGCL' && currentFilters.plant && currentFilters.plant !== 'all') {
+        params.set('plant', currentFilters.plant);
+      }
       if (currentFilters.category) params.set('category', currentFilters.category);
       let minValToUse = currentFilters.minValue;
       if (currentFilters.highValueOnly) minValToUse = '10000000';
@@ -904,7 +907,7 @@ export default function TenderDashboard({
   // Client-side plant filter + MSE/experience filters
   const displayedTenders = tenders.filter(t => {
     if (filters.source === 'CSPGCL' && filters.plant && filters.plant !== 'all') {
-      if (t.sourceMeta?.plantId !== filters.plant) return false;
+      if (t.plantId !== filters.plant && t.sourceMeta?.plantId !== filters.plant) return false;
     }
     if (filters.mseStartupOnly) {
       const isMseExempt = isExempt(getMseExempt(t));

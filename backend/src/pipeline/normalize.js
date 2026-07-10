@@ -82,6 +82,7 @@ export function normalizeGem(raw) {
     bidLink: raw.bidLink,
     status: deriveStatus(endDate),
     fetchedAt: new Date(),
+    plantId: null,
     sourceMeta: {
       locationTextRaw: raw.locationText || null,
       gemId: raw.gemId ?? null,
@@ -123,6 +124,7 @@ export function normalizeCspgcl(raw) {
     bidLink: `${CSPGCL_PORTAL_BASE}?paramflag=${raw.paramflag}`,
     status: deriveStatus(endDate),
     fetchedAt: new Date(),
+    plantId: raw.plantId || null,
     sourceMeta: {
       plantId: raw.plantId,
       plantLabel: raw.plantLabel,

@@ -288,6 +288,7 @@ export async function runPipeline() {
             bidLink:              tender.bidLink,
             status:               tender.status,
             fetchedAt:            new Date(),
+            plantId:              tender.plantId || null,
             sourceMeta: {
               ...tender.sourceMeta,
               parentNoticeNo:    tender.bidNumber,

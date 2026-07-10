@@ -35,6 +35,7 @@ model Tender {
   mseExemption           Boolean?  // true = MSE exemption confirmed in PDF
   startupExemption       Boolean?  // true = Startup exemption confirmed in PDF
   yearsOfExperienceZero  Boolean?  // true = no prior experience required
+  plantId                String?   // "central" | "korba-west" | "dspm" | "marwa"
 
   @@unique([source, bidNumber])
   @@index([locationCity, status, endDate])
@@ -44,6 +45,7 @@ model Tender {
   @@index([mseExemption, status, endDate])
   @@index([startupExemption, status, endDate])
   @@index([yearsOfExperienceZero, status, endDate])
+  @@index([plantId, status, endDate])
 }
 
 model FetchLog {

@@ -5,3 +5,18 @@ dist/
 .DS_Store
 .wrangler/
 ~/.claude
+
+# Archives & Temporary files
+*.zip
+*.jsonl
+html_tenders.html
+
+# Data Dumps
+gem_tenders.json
+
+# Dev / Test scratch scripts
+test_api.js
+test_ssr.js
+fetch_local.js
+check_html.js
+stitch_cgtenders_dual_portal_interface/
