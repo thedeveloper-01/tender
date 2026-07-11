@@ -13,6 +13,31 @@ const app = express();
 app.use(cors({ origin: config.corsOrigin }));
 app.use(express.json());
 
+// Styled HTTP Request Logger Middleware
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    const method = req.method;
+    const url = req.originalUrl || req.url;
+    const status = res.statusCode;
+    
+    let statusColor = `${status}`;
+    if (status >= 500) {
+      statusColor = `\x1b[31m${status}\x1b[0m`; // Red
+    } else if (status >= 400) {
+      statusColor = `\x1b[33m${status}\x1b[0m`; // Yellow
+    } else if (status >= 300) {
+      statusColor = `\x1b[36m${status}\x1b[0m`; // Cyan
+    } else if (status >= 200) {
+      statusColor = `\x1b[32m${status}\x1b[0m`; // Green
+    }
+    
+    console.log(`[http] ${new Date().toISOString()} | ${method} ${url} -> ${statusColor} in ${duration}ms`);
+  });
+  next();
+});
+
 app.get('/', (_req, res) => {
   res.json({ name: 'CGTenders API', status: 'ok', siteUrl: config.siteUrl });
 });

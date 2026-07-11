@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "node src/server.js",
-    "start": "node src/server.js",
+    "start": "node --max-old-space-size=400 src/server.js",
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
     "pipeline": "node -e \"import('./src/pipeline/run.js').then(m=>m.runPipeline()).then(()=>process.exit(0))\"",

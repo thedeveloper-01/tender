@@ -20,18 +20,45 @@ router.get('/', async (_req, res) => {
       ]
     };
 
-    const [totalOpen, valueAgg, bySource, byCategoryRaw, lastLog] = await Promise.all([
+    const now = new Date();
+    const [totalOpen, valueAgg, bySource, categoriesRaw, lastLog] = await Promise.all([
       prisma.tender.count({ where: openWhere }),
       prisma.tender.aggregate({ where: openWhere, _sum: { bidValue: true } }),
       prisma.tender.groupBy({ by: ['source'], where: openWhere, _count: { _all: true } }),
-      prisma.tender.findMany({ where: openWhere, select: { category: true } }),
+      prisma.tender.aggregateRaw({
+        pipeline: [
+          {
+            $match: {
+              status: 'open',
+              $or: [
+                { endDate: { $gte: { $date: now.toISOString() } } },
+                { endDate: null }
+              ]
+            }
+          },
+          { $unwind: '$category' },
+          { $group: { _id: '$category', count: { $sum: 1 } } }
+        ]
+      }),
       prisma.fetchLog.findFirst({ orderBy: { runAt: 'desc' } }),
     ]);
 
     const categoryCounts = {};
-    for (const { category } of byCategoryRaw) {
-      for (const c of category || []) {
-        categoryCounts[c] = (categoryCounts[c] || 0) + 1;
+    if (Array.isArray(categoriesRaw)) {
+      for (const item of categoriesRaw) {
+        if (item && item._id) {
+          let count = 0;
+          if (typeof item.count === 'number') {
+            count = item.count;
+          } else if (item.count && item.count.$numberLong) {
+            count = parseInt(item.count.$numberLong, 10);
+          } else if (item.count && item.count.$numberInt) {
+            count = parseInt(item.count.$numberInt, 10);
+          } else if (item.count) {
+            count = parseInt(String(item.count), 10) || 0;
+          }
+          categoryCounts[item._id] = count;
+        }
       }
     }
 
