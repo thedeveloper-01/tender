@@ -2277,27 +2277,38 @@ def main():
         if total_extract > 0:
             print(f"[*] Found {total_extract} tenders in {state_title} requiring offline details extraction.")
             extracted_count = 0
+            completed_count = 0
             extract_start = time.time()
             
-            for idx_ext, tender in enumerate(tenders_to_extract):
-                print(f"\n[*] Processing tender {idx_ext+1}/{total_extract} ({tender.get('bidNumber')})...")
-                try:
-                    success = process_tender_extraction(tender, tenders_col)
-                    if success:
-                        extracted_count += 1
-                except Exception as e:
-                    print(f"[-] Failed to extract details for {tender.get('bidNumber')}: {e}")
+            with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+                futures = {
+                    executor.submit(process_tender_extraction, t, tenders_col): t
+                    for t in tenders_to_extract
+                }
+                for fut in concurrent.futures.as_completed(futures):
+                    tender = futures[fut]
+                    completed_count += 1
+                    try:
+                        success = fut.result()
+                        if success:
+                            extracted_count += 1
+                    except Exception as e:
+                        print(f"[-] Failed to extract details for {tender.get('bidNumber')}: {e}")
+                        
+                    # Time logging & ETA calculations
+                    elapsed_ext = time.time() - extract_start
+                    avg_speed = elapsed_ext / completed_count
+                    est_remaining = avg_speed * (total_extract - completed_count)
                     
-                # Time logging & ETA calculations
-                elapsed_ext = time.time() - extract_start
-                avg_speed = elapsed_ext / (idx_ext + 1)
-                est_remaining = avg_speed * (total_extract - (idx_ext + 1))
-                
-                m, s = divmod(int(est_remaining), 60)
-                h, m = divmod(m, 60)
-                time_str = f"{h:02d}:{m:02d}:{s:02d}" if h > 0 else f"{m:02d}:{s:02d}"
-                print(f"[info] Progress {state_title}: {idx_ext+1}/{total_extract} completed. Avg: {avg_speed:.2f}s/tender. Est. remaining: {time_str}")
-                
+                    # Format ETA
+                    m, s = divmod(int(est_remaining), 60)
+                    h, m = divmod(m, 60)
+                    time_str = f"{h:02d}:{m:02d}:{s:02d}" if h > 0 else f"{m:02d}:{s:02d}"
+                    
+                    # Log progress every 5 completions (or on the final completion)
+                    if completed_count % 5 == 0 or completed_count == total_extract:
+                        print(f"[info] Progress {state_title}: {completed_count}/{total_extract} completed. Avg: {avg_speed:.2f}s/tender. Est. remaining: {time_str}")
+                        
             print(f"\n[+] Extraction phase complete for {state_title}: processed {extracted_count}/{total_extract} tenders.")
         else:
             print(f"[+] No tenders in {state_title} require details extraction.")
