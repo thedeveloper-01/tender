@@ -15,7 +15,13 @@ router.get('/', async (_req, res) => {
 
     const grouped = await prisma.tender.groupBy({
       by: ['locationCity'],
-      where: { status: 'open' },
+      where: {
+        status: 'open',
+        OR: [
+          { endDate: { gte: new Date() } },
+          { endDate: null }
+        ]
+      },
       _count: { _all: true },
     });
 

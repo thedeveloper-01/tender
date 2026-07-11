@@ -12,7 +12,13 @@ router.get('/', async (_req, res) => {
       return res.json(cached);
     }
 
-    const openWhere = { status: 'open' };
+    const openWhere = {
+      status: 'open',
+      OR: [
+        { endDate: { gte: new Date() } },
+        { endDate: null }
+      ]
+    };
 
     const [totalOpen, valueAgg, bySource, byCategoryRaw, lastLog] = await Promise.all([
       prisma.tender.count({ where: openWhere }),

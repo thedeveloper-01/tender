@@ -51,19 +51,34 @@ router.get('/', async (req, res) => {
     } = req.query;
 
     const where = {};
+    const andConditions = [];
 
     if (city && city !== 'all') where.locationCity = city;
     if (state && state !== 'all') where.locationState = state;
     if (source && source !== 'all') where.source = source.toUpperCase();
-    if (status && status !== 'all') where.status = status;
     if (plant && plant !== 'all') where.plantId = plant;
 
+    // Status filter: default to open, and filter out expired tenders
+    if (status === 'open') {
+      where.status = 'open';
+      andConditions.push({
+        OR: [
+          { endDate: { gte: new Date() } },
+          { endDate: null }
+        ]
+      });
+    } else if (status && status !== 'all') {
+      where.status = status;
+    }
+
     if (q) {
-      where.OR = [
-        { title: { contains: q, mode: 'insensitive' } },
-        { organization: { contains: q, mode: 'insensitive' } },
-        { bidNumber: { contains: q, mode: 'insensitive' } },
-      ];
+      andConditions.push({
+        OR: [
+          { title: { contains: q, mode: 'insensitive' } },
+          { organization: { contains: q, mode: 'insensitive' } },
+          { bidNumber: { contains: q, mode: 'insensitive' } },
+        ]
+      });
     }
 
     if (category) {
@@ -86,25 +101,21 @@ router.get('/', async (req, res) => {
     const pageNum  = Math.max(1, parseInt(page, 10)  || 1);
     const limitNum = Math.min(10000, Math.max(1, parseInt(limit, 10) || 20));
 
-    // ── MSE / Startup / Zero-Experience filters ──────────────────────────────
-    // These used to load ALL records into JS memory (OOM on 25k records).
-    // Now they hit indexed Boolean columns in the DB — zero extra memory cost.
     if (mseStartupOnly === 'true') {
-      // Match tenders where MSE OR Startup exemption is confirmed
-      const mseOr = [];
-      mseOr.push({ mseExemption:     true });
-      mseOr.push({ startupExemption: true });
-      // Merge with any existing OR clauses (e.g. from keyword search)
-      if (where.OR) {
-        where.AND = [{ OR: where.OR }, { OR: mseOr }];
-        delete where.OR;
-      } else {
-        where.OR = mseOr;
-      }
+      andConditions.push({
+        OR: [
+          { mseExemption: true },
+          { startupExemption: true }
+        ]
+      });
     }
 
     if (zeroExperienceOnly === 'true') {
       where.yearsOfExperienceZero = true;
+    }
+
+    if (andConditions.length > 0) {
+      where.AND = andConditions;
     }
 
     let tenders, total;
