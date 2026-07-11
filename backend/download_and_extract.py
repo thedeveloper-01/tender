@@ -2149,6 +2149,27 @@ def scrape_gem_listings_for_state(session, csrf, state_name, tenders_col):
     print(f"[+] Sync done: {new_inserts} inserted, {updates} updated.")
     return len(docs)
 
+def acquire_session_and_csrf():
+    session = requests.Session()
+    session.headers.update({
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    })
+    try:
+        r = session.get("https://bidplus.gem.gov.in/advance-search", timeout=25)
+        csrf = None
+        m = re.search(r'id="chash"\s+value="([^"]*)"', r.text)
+        if m: csrf = m.group(1)
+        if not csrf:
+            m2 = re.search(r"'csrf_bd_gem_nk'\s*:\s*'([a-f0-9]{16,})'", r.text, re.IGNORECASE)
+            if m2: csrf = m2.group(1)
+        if not csrf:
+            m3 = re.search(r'csrf_bd_gem_nk["\']?\s*[=:]\s*["\']([a-f0-9]{16,})["\']', r.text, re.IGNORECASE)
+            if m3: csrf = m3.group(1)
+        return session, csrf
+    except Exception as e:
+        print(f"[-] Error loading CSRF: {e}")
+        return None, None
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Main Orchestrator
 # ─────────────────────────────────────────────────────────────────────────────
@@ -2174,37 +2195,19 @@ def main():
         
     print(f"[*] Processing {len(states_to_process)} state(s) sequentially (state-by-state)...")
     
-    # Initial Session and CSRF token
-    session = requests.Session()
-    session.headers.update({
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-    })
-    try:
-        r = session.get("https://bidplus.gem.gov.in/advance-search", timeout=25)
-        csrf = None
-        m = re.search(r'id="chash"\s+value="([^"]*)"', r.text)
-        if m: csrf = m.group(1)
-        if not csrf:
-            m2 = re.search(r"'csrf_bd_gem_nk'\s*:\s*'([a-f0-9]{16,})'", r.text, re.IGNORECASE)
-            if m2: csrf = m2.group(1)
-        if not csrf:
-            m3 = re.search(r'csrf_bd_gem_nk["\']?\s*[=:]\s*["\']([a-f0-9]{16,})["\']', r.text, re.IGNORECASE)
-            if m3: csrf = m3.group(1)
-    except Exception as e:
-        print(f"[-] Error loading CSRF: {e}")
-        return
-        
-    if not csrf:
-        print("[-] Could not find CSRF token.")
-        return
-        
-    print(f"[+] CSRF token acquired: {csrf[:8]}...")
-    
     for idx, state_name in enumerate(states_to_process):
         state_title = title_case(state_name)
         print(f"\n==================================================")
         print(f"  STATE {idx+1}/{len(states_to_process)}: {state_title}")
         print(f"==================================================")
+        
+        # Acquire a fresh session and CSRF token per state to prevent expiration/timeout
+        session, csrf = acquire_session_and_csrf()
+        if not session or not csrf:
+            print(f"[-] Skipped {state_title} due to CSRF acquisition failure.")
+            continue
+            
+        print(f"[+] CSRF token acquired: {csrf[:8]}...")
         
         # 1. Scrape listings and sync database for this state
         try:
