@@ -2074,7 +2074,7 @@ def scrape_gem_listings_for_state(session, csrf, state_name, tenders_col):
         
     print(f"[+] Found {num_found} active bids for {state_name}.")
     
-    pages_to_crawl = min(4, math.ceil(num_found / 10))
+    pages_to_crawl = math.ceil(num_found / 10)
     if pages_to_crawl > 1:
         print(f"[*] Crawling remaining {pages_to_crawl - 1} pages...")
         with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
