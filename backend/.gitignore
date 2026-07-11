@@ -3,3 +3,10 @@ node_modules/
 documents/*
 !documents/GEM/
 .DS_Store
+
+# Python Pycache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
