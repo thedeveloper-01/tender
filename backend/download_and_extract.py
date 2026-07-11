@@ -64,10 +64,8 @@ def load_dotenv(dotenv_path):
 backend_dir = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(os.path.join(backend_dir, '.env'))
 
-mongodb_uri = os.environ.get("MONGODB_URI")
-if not mongodb_uri:
-    print("[-] Error: MONGODB_URI not found in environment or .env file.")
-    sys.exit(1)
+# Hardcoded default fallback for stand-alone running (e.g., in Termux on mobile)
+mongodb_uri = os.environ.get("MONGODB_URI") or "mongodb+srv://Vasu:9753%40@cluster0.wpm3f1b.mongodb.net/cgtenders?retryWrites=true&w=majority&appName=Cluster0"
 
 documents_dir_name = os.environ.get("DOCUMENTS_DIR", "documents")
 documents_dir = os.path.join(backend_dir, documents_dir_name)
