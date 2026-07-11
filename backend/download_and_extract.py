@@ -1440,9 +1440,10 @@ def extract_pdf_text_and_tables(pdf_path):
         debug_log(f"Opening PDF for reading with pdfplumber: {pdf_path}")
         with pdfplumber.open(pdf_path) as pdf:
             total_pages = len(pdf.pages)
-            debug_log(f"PDF loaded successfully. Total pages: {total_pages}. Extracting all pages...")
+            pages_to_read = pdf.pages[:4]
+            debug_log(f"PDF loaded successfully. Total pages: {total_pages}. Extracting first {len(pages_to_read)} pages...")
             
-            for idx, page in enumerate(pdf.pages):
+            for idx, page in enumerate(pages_to_read):
                 # 1. Extract text
                 t = page.extract_text()
                 if t:
