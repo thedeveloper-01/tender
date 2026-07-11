@@ -22,9 +22,10 @@ except ImportError:
 
 try:
     from pypdf import PdfReader
-except ImportError:
-    print("[-] Error: 'pypdf' library is not installed.")
-    print("    Please run: pip install pypdf")
+    import pdfplumber
+except ImportError as e:
+    print(f"[-] Error: required libraries are not installed. {e}")
+    print("    Please run: pip install pypdf pdfplumber")
     sys.exit(1)
 
 DEBUG = True
@@ -773,10 +774,125 @@ def extract_in_section(section_text, anchor, regex, shape, val_type, window_size
             return val
     return try_extract(section_text, regex, shape, val_type)
 
-def extract_fields(sections):
+def label_matches(label, anchor):
+    if not label or not anchor:
+        return False
+    # Remove all non-alphanumeric chars to strip out Hindi/punctuation and get clean English matching
+    l_clean = re.sub(r'[^a-z0-9]', '', label.lower())
+    a_clean = re.sub(r'[^a-z0-9]', '', anchor.lower())
+    
+    # Handle spelling differences for organisation/organization
+    if 'organis' in a_clean:
+        a_clean = a_clean.replace('organisation', 'org')
+    if 'organiz' in a_clean:
+        a_clean = a_clean.replace('organization', 'org')
+    if 'organis' in l_clean:
+        l_clean = l_clean.replace('organisation', 'org')
+    if 'organiz' in l_clean:
+        l_clean = l_clean.replace('organization', 'org')
+        
+    return a_clean in l_clean
+
+def extract_consignees_from_all_tables(all_tables):
+    consignees = []
+    for table in all_tables:
+        if not table or len(table) < 2:
+            continue
+            
+        header = None
+        header_idx = -1
+        for idx, row in enumerate(table):
+            row_str = " ".join([str(c).lower() for c in row if c is not None])
+            if "consignee" in row_str or "reporting officer" in row_str or "address" in row_str or "पता" in row_str:
+                header = row
+                header_idx = idx
+                break
+                
+        if header is None:
+            continue
+            
+        sno_col = -1
+        officer_col = -1
+        address_col = -1
+        qty_col = -1
+        days_col = -1
+        
+        for c_idx, cell in enumerate(header):
+            if not cell:
+                continue
+            c_lower = str(cell).lower()
+            if "s.n" in c_lower or "s.no" in c_lower or "क.सं" in c_lower:
+                sno_col = c_idx
+            elif "consignee" in c_lower or "reporting officer" in c_lower or "परेषती" in c_lower:
+                officer_col = c_idx
+            elif "address" in c_lower or "पता" in c_lower:
+                address_col = c_idx
+            elif "quantity" in c_lower or "मात्रा" in c_lower:
+                qty_col = c_idx
+            elif "delivery" in c_lower or "delivery days" in c_lower or "days" in c_lower or "डलीवर के दन" in c_lower or "डलीवरी के दन" in c_lower:
+                days_col = c_idx
+                
+        if address_col != -1:
+            for row in table[header_idx + 1:]:
+                if not row or len(row) <= max(address_col, qty_col):
+                    continue
+                
+                addr_val = row[address_col]
+                if not addr_val or "address" in str(addr_val).lower():
+                    continue
+                    
+                sno_val = row[sno_col] if (sno_col != -1 and sno_col < len(row)) else None
+                officer_val = row[officer_col] if (officer_col != -1 and officer_col < len(row)) else None
+                qty_val = row[qty_col] if (qty_col != -1 and qty_col < len(row)) else None
+                days_val = row[days_col] if (days_col != -1 and days_col < len(row)) else None
+                
+                sNo = parse_number(sno_val)
+                if sNo is not None:
+                    sNo = int(sNo)
+                else:
+                    sNo = len(consignees) + 1
+                    
+                consignees.append({
+                    "sNo": sNo,
+                    "reportingOfficer": clean_text(officer_val) if officer_val else None,
+                    "address": clean_text(addr_val) if addr_val else None,
+                    "quantity": parse_number(qty_val) if qty_val else None,
+                    "deliveryDays": parse_days(days_val) if days_val else None
+                })
+    return consignees
+
+def extract_fields(sections, table_rows=None):
     result = {}
+    
+    # Try structural table cell extraction first
+    if table_rows:
+        for field in FIELD_DICTIONARY:
+            key = field['key']
+            anchor = field['anchor']
+            val_type = field['type']
+            shape = field.get('shape')
+            
+            if result.get(key) is not None:
+                continue
+                
+            for label, value in table_rows:
+                if label_matches(label, anchor):
+                    clean_val = clean_text(value)
+                    if clean_val:
+                        if shape:
+                            if not re.search(shape, clean_val, re.IGNORECASE):
+                                continue
+                        converted = convert_value(clean_val, val_type)
+                        if converted is not None and converted != '':
+                            result[key] = converted
+                            break
+                            
+    # Fallback to regex-based text extraction for missing fields
     for field in FIELD_DICTIONARY:
         key = field['key']
+        if result.get(key) is not None:
+            continue
+            
         section = field['section']
         anchor = field['anchor']
         regex = field['regex']
@@ -784,14 +900,12 @@ def extract_fields(sections):
         val_type = field['type']
         win = field.get('window', 3)
         
-        if result.get(key) is not None:
-            continue
-            
         value = extract_in_section(sections.get(section, ''), anchor, regex, shape, val_type, win)
         if value is None and 'FULL_TEXT' in sections:
             value = extract_in_section(sections['FULL_TEXT'], anchor, regex, shape, val_type, win)
             
         result[key] = value
+        
     return result
 
 def extract_documents_required(sections):
@@ -1316,27 +1430,60 @@ def resolve_years_zero(val):
 # PDF Parser Entry point
 # ─────────────────────────────────────────────────────────────────────────────
 
-def extract_pdf_text(pdf_path):
+def extract_pdf_text_and_tables(pdf_path):
+    raw_text_parts = []
+    table_rows = []
+    all_tables = []
+    is_scanned = False
+    
     try:
-        debug_log(f"Opening PDF for reading: {pdf_path}")
-        reader = PdfReader(pdf_path)
-        text_parts = []
-        pages_to_read = reader.pages[:4]
-        debug_log(f"PDF loaded successfully. Total pages: {len(reader.pages)}. Extracting starting {len(pages_to_read)} pages...")
-        for idx, page in enumerate(pages_to_read):
-            t = page.extract_text()
-            if t:
-                text_parts.append(t)
-                debug_log(f"  [page {idx+1}] extracted {len(t)} characters")
-        raw_text = "\n".join(text_parts)
-        debug_log(f"Successfully extracted {len(raw_text)} total characters of raw text from starting {len(pages_to_read)} pages.")
-        return raw_text, False
+        debug_log(f"Opening PDF for reading with pdfplumber: {pdf_path}")
+        with pdfplumber.open(pdf_path) as pdf:
+            total_pages = len(pdf.pages)
+            debug_log(f"PDF loaded successfully. Total pages: {total_pages}. Extracting all pages...")
+            
+            for idx, page in enumerate(pdf.pages):
+                # 1. Extract text
+                t = page.extract_text()
+                if t:
+                    raw_text_parts.append(t)
+                    
+                # 2. Extract tables
+                tables = page.extract_tables()
+                page_rows_count = 0
+                for table in tables:
+                    if not table:
+                        continue
+                    all_tables.append(table)
+                    for row in table:
+                        if not row:
+                            continue
+                        if len(row) >= 2:
+                            col0 = row[0]
+                            col1 = row[1]
+                            if col0 is not None or col1 is not None:
+                                col0_str = clean_text(col0)
+                                col1_str = clean_text(col1)
+                                table_rows.append((col0_str, col1_str))
+                                page_rows_count += 1
+                        elif len(row) == 1:
+                            col0_str = clean_text(row[0])
+                            table_rows.append((col0_str, ""))
+                            page_rows_count += 1
+                            
+                debug_log(f"  [page {idx+1}] extracted {len(t) if t else 0} chars, {len(tables)} tables ({page_rows_count} rows)")
+                
+        raw_text = "\n".join(raw_text_parts)
+        if len(raw_text.strip()) < 100:
+            is_scanned = True
+            
+        return raw_text, table_rows, all_tables, is_scanned
     except Exception as e:
-        print(f"[-] Error extracting PDF text using pypdf for {pdf_path}: {e}")
-        return "", True
+        print(f"[-] Error extracting PDF text/tables using pdfplumber for {pdf_path}: {e}")
+        return "", [], [], True
 
 def extract_gem_pdf(pdf_path):
-    raw_text, is_scanned = extract_pdf_text(pdf_path)
+    raw_text, table_rows, all_tables, is_scanned = extract_pdf_text_and_tables(pdf_path)
     if is_scanned or not raw_text or len(raw_text.strip()) < 100:
         return {
             "bidValue": None,
@@ -1351,14 +1498,30 @@ def extract_gem_pdf(pdf_path):
     debug_log(f"Normalized text size: {len(normalized)} chars")
     sections = split_sections(normalized)
     debug_log(f"Split PDF into sections: {list(sections.keys())}")
-    fields = extract_fields(sections)
+    
+    fields = extract_fields(sections, table_rows)
+    
+    # Plausibility sanity check for bidStartDate (Bug 3)
+    start_dt = fields.get("bidStartDate")
+    end_dt = fields.get("bidEndDate")
+    if start_dt and isinstance(start_dt, datetime) and end_dt and isinstance(end_dt, datetime):
+        if (end_dt - start_dt).days > 730 or (end_dt - start_dt).days < 0:
+            debug_log(f"[warning] Plausibility check failed: start={start_dt.strftime('%Y-%m-%d')}, end={end_dt.strftime('%Y-%m-%d')}. Setting start date to None.")
+            fields["bidStartDate"] = None
+            
     debug_log(f"Extracted fields: bidNumber={fields.get('bidNumber')}, bidValue={fields.get('bidValue')}, emdAmount={fields.get('emdAmount')}, itemCategory={fields.get('itemCategory')}")
-    consignees = parse_consignees(sections)
+    
+    consignees = extract_consignees_from_all_tables(all_tables)
+    if not consignees:
+        consignees = parse_consignees(sections)
     debug_log(f"Parsed {len(consignees)} consignees")
+    
     eligibility = parse_eligibility(sections, fields)
     debug_log(f"Parsed eligibility criteria. MSE Exemption: {eligibility.get('mseExemption')}, Startup Exemption: {eligibility.get('startupExemption')}")
+    
     atc = parse_atc(sections)
     debug_log(f"Parsed {len(atc)} buyer added ATC clauses")
+    
     uploaded_docs = parse_uploaded_docs(sections)
     debug_log(f"Parsed {len(uploaded_docs)} uploaded ATC documents")
     
@@ -1386,7 +1549,7 @@ def extract_gem_pdf(pdf_path):
         "consignees": consignees,
         "atc": atc,
         "uploadedDocuments": uploaded_docs,
-        "_extractionMethod": "pypdf_python",
+        "_extractionMethod": "pdfplumber_python",
         "_isScanned": False,
         "extractedAt": datetime.now().isoformat()
     }
