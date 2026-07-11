@@ -101,7 +101,10 @@ function fmt(val) {
 function fmtDate(s) {
   if (!s) return '—';
   const d = new Date(s);
-  return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  if (isNaN(d.getTime())) return '—';
+  const dateStr = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  const timeStr = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false });
+  return `${dateStr} ${timeStr}`;
 }
 
 function daysLeft(s) {
