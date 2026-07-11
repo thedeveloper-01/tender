@@ -2077,7 +2077,7 @@ def scrape_gem_listings_for_state(session, csrf, state_name, tenders_col):
     pages_to_crawl = math.ceil(num_found / 10)
     if pages_to_crawl > 1:
         print(f"[*] Crawling remaining {pages_to_crawl - 1} pages...")
-        with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=25) as executor:
             future_to_page = {
                 executor.submit(fetch_page_state_full, session, csrf, state_name, p): p 
                 for p in range(2, pages_to_crawl + 1)
@@ -2251,7 +2251,7 @@ def main():
             print(f"[*] Starting concurrent downloads for {total_pending} missing PDFs in {state_title}...")
             download_start = time.time()
             downloaded_count = 0
-            with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=25) as executor:
                 futures = {
                     executor.submit(process_single_tender_download, t, documents_dir, tenders_col): t
                     for t in tenders_to_download
@@ -2280,7 +2280,7 @@ def main():
             completed_count = 0
             extract_start = time.time()
             
-            with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=25) as executor:
                 futures = {
                     executor.submit(process_tender_extraction, t, tenders_col): t
                     for t in tenders_to_extract
