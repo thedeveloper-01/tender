@@ -10,7 +10,7 @@ export function getApiBaseUrl() {
     const backendUrl = env?.BACKEND_URL;
     if (backendUrl) return backendUrl;
   } catch (e) {}
-  return 'https://cgtenders-com.onrender.com';
+  return 'https://tender-ntuf.onrender.com';
 }
 
 export const API_BASE_URL = getApiBaseUrl();
