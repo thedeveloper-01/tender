@@ -157,20 +157,7 @@ async def list_tenders(
         return JSONResponse({'error': 'Internal server error'}, status_code=500)
 
 
-@router.get("/{source}/{bid_number}")
-async def get_tender(source: str, bid_number: str):
-    """GET /api/tenders/:source/:bidNumber — single tender detail (full record)"""
-    try:
-        tender = await db.tenders.find_one({'source': source.upper(), 'bidNumber': bid_number})
-        if not tender:
-            return JSONResponse({'error': 'Tender not found'}, status_code=404)
-        return JSONResponse(serialize_doc(tender))
-    except Exception as e:
-        print(f"[api] GET /tenders/:source/:bidNumber error: {e}")
-        return JSONResponse({'error': 'Internal server error'}, status_code=500)
-
-
-@router.get("/{source}/{bid_number}/document")
+@router.get("/{source}/{bid_number:path}/document")
 async def get_tender_document(source: str, bid_number: str):
     """GET /api/tenders/:source/:bidNumber/document — stream saved PDF"""
     try:
@@ -187,7 +174,7 @@ async def get_tender_document(source: str, bid_number: str):
         return JSONResponse({'error': 'Internal server error'}, status_code=500)
 
 
-@router.get("/{source}/{bid_number}/ai-extract")
+@router.get("/{source}/{bid_number:path}/ai-extract")
 async def get_ai_extract(source: str, bid_number: str):
     """GET /api/tenders/:source/:bidNumber/ai-extract
 
@@ -221,4 +208,17 @@ async def get_ai_extract(source: str, bid_number: str):
         }, status_code=404)
     except Exception as e:
         print(f"[api] GET /tenders/:source/:bidNumber/ai-extract error: {e}")
+        return JSONResponse({'error': 'Internal server error'}, status_code=500)
+
+
+@router.get("/{source}/{bid_number:path}")
+async def get_tender(source: str, bid_number: str):
+    """GET /api/tenders/:source/:bidNumber — single tender detail (full record)"""
+    try:
+        tender = await db.tenders.find_one({'source': source.upper(), 'bidNumber': bid_number})
+        if not tender:
+            return JSONResponse({'error': 'Tender not found'}, status_code=404)
+        return JSONResponse(serialize_doc(tender))
+    except Exception as e:
+        print(f"[api] GET /tenders/:source/:bidNumber error: {e}")
         return JSONResponse({'error': 'Internal server error'}, status_code=500)
