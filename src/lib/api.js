@@ -5,11 +5,11 @@ export function getApiBaseUrl() {
     if (typeof process !== 'undefined' && process.env && process.env.BACKEND_URL) {
       return process.env.BACKEND_URL;
     }
-  } catch (e) {}
+  } catch (e) { }
   try {
     const backendUrl = env?.BACKEND_URL;
     if (backendUrl) return backendUrl;
-  } catch (e) {}
+  } catch (e) { }
   return 'https://tender-ntuf.onrender.com';
 }
 
