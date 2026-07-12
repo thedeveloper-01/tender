@@ -580,10 +580,12 @@ function GemSidebar({ filters, onChange, onReset, total, loading }) {
             value={filters.minEmd || ''}
             onChange={e => onChange('minEmd', e.target.value)}
             style={{
-              flex: 1, padding: '7px 10px',
+              flex: 1, width: '100%', minWidth: '0', padding: '7px 10px',
               background: C.surfaceContainer, border: `1px solid ${C.outlineVariant}`,
               borderRadius: '2px', color: C.onSurface, fontSize: '13px', outline: 'none',
             }}
+            onFocus={e => e.target.style.borderColor = C.primary}
+            onBlur={e => e.target.style.borderColor = C.outlineVariant}
           />
           <input
             type="number"
@@ -591,10 +593,12 @@ function GemSidebar({ filters, onChange, onReset, total, loading }) {
             value={filters.maxEmd || ''}
             onChange={e => onChange('maxEmd', e.target.value)}
             style={{
-              flex: 1, padding: '7px 10px',
+              flex: 1, width: '100%', minWidth: '0', padding: '7px 10px',
               background: C.surfaceContainer, border: `1px solid ${C.outlineVariant}`,
               borderRadius: '2px', color: C.onSurface, fontSize: '13px', outline: 'none',
             }}
+            onFocus={e => e.target.style.borderColor = C.primary}
+            onBlur={e => e.target.style.borderColor = C.outlineVariant}
           />
         </div>
       </div>
@@ -707,10 +711,10 @@ function CspgclFilterBar({ filters, onChange, onApply }) {
       background: C.surfaceLow, border: `1px solid ${C.outlineVariant}`,
       borderRadius: '2px', padding: '16px 24px', marginBottom: '24px',
     }}>
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: '20px' }}>
+      <div className="cspgcl-filter-row">
 
         {/* Plant dropdown */}
-        <div style={{ flex: 1, minWidth: '240px' }}>
+        <div className="cspgcl-filter-field">
           <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: C.outline, marginBottom: '6px' }}>Organization &amp; Plant</div>
           <div style={{ position: 'relative' }}>
             <select
@@ -734,35 +738,41 @@ function CspgclFilterBar({ filters, onChange, onApply }) {
         </div>
 
         {/* EMD range */}
-        <div>
+        <div className="cspgcl-filter-field emd-field">
           <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: C.outline, marginBottom: '6px' }}>EMD Amount Range (INR)</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ position: 'relative' }}>
+          <div className="cspgcl-emd-input-wrap" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div className="cspgcl-emd-input-container" style={{ position: 'relative' }}>
               <input
                 type="number"
                 value={local.minEmd}
                 onChange={e => setLocal(l => ({ ...l, minEmd: e.target.value }))}
                 placeholder="0"
+                className="cspgcl-emd-input"
                 style={{
-                  width: '100px', padding: '9px 28px 9px 10px',
+                  padding: '9px 28px 9px 10px',
                   background: C.surfaceContainer, border: `1px solid ${C.outlineVariant}`,
                   borderRadius: '2px', color: C.onSurface, fontSize: '13px', outline: 'none',
                 }}
+                onFocus={e => e.target.style.borderColor = C.primary}
+                onBlur={e => e.target.style.borderColor = C.outlineVariant}
               />
               <span style={{ position: 'absolute', right: '6px', top: '50%', transform: 'translateY(-50%)', fontSize: '9px', color: C.outline, fontWeight: 700 }}>MIN</span>
             </div>
             <span style={{ color: C.outline, fontWeight: 700 }}>to</span>
-            <div style={{ position: 'relative' }}>
+            <div className="cspgcl-emd-input-container" style={{ position: 'relative' }}>
               <input
                 type="number"
                 value={local.maxEmd}
                 onChange={e => setLocal(l => ({ ...l, maxEmd: e.target.value }))}
                 placeholder="10000"
+                className="cspgcl-emd-input"
                 style={{
-                  width: '100px', padding: '9px 28px 9px 10px',
+                  padding: '9px 28px 9px 10px',
                   background: C.surfaceContainer, border: `1px solid ${C.outlineVariant}`,
                   borderRadius: '2px', color: C.onSurface, fontSize: '13px', outline: 'none',
                 }}
+                onFocus={e => e.target.style.borderColor = C.primary}
+                onBlur={e => e.target.style.borderColor = C.outlineVariant}
               />
               <span style={{ position: 'absolute', right: '6px', top: '50%', transform: 'translateY(-50%)', fontSize: '9px', color: C.outline, fontWeight: 700 }}>MAX</span>
             </div>
@@ -772,6 +782,7 @@ function CspgclFilterBar({ filters, onChange, onApply }) {
         {/* Apply button */}
         <button
           onClick={() => onApply(local)}
+          className="cspgcl-apply-btn"
           style={{
             display: 'flex', alignItems: 'center', gap: '6px',
             padding: '9px 20px',
@@ -952,7 +963,7 @@ export default function TenderDashboard({
         background: C.surface, borderBottom: `1px solid ${C.outlineVariant}`,
         position: 'sticky', top: '64px', zIndex: 40,
       }}>
-        <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 32px' }}>
+        <div className="container-pad" style={{ maxWidth: '1440px', margin: '0 auto' }}>
           {/* Tabs row */}
           <div style={{ display: 'flex', alignItems: 'center', height: '48px', borderBottom: `1px solid color-mix(in srgb, var(--outline-variant) 30%, transparent)`, gap: 0 }}>
             <button style={tabStyle('GEM')} onClick={() => switchTab('GEM')}>GeM Tenders</button>
@@ -980,7 +991,7 @@ export default function TenderDashboard({
       {/* ── CSPGCL horizontal filter bar ── */}
       {!isGem && (
         <div style={{ background: C.surface, borderBottom: `1px solid ${C.outlineVariant}` }}>
-          <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '16px 32px' }}>
+          <div className="bar-pad" style={{ maxWidth: '1440px', margin: '0 auto' }}>
             <CspgclFilterBar
               filters={filters}
               onChange={onFilterChange}
@@ -995,10 +1006,10 @@ export default function TenderDashboard({
       )}
 
       {/* ── Main content ── */}
-      <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '24px 32px' }}>
+      <div className="main-content-pad" style={{ maxWidth: '1440px', margin: '0 auto' }}>
 
         {/* Toolbar: search + sort */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '16px', alignItems: 'center' }}>
+        <div className="dashboard-toolbar">
           {/* Search */}
           <div style={{ position: 'relative', flex: '1', minWidth: '200px' }}>
             <span className="material-symbols-outlined" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: C.outline, fontSize: '18px' }}>search</span>
