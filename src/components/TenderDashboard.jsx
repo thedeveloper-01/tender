@@ -658,6 +658,7 @@ function GemSidebar({ filters, onChange, onReset, total, loading }) {
       <div style={{ display: 'none' }} className="mobile-filter-toggle">
         <button
           onClick={() => setMobileOpen(o => !o)}
+          className="mobile-filter-btn"
           style={{
             display: 'flex', alignItems: 'center', gap: '8px',
             padding: '8px 16px',
@@ -966,8 +967,8 @@ export default function TenderDashboard({
         <div className="container-pad" style={{ maxWidth: '1440px', margin: '0 auto' }}>
           {/* Tabs row */}
           <div style={{ display: 'flex', alignItems: 'center', height: '48px', borderBottom: `1px solid color-mix(in srgb, var(--outline-variant) 30%, transparent)`, gap: 0 }}>
-            <button style={tabStyle('GEM')} onClick={() => switchTab('GEM')}>GeM Tenders</button>
-            <button style={tabStyle('CSPGCL')} onClick={() => switchTab('CSPGCL')}>CSPGCL Tenders</button>
+            <button className="dashboard-tab-btn" style={tabStyle('GEM')} onClick={() => switchTab('GEM')}>GeM Tenders</button>
+            <button className="dashboard-tab-btn" style={tabStyle('CSPGCL')} onClick={() => switchTab('CSPGCL')}>CSPGCL Tenders</button>
           </div>
           {/* All India breadcrumb indicator under tab bar — only for GEM scope india */}
           {isGem && filters.gemScope === 'india' && (
@@ -1056,7 +1057,7 @@ export default function TenderDashboard({
         </div>
 
         {/* Content area */}
-        <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
+        <div className="dashboard-content-area">
 
           {/* GeM sidebar */}
           {isGem && (
@@ -1129,7 +1130,7 @@ export default function TenderDashboard({
                 {/* Card grid */}
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 300px), 1fr))',
                   gap: '16px',
                 }}>
                   {displayedTenders.map(t => (
@@ -1139,10 +1140,11 @@ export default function TenderDashboard({
 
                 {/* Pagination */}
                 {totalPages > 1 && (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginTop: '32px' }}>
+                  <div className="pagination-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginTop: '32px' }}>
                     <button
                       disabled={page === 1}
                       onClick={() => setPage(p => p - 1)}
+                      className="pagination-btn-prev-next"
                       style={{
                         padding: '8px 16px',
                         background: 'transparent', border: `1px solid ${C.outlineVariant}`,
@@ -1152,75 +1154,82 @@ export default function TenderDashboard({
                       }}
                     >← Previous</button>
 
-                    {(() => {
-                      const maxButtons = 5;
-                      let startPage = Math.max(1, page - 2);
-                      let endPage = Math.min(totalPages, startPage + maxButtons - 1);
-                      if (endPage - startPage < maxButtons - 1) {
-                        startPage = Math.max(1, endPage - maxButtons + 1);
-                      }
-                      
-                      const pages = [];
-                      for (let p = startPage; p <= endPage; p++) {
-                        pages.push(p);
-                      }
+                    <div className="pagination-numbers-wrap" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      {(() => {
+                        const maxButtons = 5;
+                        let startPage = Math.max(1, page - 2);
+                        let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+                        if (endPage - startPage < maxButtons - 1) {
+                          startPage = Math.max(1, endPage - maxButtons + 1);
+                        }
+                        
+                        const pages = [];
+                        for (let p = startPage; p <= endPage; p++) {
+                          pages.push(p);
+                        }
 
-                      return (
-                        <>
-                          {startPage > 1 && (
-                            <>
+                        return (
+                          <>
+                            {startPage > 1 && (
+                              <>
+                                <button
+                                  onClick={() => setPage(1)}
+                                  style={{
+                                    width: '36px', height: '36px',
+                                    border: `1px solid ${C.outlineVariant}`,
+                                    borderRadius: '2px',
+                                    background: 'transparent',
+                                    color: C.onSurfaceVar,
+                                    fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit',
+                                  }}
+                                >1</button>
+                                {startPage > 2 && <span style={{ color: C.outline }}>…</span>}
+                              </>
+                            )}
+                            {pages.map(p => (
                               <button
-                                onClick={() => setPage(1)}
+                                key={p}
+                                onClick={() => setPage(p)}
                                 style={{
                                   width: '36px', height: '36px',
-                                  border: `1px solid ${C.outlineVariant}`,
+                                  border: `1px solid ${page === p ? C.primary : C.outlineVariant}`,
                                   borderRadius: '2px',
-                                  background: 'transparent',
-                                  color: C.onSurfaceVar,
-                                  fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit',
+                                  background: page === p ? C.primaryContainer : 'transparent',
+                                  color: page === p ? C.onPrimaryContainer : C.onSurfaceVar,
+                                  fontSize: '13px', fontWeight: page === p ? 700 : 400,
+                                  cursor: 'pointer', fontFamily: 'inherit',
                                 }}
-                              >1</button>
-                              {startPage > 2 && <span style={{ color: C.outline }}>…</span>}
-                            </>
-                          )}
-                          {pages.map(p => (
-                            <button
-                              key={p}
-                              onClick={() => setPage(p)}
-                              style={{
-                                width: '36px', height: '36px',
-                                border: `1px solid ${page === p ? C.primary : C.outlineVariant}`,
-                                borderRadius: '2px',
-                                background: page === p ? C.primaryContainer : 'transparent',
-                                color: page === p ? C.onPrimaryContainer : C.onSurfaceVar,
-                                fontSize: '13px', fontWeight: page === p ? 700 : 400,
-                                cursor: 'pointer', fontFamily: 'inherit',
-                              }}
-                            >{p}</button>
-                          ))}
-                          {endPage < totalPages && (
-                            <>
-                              {endPage < totalPages - 1 && <span style={{ color: C.outline }}>…</span>}
-                              <button
-                                onClick={() => setPage(totalPages)}
-                                style={{
-                                  width: '36px', height: '36px',
-                                  border: `1px solid ${C.outlineVariant}`,
-                                  borderRadius: '2px',
-                                  background: 'transparent',
-                                  color: C.onSurfaceVar,
-                                  fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit',
-                                }}
-                              >{totalPages}</button>
-                            </>
-                          )}
-                        </>
-                      );
-                    })()}
+                              >{p}</button>
+                            ))}
+                            {endPage < totalPages && (
+                              <>
+                                {endPage < totalPages - 1 && <span style={{ color: C.outline }}>…</span>}
+                                <button
+                                  onClick={() => setPage(totalPages)}
+                                  style={{
+                                    width: '36px', height: '36px',
+                                    border: `1px solid ${C.outlineVariant}`,
+                                    borderRadius: '2px',
+                                    background: 'transparent',
+                                    color: C.onSurfaceVar,
+                                    fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit',
+                                  }}
+                                >{totalPages}</button>
+                              </>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
+
+                    <span className="pagination-mobile-label" style={{ display: 'none', fontSize: '13px', color: C.onSurfaceVar, fontWeight: 600, padding: '0 8px' }}>
+                      Page {page} of {totalPages}
+                    </span>
 
                     <button
                       disabled={page >= totalPages}
                       onClick={() => setPage(p => p + 1)}
+                      className="pagination-btn-prev-next"
                       style={{
                         padding: '8px 16px',
                         background: 'transparent', border: `1px solid ${C.outlineVariant}`,
@@ -1239,14 +1248,122 @@ export default function TenderDashboard({
 
       {/* Responsive styles */}
       <style>{`
-        @media (max-width: 1023px) {
-          .gem-sidebar-desktop { display: none !important; }
-          .mobile-filter-toggle { display: block !important; }
+        /* Core Dashboard Layout & Tabs */
+        .dashboard-content-area {
+          display: flex;
+          gap: 24px;
+          align-items: flex-start;
+        }
+        .dashboard-tab-btn {
+          flex: 1;
+          justify-content: center;
+          text-align: center;
         }
         @media (max-width: 767px) {
-          div[style*="padding:24px 32px"] { padding: 16px !important; }
-          div[style*="padding:0 32px"] { padding: 0 16px !important; }
-          div[style*="padding:16px 32px"] { padding: 12px 16px !important; }
+          .dashboard-tab-btn {
+            padding: 0 8px !important;
+            font-size: 13px !important;
+          }
+        }
+
+        /* Desktop/Mobile toggles */
+        @media (max-width: 1023px) {
+          .dashboard-content-area {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 16px;
+          }
+          .gem-sidebar-desktop { display: none !important; }
+          .mobile-filter-toggle {
+            display: block !important;
+            width: 100%;
+          }
+          .mobile-filter-btn {
+            width: 100% !important;
+            justify-content: center;
+          }
+        }
+
+        /* CSPGCL Filter Bar layout */
+        .cspgcl-filter-row {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: flex-end;
+          gap: 20px;
+        }
+        .cspgcl-filter-field {
+          flex: 1;
+          min-width: 240px;
+        }
+        .cspgcl-filter-field.emd-field {
+          flex: none;
+        }
+        .cspgcl-emd-input {
+          width: 100px;
+        }
+
+        /* Toolbar styles */
+        .dashboard-toolbar {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 12px;
+          margin-bottom: 16px;
+          align-items: center;
+        }
+
+        @media (max-width: 767px) {
+          /* Toolbar Mobile Stacking */
+          .dashboard-toolbar {
+            flex-direction: column;
+            align-items: stretch;
+          }
+          .dashboard-toolbar > div,
+          .dashboard-toolbar > select {
+            width: 100% !important;
+          }
+
+          /* CSPGCL Filter Mobile Stacking */
+          .cspgcl-filter-row {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 16px;
+          }
+          .cspgcl-filter-field {
+            width: 100% !important;
+            min-width: 0 !important;
+          }
+          .cspgcl-filter-field.emd-field {
+            flex: 1;
+          }
+          .cspgcl-emd-input-wrap {
+            width: 100% !important;
+          }
+          .cspgcl-emd-input-container {
+            flex: 1;
+          }
+          .cspgcl-emd-input {
+            width: 100% !important;
+          }
+          .cspgcl-apply-btn {
+            width: 100% !important;
+            justify-content: center;
+          }
+
+          /* Pagination Mobile Simplification */
+          .pagination-container {
+            width: 100%;
+            justify-content: space-between !important;
+          }
+          .pagination-numbers-wrap {
+            display: none !important;
+          }
+          .pagination-mobile-label {
+            display: inline-block !important;
+          }
+          .pagination-btn-prev-next {
+            flex: 1;
+            text-align: center;
+          }
         }
       `}</style>
     </div>

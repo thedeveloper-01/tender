@@ -55,7 +55,7 @@ const ssrTenders = (initialTenders || []).slice(0, 20);
   <Navbar />
   <main>
     <!-- Issue #8 — HTML Breadcrumb -->
-    <nav aria-label="Breadcrumb" style="max-width:1440px;margin:0 auto;padding:12px 32px 0;">
+    <nav class="container-pad" aria-label="Breadcrumb" style="max-width:1440px;margin:0 auto;padding-top:12px;">
       <ol style="display:flex;align-items:center;gap:6px;list-style:none;margin:0;padding:0;font-size:12px;color:var(--on-surface-variant);">
         <li><a href="/" style="color:var(--on-surface-variant);text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--on-surface-variant)'">Home</a></li>
         <li aria-hidden="true" style="color:var(--outline-variant);">›</li>
@@ -64,7 +64,7 @@ const ssrTenders = (initialTenders || []).slice(0, 20);
     </nav>
 
     <div style="background:var(--surface-dim);border-bottom:1px solid var(--outline-variant);">
-      <div style="max-width:1440px;margin:0 auto;padding:20px 32px 18px;">
+      <div class="container-pad" style="max-width:1440px;margin:0 auto;padding-top:20px;padding-bottom:18px;">
         <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;">
           <div>
             <h1 style="font-family:'Hanken Grotesk','Inter',sans-serif;font-weight:800;font-size:28px;color:var(--on-surface);margin:0 0 4px;letter-spacing:-0.02em;">GeM Tenders</h1>
