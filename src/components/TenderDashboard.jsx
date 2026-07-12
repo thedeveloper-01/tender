@@ -1128,11 +1128,7 @@ export default function TenderDashboard({
             ) : (
               <>
                 {/* Card grid */}
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 300px), 1fr))',
-                  gap: '16px',
-                }}>
+                <div className="tender-card-grid">
                   {displayedTenders.map(t => (
                     <TenderCard key={`${t.source}-${t.bidNumber}`} t={t} />
                   ))}
@@ -1248,11 +1244,16 @@ export default function TenderDashboard({
 
       {/* Responsive styles */}
       <style>{`
-        /* Core Dashboard Layout & Tabs */
+        /* Core Dashboard Layout, Grid & Tabs */
         .dashboard-content-area {
           display: flex;
           gap: 24px;
           align-items: flex-start;
+        }
+        .tender-card-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+          gap: 16px;
         }
         .dashboard-tab-btn {
           flex: 1;
@@ -1312,6 +1313,11 @@ export default function TenderDashboard({
         }
 
         @media (max-width: 767px) {
+          /* Force single-column list card view on mobile */
+          .tender-card-grid {
+            grid-template-columns: 1fr !important;
+          }
+
           /* Toolbar Mobile Stacking */
           .dashboard-toolbar {
             flex-direction: column;
