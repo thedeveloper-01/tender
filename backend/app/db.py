@@ -15,8 +15,12 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from .config import config
 
 _client = AsyncIOMotorClient(config.mongo_uri) if config.mongo_uri else None
-# Motor infers the database name from the URI path; fall back to a default.
-db = _client.get_default_database() if _client else None
+db = None
+if _client is not None:
+    try:
+        db = _client.get_default_database()
+    except Exception:
+        db = _client["cgtenders"]
 
 tenders = db["Tender"] if db is not None else None
 fetch_logs = db["FetchLog"] if db is not None else None
