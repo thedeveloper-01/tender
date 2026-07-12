@@ -4,11 +4,9 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "node src/server.js",
-    "start": "node --max-old-space-size=400 src/server.js",
-    "postinstall": "prisma generate",
-    "db:push": "prisma db push",
-    "pipeline": "node -e \"import('./src/pipeline/run.js').then(m=>m.runPipeline()).then(()=>process.exit(0))\"",
+    "dev": "uvicorn main:app --reload --port 4000",
+    "start": "python main.py",
+    "pipeline": "python -c \"import asyncio; from app.pipeline.run import run_pipeline; asyncio.run(run_pipeline())\"",
     "gem:scrape": "node src/gem_scraper_run.js"
   },
   "dependencies": {

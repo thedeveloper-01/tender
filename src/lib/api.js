@@ -1,10 +1,22 @@
-// Shared API client for the CGTenders backend (Express + Prisma on Railway).
-// Used by both server-rendered Astro pages and the client-side React island.
+import { env } from 'cloudflare:workers';
 
-export const API_BASE_URL = 'https://cgtenders-com.onrender.com';
+export function getApiBaseUrl() {
+  try {
+    if (typeof process !== 'undefined' && process.env && process.env.BACKEND_URL) {
+      return process.env.BACKEND_URL;
+    }
+  } catch (e) {}
+  try {
+    const backendUrl = env?.BACKEND_URL;
+    if (backendUrl) return backendUrl;
+  } catch (e) {}
+  return 'https://cgtenders-com.onrender.com';
+}
+
+export const API_BASE_URL = getApiBaseUrl();
 
 async function getJson(path, { timeout = 30000 } = {}) {
-  const url = `${API_BASE_URL}${path}`;
+  const url = `${getApiBaseUrl()}${path}`;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
   try {
@@ -52,10 +64,8 @@ export async function fetchStats() {
 
 /** Build the document/PDF URL for a tender */
 export function documentUrl(source, bidNumber) {
-  return `${API_BASE_URL}/api/tenders/${source}/${encodeURIComponent(bidNumber)}/document`;
+  return `${getApiBaseUrl()}/api/tenders/${source}/${encodeURIComponent(bidNumber)}/document`;
 }
-
-import { env } from 'cloudflare:workers';
 
 /** Helper to fetch with Cloudflare KV cache.
  * In Astro v6 the old Astro.locals.runtime.env API was removed.

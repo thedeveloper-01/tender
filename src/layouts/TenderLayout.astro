@@ -1,5 +1,8 @@
 ---
 import '../styles/global.css';
+import { getApiBaseUrl } from '../lib/api.js';
+
+const apiBase = getApiBaseUrl();
 
 export interface Props {
   title?: string;
@@ -113,8 +116,8 @@ const jsonLdItems: object[] = jsonLd
 
     <!-- DNS prefetch -->
     <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-    <link rel="dns-prefetch" href="https://cgtenders-com.onrender.com" />
-    <link rel="preconnect" href="https://cgtenders-com.onrender.com" crossorigin />
+    <link rel="dns-prefetch" href={apiBase} />
+    <link rel="preconnect" href={apiBase} crossorigin />
     <link rel="preconnect" href="https://mkp.gem.gov.in" crossorigin />
     <link rel="dns-prefetch" href="https://mkp.gem.gov.in" />
 
