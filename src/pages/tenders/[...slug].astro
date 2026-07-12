@@ -417,18 +417,18 @@ const riskMeterColor = riskLevel === 'Low' ? 'text-emerald-500'
 
   {isCityRoute ? (
     <main class="transition-colors duration-200">
-      <div style="background:#0d1c2d;border-bottom:1px solid #424754;padding:20px 32px 18px;">
+      <div style="background:var(--surface-dim);border-bottom:1px solid var(--outline-variant);padding:20px 32px 18px;">
         <div style="max-width:1440px;margin:0 auto;">
           <!-- Issue #8 — HTML Breadcrumb -->
           <nav aria-label="Breadcrumb" style="margin-bottom:8px;">
-            <ol style="display:flex;align-items:center;gap:6px;list-style:none;margin:0;padding:0;font-size:12px;color:#636878;">
-              <li><a href="/" style="color:#636878;text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='#adc6ff'" onmouseout="this.style.color='#636878'">Home</a></li>
-              <li aria-hidden="true" style="color:#424754;">›</li>
-              <li style="color:#8c909f;font-weight:600;">{city}</li>
+            <ol style="display:flex;align-items:center;gap:6px;list-style:none;margin:0;padding:0;font-size:12px;color:var(--on-surface-variant);">
+              <li><a href="/" style="color:var(--on-surface-variant);text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--on-surface-variant)'">Home</a></li>
+              <li aria-hidden="true" style="color:var(--outline-variant);">›</li>
+              <li style="color:var(--outline);font-weight:600;">{city}</li>
             </ol>
           </nav>
-          <h1 style="font-family:'Hanken Grotesk','Inter',sans-serif;font-weight:800;font-size:28px;color:#d4e4fa;margin:0 0 4px;letter-spacing:-0.02em;">{city} Tenders</h1>
-          <p style="font-size:13px;color:#8c909f;margin:0;">
+          <h1 style="font-family:'Hanken Grotesk','Inter',sans-serif;font-weight:800;font-size:28px;color:var(--on-surface);margin:0 0 4px;letter-spacing:-0.02em;">{city} Tenders</h1>
+          <p style="font-size:13px;color:var(--outline);margin:0;">
             Open government tenders in {city} district, Chhattisgarh — sourced from GeM and CSPGCL portals.
           </p>
         </div>

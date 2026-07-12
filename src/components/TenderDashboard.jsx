@@ -74,21 +74,24 @@ const DISTRICTS_BY_STATE = {
 
 // ─── MD3 Design Tokens ────────────────────────────────────────────────────────
 const C = {
-  surface: '#051424',
-  surfaceLow: '#0d1c2d',
-  surfaceContainer: '#122131',
-  surfaceHigh: '#1c2b3c',
-  surfaceHighest: '#273647',
-  onSurface: '#d4e4fa',
-  onSurfaceVar: '#c2c6d6',
-  primary: '#adc6ff',
-  primaryContainer: '#4d8eff',
-  secondary: '#4edea3',
-  secondaryContainer: '#00a572',
-  tertiary: '#ffb786',
-  outline: '#8c909f',
-  outlineVariant: '#424754',
-  error: '#ffb4ab',
+  surface: 'var(--surface)',
+  surfaceLow: 'var(--surface-dim)',
+  surfaceContainer: 'var(--surface-container)',
+  surfaceHigh: 'var(--surface-container-high)',
+  surfaceHighest: 'var(--surface-container-highest)',
+  onSurface: 'var(--on-surface)',
+  onSurfaceVar: 'var(--on-surface-variant)',
+  primary: 'var(--primary)',
+  primaryContainer: 'var(--primary-container)',
+  onPrimary: 'var(--on-primary)',
+  onPrimaryContainer: 'var(--on-primary-container)',
+  secondary: 'var(--secondary)',
+  secondaryContainer: 'var(--secondary-container)',
+  onSecondaryContainer: 'var(--on-secondary-container)',
+  tertiary: 'var(--tertiary)',
+  outline: 'var(--outline)',
+  outlineVariant: 'var(--outline-variant)',
+  error: 'var(--error)',
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -216,7 +219,7 @@ function TenderCard({ t }) {
       onMouseLeave={() => setHovered(false)}
       style={{
         background: C.surfaceContainer,
-        border: `1px solid ${hovered ? 'rgba(173,198,255,0.5)' : C.outlineVariant}`,
+        border: `1px solid ${hovered ? 'color-mix(in srgb, var(--primary) 50%, transparent)' : C.outlineVariant}`,
         borderRadius: '2px',
         overflow: 'hidden',
         display: 'flex',
@@ -258,14 +261,14 @@ function TenderCard({ t }) {
               fontSize: '9px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
               padding: '2px 7px', borderRadius: '2px',
               ...(t.source === 'GEM'
-                ? { background: 'rgba(173,198,255,0.12)', color: C.primary, border: '1px solid rgba(173,198,255,0.25)' }
-                : { background: 'rgba(255,183,134,0.12)', color: C.tertiary, border: '1px solid rgba(255,183,134,0.25)' }),
+                ? { background: 'color-mix(in srgb, var(--primary) 12%, transparent)', color: C.primary, border: '1px solid color-mix(in srgb, var(--primary) 25%, transparent)' }
+                : { background: 'color-mix(in srgb, var(--tertiary) 12%, transparent)', color: C.tertiary, border: '1px solid color-mix(in srgb, var(--tertiary) 25%, transparent)' }),
             }}>{t.source}</span>
 
             {isMseYes && (
               <span style={{
                 fontSize: '9px', fontWeight: 700, padding: '2px 6px', borderRadius: '2px',
-                background: 'rgba(78,222,163,0.1)', color: C.secondary, border: '1px solid rgba(78,222,163,0.2)'
+                background: 'color-mix(in srgb, var(--secondary) 10%, transparent)', color: C.secondary, border: '1px solid color-mix(in srgb, var(--secondary) 20%, transparent)'
               }}>
                 ✓ MSE
               </span>
@@ -273,7 +276,7 @@ function TenderCard({ t }) {
             {isStartupYes && (
               <span style={{
                 fontSize: '9px', fontWeight: 700, padding: '2px 6px', borderRadius: '2px',
-                background: 'rgba(78,222,163,0.1)', color: C.secondary, border: '1px solid rgba(78,222,163,0.2)'
+                background: 'color-mix(in srgb, var(--secondary) 10%, transparent)', color: C.secondary, border: '1px solid color-mix(in srgb, var(--secondary) 20%, transparent)'
               }}>
                 ✓ Startup
               </span>
@@ -296,7 +299,7 @@ function TenderCard({ t }) {
         </h3>
 
         {/* Financials table */}
-        <div style={{ borderTop: `1px solid rgba(66,71,84,0.5)`, paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+        <div style={{ borderTop: `1px solid color-mix(in srgb, var(--outline-variant) 50%, transparent)`, paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '11px', color: C.outline }}>Tender ID:</span>
             <span style={{ fontFamily: "'JetBrains Mono','Courier New',monospace", fontSize: '11px', color: C.onSurfaceVar }}>
@@ -324,8 +327,8 @@ function TenderCard({ t }) {
             {t.risks.slice(0, 2).map(r => (
               <span key={r} style={{
                 fontSize: '10px', fontWeight: 600,
-                background: 'rgba(255,180,171,0.1)', color: C.error,
-                border: '1px solid rgba(255,180,171,0.2)',
+                background: 'color-mix(in srgb, var(--error) 10%, transparent)', color: C.error,
+                border: '1px solid color-mix(in srgb, var(--error) 20%, transparent)',
                 padding: '2px 7px', borderRadius: '2px',
               }}>{r}</span>
             ))}
@@ -335,7 +338,7 @@ function TenderCard({ t }) {
 
       {/* Card footer */}
       <div style={{
-        background: 'rgba(39,54,71,0.5)',
+        background: 'color-mix(in srgb, var(--surface-container-highest) 50%, transparent)',
         borderTop: `1px solid ${C.outlineVariant}`,
         padding: '10px 20px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px',
@@ -436,7 +439,7 @@ function GemSidebar({ filters, onChange, onReset, total, loading }) {
                 style={{
                   padding: '8px 4px',
                   background: active ? C.primaryContainer : 'transparent',
-                  color: active ? '#002e6a' : C.onSurfaceVar,
+                  color: active ? C.onPrimaryContainer : C.onSurfaceVar,
                   border: 'none',
                   borderRight: key === 'cg' ? `1px solid ${C.outlineVariant}` : 'none',
                   fontSize: '11px', fontWeight: active ? 700 : 500,
@@ -619,7 +622,7 @@ function GemSidebar({ filters, onChange, onReset, total, loading }) {
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}
                 >
-                  {active && <span className="material-symbols-outlined" style={{ fontSize: '11px', color: '#003824' }}>check</span>}
+                  {active && <span className="material-symbols-outlined" style={{ fontSize: '11px', color: C.onSecondaryContainer }}>check</span>}
                 </div>
                 <span style={{ fontSize: '13px', color: active ? C.onSurface : C.onSurfaceVar, cursor: 'pointer' }} onClick={() => onChange(key, !active)}>{label}</span>
               </label>
@@ -662,7 +665,7 @@ function GemSidebar({ filters, onChange, onReset, total, loading }) {
           <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>filter_alt</span>
           Filters
           <span style={{
-            background: C.primaryContainer, color: C.onPrimary || '#002e6a',
+            background: C.primaryContainer, color: C.onPrimaryContainer,
             fontSize: '10px', fontWeight: 700, borderRadius: '10px', padding: '1px 7px',
           }}>{loading ? '…' : total}</span>
           <span className="material-symbols-outlined" style={{ fontSize: '18px', transform: mobileOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>expand_more</span>
@@ -772,7 +775,7 @@ function CspgclFilterBar({ filters, onChange, onApply }) {
           style={{
             display: 'flex', alignItems: 'center', gap: '6px',
             padding: '9px 20px',
-            background: C.primary, color: '#002e6a',
+            background: C.primary, color: C.onPrimary,
             border: 'none', borderRadius: '2px',
             fontSize: '13px', fontWeight: 700, cursor: 'pointer',
             fontFamily: 'inherit', transition: 'filter 0.15s',
@@ -951,7 +954,7 @@ export default function TenderDashboard({
       }}>
         <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 32px' }}>
           {/* Tabs row */}
-          <div style={{ display: 'flex', alignItems: 'center', height: '48px', borderBottom: `1px solid rgba(66,71,84,0.3)`, gap: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', height: '48px', borderBottom: `1px solid color-mix(in srgb, var(--outline-variant) 30%, transparent)`, gap: 0 }}>
             <button style={tabStyle('GEM')} onClick={() => switchTab('GEM')}>GeM Tenders</button>
             <button style={tabStyle('CSPGCL')} onClick={() => switchTab('CSPGCL')}>CSPGCL Tenders</button>
           </div>
@@ -959,7 +962,7 @@ export default function TenderDashboard({
           {isGem && filters.gemScope === 'india' && (
             <div style={{
               display: 'flex', alignItems: 'center', gap: '6px',
-              padding: '6px 0 5px', borderTop: `1px solid rgba(66,71,84,0.2)`,
+              padding: '6px 0 5px', borderTop: `1px solid color-mix(in srgb, var(--outline-variant) 20%, transparent)`,
               fontSize: '11px', color: C.outline,
             }}>
               <span style={{ color: C.primary, fontWeight: 700 }}>🇮🇳 All India</span>
@@ -1059,7 +1062,7 @@ export default function TenderDashboard({
           <div style={{ flex: 1, minWidth: 0 }}>
 
             {/* Dashboard header */}
-            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '20px', borderBottom: `1px solid rgba(66,71,84,0.3)`, paddingBottom: '14px', flexWrap: 'wrap', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '20px', borderBottom: `1px solid color-mix(in srgb, var(--outline-variant) 30%, transparent)`, paddingBottom: '14px', flexWrap: 'wrap', gap: '12px' }}>
               <div>
                 <h1 style={{
                   fontFamily: "'Hanken Grotesk','Inter',sans-serif",
@@ -1088,8 +1091,8 @@ export default function TenderDashboard({
             {/* Error */}
             {error && (
               <div style={{
-                background: 'rgba(147,0,10,0.1)', border: '1px solid rgba(255,180,171,0.3)',
-                borderRadius: '2px', padding: '12px 16px', color: C.error,
+                background: 'color-mix(in srgb, var(--error) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--error) 30%, transparent)',
+                borderRadius: '2px', padding: '12px 16px', color: 'var(--error)',
                 fontSize: '13px', marginBottom: '16px',
               }}>
                 ⚠ Error loading tenders: {error}
@@ -1178,7 +1181,7 @@ export default function TenderDashboard({
                                 border: `1px solid ${page === p ? C.primary : C.outlineVariant}`,
                                 borderRadius: '2px',
                                 background: page === p ? C.primaryContainer : 'transparent',
-                                color: page === p ? '#002e6a' : C.onSurfaceVar,
+                                color: page === p ? C.onPrimaryContainer : C.onSurfaceVar,
                                 fontSize: '13px', fontWeight: page === p ? 700 : 400,
                                 cursor: 'pointer', fontFamily: 'inherit',
                               }}

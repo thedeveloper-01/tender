@@ -55,29 +55,29 @@ const jsonLd = [
 >
   <Navbar />
 
-  <main style="min-height:100vh;background:#051424;">
+  <main style="min-height:100vh;background:var(--surface);">
 
     <!-- Stats bar -->
-    <div style="background:#0d1c2d;border-bottom:1px solid #424754;">
+    <div style="background:var(--surface-dim);border-bottom:1px solid var(--outline-variant);">
       <div style="max-width:1440px;margin:0 auto;padding:10px 32px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;">
         <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:center;">
           <div style="display:flex;align-items:center;gap:6px;">
-            <span style="width:7px;height:7px;border-radius:50%;background:#4edea3;display:inline-block;animation:blink 2s ease-in-out infinite;"></span>
-            <span style="font-size:12px;color:#c2c6d6;font-weight:500;">Updated daily · GeM + CSPGCL</span>
-            {lastUpdated && <span style="font-size:11px;color:#8c909f;">· Last updated {lastUpdated}</span>}
+            <span style="width:7px;height:7px;border-radius:50%;background:var(--secondary);display:inline-block;animation:blink 2s ease-in-out infinite;"></span>
+            <span style="font-size:12px;color:var(--on-surface-variant);font-weight:500;">Updated daily · GeM + CSPGCL</span>
+            {lastUpdated && <span style="font-size:11px;color:var(--outline);">· Last updated {lastUpdated}</span>}
           </div>
           <div style="display:flex;gap:16px;">
             <div style="text-align:center;">
-              <span style="font-family:'Hanken Grotesk','Inter',sans-serif;font-weight:700;font-size:18px;color:#adc6ff;">{stats.totalOpenTenders}</span>
-              <span style="font-size:11px;color:#8c909f;margin-left:4px;">Open</span>
+              <span style="font-family:'Hanken Grotesk','Inter',sans-serif;font-weight:700;font-size:18px;color:var(--primary);">{stats.totalOpenTenders}</span>
+              <span style="font-size:11px;color:var(--outline);margin-left:4px;">Open</span>
             </div>
             <div style="text-align:center;">
-              <span style="font-family:'Hanken Grotesk','Inter',sans-serif;font-weight:700;font-size:18px;color:#adc6ff;">{stats.bySource?.GEM || 0}</span>
-              <span style="font-size:11px;color:#8c909f;margin-left:4px;">GeM</span>
+              <span style="font-family:'Hanken Grotesk','Inter',sans-serif;font-weight:700;font-size:18px;color:var(--primary);">{stats.bySource?.GEM || 0}</span>
+              <span style="font-size:11px;color:var(--outline);margin-left:4px;">GeM</span>
             </div>
             <div style="text-align:center;">
-              <span style="font-family:'Hanken Grotesk','Inter',sans-serif;font-weight:700;font-size:18px;color:#ffb786;">{stats.bySource?.CSPGCL || 0}</span>
-              <span style="font-size:11px;color:#8c909f;margin-left:4px;">CSPGCL</span>
+              <span style="font-family:'Hanken Grotesk','Inter',sans-serif;font-weight:700;font-size:18px;color:var(--tertiary);">{stats.bySource?.CSPGCL || 0}</span>
+              <span style="font-size:11px;color:var(--outline);margin-left:4px;">CSPGCL</span>
             </div>
           </div>
         </div>
@@ -85,23 +85,23 @@ const jsonLd = [
         <!-- Active districts strip -->
         {topCities.filter((c: {openCount: number}) => c.openCount > 0).length > 0 && (
           <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
-            <span style="font-size:10px;color:#8c909f;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;margin-right:4px;">Districts:</span>
+            <span style="font-size:10px;color:var(--outline);font-weight:700;text-transform:uppercase;letter-spacing:0.07em;margin-right:4px;">Districts:</span>
             {topCities
               .filter((c: {openCount: number}) => c.openCount > 0)
               .sort((a: {openCount: number}, b: {openCount: number}) => b.openCount - a.openCount)
               .slice(0, 8)
               .map((c: {name: string; slug: string; openCount: number}) => (
                 <a href={`/tenders/${c.slug}`}
-                  style="display:inline-flex;align-items:center;gap:4px;padding:2px 10px;background:#122131;border:1px solid #424754;border-radius:100px;font-size:11px;color:#c2c6d6;text-decoration:none;transition:all 0.15s;"
-                  onmouseover="this.style.borderColor='#adc6ff';this.style.color='#adc6ff';"
-                  onmouseout="this.style.borderColor='#424754';this.style.color='#c2c6d6';"
+                  style="display:inline-flex;align-items:center;gap:4px;padding:2px 10px;background:var(--surface-container);border:1px solid var(--outline-variant);border-radius:100px;font-size:11px;color:var(--on-surface-variant);text-decoration:none;transition:all 0.15s;"
+                  onmouseover="this.style.borderColor='var(--primary)';this.style.color='var(--primary)';"
+                  onmouseout="this.style.borderColor='var(--outline-variant)';this.style.color='var(--on-surface-variant)';"
                 >
                   {c.name}
-                  <span style="background:#1c2b3c;color:#adc6ff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:100px;">{c.openCount}</span>
+                  <span style="background:var(--surface-container-high);color:var(--primary);font-size:9px;font-weight:700;padding:1px 5px;border-radius:100px;">{c.openCount}</span>
                 </a>
               ))
             }
-            <a href="/districts" style="font-size:11px;color:#adc6ff;text-decoration:none;padding:2px 10px;border:1px solid #424754;border-radius:100px;">All 33 →</a>
+            <a href="/districts" style="font-size:11px;color:var(--primary);text-decoration:none;padding:2px 10px;border:1px solid var(--outline-variant);border-radius:100px;">All 33 →</a>
           </div>
         )}
       </div>
@@ -113,12 +113,12 @@ const jsonLd = [
     <!-- FAQ Section (SEO content) -->
     <div style="max-width:900px;margin:0 auto;padding:48px 32px 64px;">
       <div style="text-align:center;margin-bottom:36px;">
-        <p style="font-size:10px;font-weight:700;color:#ffb786;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">CGTenders.com — Chhattisgarh's Tender Portal</p>
-        <h2 style="font-family:'Hanken Grotesk','Inter',sans-serif;font-weight:700;font-size:26px;color:#d4e4fa;margin:0;">Tender &amp; Bidding <span style="color:#ffb786;">FAQs</span></h2>
-        <div style="display:inline-block;background:#df7412;color:#311400;font-size:11px;font-weight:700;padding:4px 14px;border-radius:100px;margin-top:12px;">20 Questions Answered</div>
+        <p style="font-size:10px;font-weight:700;color:var(--tertiary);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">CGTenders.com — Chhattisgarh's Tender Portal</p>
+        <h2 style="font-family:'Hanken Grotesk','Inter',sans-serif;font-weight:700;font-size:26px;color:var(--on-surface);margin:0;">Tender &amp; Bidding <span style="color:var(--tertiary);">FAQs</span></h2>
+        <div style="display:inline-block;background:var(--tertiary-container);color:var(--on-tertiary-container);font-size:11px;font-weight:700;padding:4px 14px;border-radius:100px;margin-top:12px;">20 Questions Answered</div>
       </div>
 
-      <div style="background:#122131;border-left:3px solid #ffb786;border-radius:0 4px 4px 0;padding:14px 18px;margin-bottom:24px;font-size:14px;color:#c2c6d6;">
+      <div style="background:var(--surface-container);border-left:3px solid var(--tertiary);border-radius:0 4px 4px 0;padding:14px 18px;margin-bottom:24px;font-size:14px;color:var(--on-surface-variant);">
         Common questions about the e-tendering process, EMD, procurement contracts, and bidding in Chhattisgarh — answered in plain language.
       </div>
 
@@ -164,7 +164,7 @@ const jsonLd = [
       <div class="faq-group-label">The Bidding Process</div>
 
       <details><summary><span class="q-num">9</span><span class="q-text">How do I find CG government tenders on CGTenders.com?</span><svg class="chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" /></svg></summary>
-        <div class="answer">You can search tenders by keyword, department name, category, or tender ID using the search input on our <a href="/" style="color:#adc6ff;text-decoration:underline;">Tenders search page</a>. You can also filter results by state, closing date, or tender value to quickly find the most relevant procurement opportunities for your business.</div>
+        <div class="answer">You can search tenders by keyword, department name, category, or tender ID using the search input on our <a href="/" style="color:var(--primary);text-decoration:underline;">Tenders search page</a>. You can also filter results by state, closing date, or tender value to quickly find the most relevant procurement opportunities for your business.</div>
       </details>
 
       <details><summary><span class="q-num">10</span><span class="q-text">What is a two-bid system in tendering?</span><svg class="chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" /></svg></summary>

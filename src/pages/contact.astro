@@ -81,16 +81,16 @@ const description = 'Get in touch with our team. We are here to help with any qu
               id="name" 
               name="name"
               required
-              style="width:100%;padding:10px 14px;background:#0d1c2d;border:1px solid #424754;border-radius:4px;color:#d4e4fa;font-size:14px;outline:none;"
-              onfocus="this.style.borderColor='#adc6ff'"
-              onblur="this.style.borderColor='#424754'"
+              style="width:100%;padding:10px 14px;background:var(--surface-container);border:1px solid var(--outline-variant);border-radius:4px;color:var(--on-surface);font-size:14px;outline:none;transition:border-color 0.2s;"
+              onfocus="this.style.borderColor='var(--primary)'"
+              onblur="this.style.borderColor='var(--outline-variant)'"
               placeholder="Your full name"
             />
           </div>
 
           <!-- Email Field -->
           <div>
-            <label for="email" style="display:block;font-size:13px;font-weight:700;color:#8c909f;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">
+            <label for="email" style="display:block;font-size:13px;font-weight:700;color:var(--outline);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">
               Email Address
             </label>
             <input 
@@ -98,56 +98,56 @@ const description = 'Get in touch with our team. We are here to help with any qu
               id="email" 
               name="email"
               required
-              style="width:100%;padding:10px 14px;background:#0d1c2d;border:1px solid #424754;border-radius:4px;color:#d4e4fa;font-size:14px;outline:none;"
-              onfocus="this.style.borderColor='#adc6ff'"
-              onblur="this.style.borderColor='#424754'"
+              style="width:100%;padding:10px 14px;background:var(--surface-container);border:1px solid var(--outline-variant);border-radius:4px;color:var(--on-surface);font-size:14px;outline:none;transition:border-color 0.2s;"
+              onfocus="this.style.borderColor='var(--primary)'"
+              onblur="this.style.borderColor='var(--outline-variant)'"
               placeholder="your.email@company.com"
             />
           </div>
 
           <!-- Organization Field -->
           <div>
-            <label for="organization" style="display:block;font-size:13px;font-weight:700;color:#8c909f;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">
+            <label for="organization" style="display:block;font-size:13px;font-weight:700;color:var(--outline);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">
               Organization / Company
             </label>
             <input 
               type="text" 
               id="organization" 
               name="organization"
-              style="width:100%;padding:10px 14px;background:#0d1c2d;border:1px solid #424754;border-radius:4px;color:#d4e4fa;font-size:14px;outline:none;"
-              onfocus="this.style.borderColor='#adc6ff'"
-              onblur="this.style.borderColor='#424754'"
+              style="width:100%;padding:10px 14px;background:var(--surface-container);border:1px solid var(--outline-variant);border-radius:4px;color:var(--on-surface);font-size:14px;outline:none;transition:border-color 0.2s;"
+              onfocus="this.style.borderColor='var(--primary)'"
+              onblur="this.style.borderColor='var(--outline-variant)'"
               placeholder="Your organization"
             />
           </div>
 
           <!-- Subject Field -->
           <div>
-            <label for="subject" style="display:block;font-size:13px;font-weight:700;color:#8c909f;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">
+            <label for="subject" style="display:block;font-size:13px;font-weight:700;color:var(--outline);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">
               Subject
             </label>
             <div style="position:relative;">
               <select 
                 id="subject" 
                 name="subject"
-                style="width:100%;padding:10px 14px;background:#0d1c2d;border:1px solid #424754;border-radius:4px;color:#d4e4fa;font-size:14px;outline:none;appearance:none;"
-                onfocus="this.style.borderColor='#adc6ff'"
-                onblur="this.style.borderColor='#424754'"
+                style="width:100%;padding:10px 14px;background:var(--surface-container);border:1px solid var(--outline-variant);border-radius:4px;color:var(--on-surface);font-size:14px;outline:none;appearance:none;transition:border-color 0.2s;"
+                onfocus="this.style.borderColor='var(--primary)'"
+                onblur="this.style.borderColor='var(--outline-variant)'"
               >
-                <option value="" style="background:#0d1c2d;">Select a subject</option>
-                <option value="support" style="background:#0d1c2d;">Technical Support</option>
-                <option value="feedback" style="background:#0d1c2d;">Feedback</option>
-                <option value="partnership" style="background:#0d1c2d;">Partnership Inquiry</option>
-                <option value="bug" style="background:#0d1c2d;">Report a Bug</option>
-                <option value="other" style="background:#0d1c2d;">Other</option>
+                <option value="" style="background:var(--surface-container);">Select a subject</option>
+                <option value="support" style="background:var(--surface-container);">Technical Support</option>
+                <option value="feedback" style="background:var(--surface-container);">Feedback</option>
+                <option value="partnership" style="background:var(--surface-container);">Partnership Inquiry</option>
+                <option value="bug" style="background:var(--surface-container);">Report a Bug</option>
+                <option value="other" style="background:var(--surface-container);">Other</option>
               </select>
-              <span class="material-symbols-outlined" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#8c909f;font-size:20px;pointer-events:none;">expand_more</span>
+              <span class="material-symbols-outlined" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--outline);font-size:20px;pointer-events:none;">expand_more</span>
             </div>
           </div>
 
           <!-- Message Field -->
           <div>
-            <label for="message" style="display:block;font-size:13px;font-weight:700;color:#8c909f;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">
+            <label for="message" style="display:block;font-size:13px;font-weight:700;color:var(--outline);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">
               Message
             </label>
             <textarea 
@@ -155,9 +155,9 @@ const description = 'Get in touch with our team. We are here to help with any qu
               name="message"
               rows={6}
               required
-              style="width:100%;padding:10px 14px;background:#0d1c2d;border:1px solid #424754;border-radius:4px;color:#d4e4fa;font-size:14px;outline:none;resize:none;font-family:inherit;"
-              onfocus="this.style.borderColor='#adc6ff'"
-              onblur="this.style.borderColor='#424754'"
+              style="width:100%;padding:10px 14px;background:var(--surface-container);border:1px solid var(--outline-variant);border-radius:4px;color:var(--on-surface);font-size:14px;outline:none;resize:none;font-family:inherit;transition:border-color 0.2s;"
+              onfocus="this.style.borderColor='var(--primary)'"
+              onblur="this.style.borderColor='var(--outline-variant)'"
               placeholder="Tell us how we can help..."
             />
           </div>
@@ -170,7 +170,7 @@ const description = 'Get in touch with our team. We are here to help with any qu
               name="consent"
               style="margin-top:3px;cursor:pointer;"
             />
-            <label for="consent" style="font-size:13px;color:#8c909f;cursor:pointer;">
+            <label for="consent" style="font-size:13px;color:var(--outline);cursor:pointer;">
               I agree to be contacted about my inquiry and accept the privacy policy
             </label>
           </div>

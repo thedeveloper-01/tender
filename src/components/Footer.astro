@@ -1,6 +1,6 @@
 ---
 ---
-<footer style="background:#273647;border-top:1px solid #424754;margin-top:auto;">
+<footer style="background:var(--surface-container-highest);border-top:1px solid var(--outline-variant);margin-top:auto;">
   <div style="max-width:1440px;margin:0 auto;padding:32px;display:flex;flex-direction:column;gap:28px;">
 
     <!-- Top row: brand + links -->
@@ -10,16 +10,16 @@
       <div style="max-width:260px;">
         <a href="/" style="display:flex;align-items:center;gap:10px;text-decoration:none;margin-bottom:12px;">
           <svg aria-hidden="true" width="30" height="30" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="4" y="4" width="120" height="120" rx="20" fill="#122131" stroke="#4d8eff" stroke-width="6"/>
-            <text x="64" y="73" font-family="'Hanken Grotesk','Inter',system-ui" font-weight="700" font-size="46" fill="#adc6ff" text-anchor="middle">CG</text>
-            <line x1="44" y1="90" x2="84" y2="90" stroke="#4edea3" stroke-width="5" stroke-linecap="round"/>
+            <rect x="4" y="4" width="120" height="120" rx="20" fill="var(--surface-container)" stroke="var(--primary)" stroke-width="6"/>
+            <text x="64" y="73" font-family="'Hanken Grotesk','Inter',system-ui" font-weight="700" font-size="46" fill="var(--primary)" text-anchor="middle">CG</text>
+            <line x1="44" y1="90" x2="84" y2="90" stroke="var(--secondary)" stroke-width="5" stroke-linecap="round"/>
           </svg>
           <div>
-            <div style="font-family:'Hanken Grotesk','Inter',sans-serif;font-weight:700;font-size:15px;color:#adc6ff;line-height:1.1;">CGTenders</div>
-            <div style="font-size:8px;color:#4edea3;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-top:2px;">Procurement · Simplified</div>
+            <div style="font-family:'Hanken Grotesk','Inter',sans-serif;font-weight:700;font-size:15px;color:var(--primary);line-height:1.1;">CGTenders</div>
+            <div style="font-size:8px;color:var(--secondary);font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-top:2px;">Procurement · Simplified</div>
           </div>
         </a>
-        <p style="font-size:13px;color:#8c909f;line-height:1.6;margin:0;">
+        <p style="font-size:13px;color:var(--outline);line-height:1.6;margin:0;">
           Chhattisgarh government tender aggregator — GeM &amp; CSPGCL in one dashboard. Updated daily at 06:00 IST.
         </p>
       </div>
@@ -27,41 +27,41 @@
       <!-- Link columns -->
       <div style="display:flex;flex-wrap:wrap;gap:40px;">
         <div>
-          <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#8c909f;margin-bottom:14px;">Explore</div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--outline);margin-bottom:14px;">Explore</div>
           <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;">
-            <li><a href="/" style="font-size:13px;color:#c2c6d6;text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='#adc6ff'" onmouseout="this.style.color='#c2c6d6'">All Tenders</a></li>
-            <li><a href="/gem" style="font-size:13px;color:#c2c6d6;text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='#adc6ff'" onmouseout="this.style.color='#c2c6d6'">GeM Tenders</a></li>
-            <li><a href="/cspgcl" style="font-size:13px;color:#c2c6d6;text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='#adc6ff'" onmouseout="this.style.color='#c2c6d6'">CSPGCL Tenders</a></li>
-            <li><a href="/districts" style="font-size:13px;color:#c2c6d6;text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='#adc6ff'" onmouseout="this.style.color='#c2c6d6'">By District</a></li>
+            <li><a href="/" style="font-size:13px;color:var(--on-surface-variant);text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--on-surface-variant)'">All Tenders</a></li>
+            <li><a href="/gem" style="font-size:13px;color:var(--on-surface-variant);text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--on-surface-variant)'">GeM Tenders</a></li>
+            <li><a href="/cspgcl" style="font-size:13px;color:var(--on-surface-variant);text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--on-surface-variant)'">CSPGCL Tenders</a></li>
+            <li><a href="/districts" style="font-size:13px;color:var(--on-surface-variant);text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--on-surface-variant)'">By District</a></li>
           </ul>
         </div>
         <div>
-          <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#8c909f;margin-bottom:14px;">Company</div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--outline);margin-bottom:14px;">Company</div>
           <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;">
-            <li><a href="/about" style="font-size:13px;color:#c2c6d6;text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='#adc6ff'" onmouseout="this.style.color='#c2c6d6'">About</a></li>
-            <li><a href="/contact" style="font-size:13px;color:#c2c6d6;text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='#adc6ff'" onmouseout="this.style.color='#c2c6d6'">Contact</a></li>
+            <li><a href="/about" style="font-size:13px;color:var(--on-surface-variant);text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--on-surface-variant)'">About</a></li>
+            <li><a href="/contact" style="font-size:13px;color:var(--on-surface-variant);text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--on-surface-variant)'">Contact</a></li>
           </ul>
         </div>
         <div>
-          <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#8c909f;margin-bottom:14px;">Legal</div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--outline);margin-bottom:14px;">Legal</div>
           <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;">
-            <li><a href="/privacy" style="font-size:13px;color:#c2c6d6;text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='#adc6ff'" onmouseout="this.style.color='#c2c6d6'">Privacy Policy</a></li>
-            <li><a href="/terms" style="font-size:13px;color:#c2c6d6;text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='#adc6ff'" onmouseout="this.style.color='#c2c6d6'">Terms &amp; Conditions</a></li>
+            <li><a href="/privacy" style="font-size:13px;color:var(--on-surface-variant);text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--on-surface-variant)'">Privacy Policy</a></li>
+            <li><a href="/terms" style="font-size:13px;color:var(--on-surface-variant);text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--on-surface-variant)'">Terms &amp; Conditions</a></li>
           </ul>
         </div>
       </div>
     </div>
 
     <!-- Bottom row: copyright + links -->
-    <div style="border-top:1px solid #424754;padding-top:20px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;">
-      <p style="margin:0;font-size:11px;color:#8c909f;letter-spacing:0.03em;">
+    <div style="border-top:1px solid var(--outline-variant);padding-top:20px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;">
+      <p style="margin:0;font-size:11px;color:var(--outline);letter-spacing:0.03em;">
         &copy; <span id="footer-year">2026</span> CGTenders.com &nbsp;·&nbsp; Government of India. Institutional Division.
         <span style="display:block;margin-top:2px;font-size:10px;">Data sourced from official government portals. Not affiliated with any government body.</span>
       </p>
       <div style="display:flex;gap:20px;">
-        <a href="/privacy" style="font-size:12px;font-weight:600;color:#8c909f;text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='#adc6ff'" onmouseout="this.style.color='#8c909f'">Privacy Policy</a>
-        <a href="/terms" style="font-size:12px;font-weight:600;color:#8c909f;text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='#adc6ff'" onmouseout="this.style.color='#8c909f'">Terms of Service</a>
-        <a href="/contact" style="font-size:12px;font-weight:600;color:#8c909f;text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='#adc6ff'" onmouseout="this.style.color='#8c909f'">Contact Support</a>
+        <a href="/privacy" style="font-size:12px;font-weight:600;color:var(--outline);text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--outline)'">Privacy Policy</a>
+        <a href="/terms" style="font-size:12px;font-weight:600;color:var(--outline);text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--outline)'">Terms of Service</a>
+        <a href="/contact" style="font-size:12px;font-weight:600;color:var(--outline);text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--outline)'">Contact Support</a>
       </div>
     </div>
   </div>
