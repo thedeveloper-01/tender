@@ -90,22 +90,21 @@ const isMseYes = isExempt(mseExempt);
 const isStartupYes = isExempt(startupExempt);
 
 // Deadline color: red ≤2, amber ≤7, green otherwise
-const isClosed = t.endDate ? new Date(t.endDate) < new Date() : false;
-
-// Deadline color: red ≤2, amber ≤7, green otherwise
 const dlColor =
-  dl == null || isClosed
+  dl == null
     ? "#8c909f"
-    : dl <= 2
-      ? "#ffb4ab"
-      : dl <= 7
-        ? "#ffb786"
-        : "#4edea3";
+    : dl < 0
+      ? "#8c909f"
+      : dl <= 2
+        ? "#ffb4ab"
+        : dl <= 7
+          ? "#ffb786"
+          : "#4edea3";
 
 const dlLabel =
   dl == null
     ? ""
-    : isClosed
+    : dl < 0
       ? "Closed"
       : dl === 0
         ? "Closes today"
@@ -123,12 +122,10 @@ const orgInitials = initials(orgDisplay);
 const risks = t.risks || [];
 ---
 
-{
-  !isClosed && (
-    <article
-      style="background:var(--surface-container);border:1px solid var(--outline-variant);border-radius:2px;overflow:hidden;display:flex;flex-direction:column;transition:border-color 0.2s,box-shadow 0.2s;"
-      class="md3-tender-card"
-    >
+<article
+  style="background:var(--surface-container);border:1px solid var(--outline-variant);border-radius:2px;overflow:hidden;display:flex;flex-direction:column;transition:border-color 0.2s,box-shadow 0.2s;"
+  class="md3-tender-card"
+>
   <!-- Card body -->
   <div style="padding:20px;flex:1;">
     <!-- Header: org avatar + name + EMD badge -->
@@ -333,7 +330,6 @@ const risks = t.risks || [];
     </a>
   </div>
 </article>
-)}
 
 <style>
   .md3-tender-card:hover {

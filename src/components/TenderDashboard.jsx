@@ -924,14 +924,10 @@ export default function TenderDashboard({
     setPage(1);
   };
 
-  // Client-side plant and active-time filter fallback (other filters handled server-side)
+  // Client-side plant filter fallback (other filters handled server-side)
   const displayedTenders = tenders.filter(t => {
     if (filters.source === 'CSPGCL' && filters.plant && filters.plant !== 'all') {
       if (t.plantId !== filters.plant && t.sourceMeta?.plantId !== filters.plant) return false;
-    }
-    // Filter out closed/expired tenders (real-time check)
-    if (t.endDate && new Date(t.endDate) < new Date()) {
-      return false;
     }
     return true;
   });
