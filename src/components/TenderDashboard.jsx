@@ -204,11 +204,9 @@ function TenderCard({ t }) {
   const hasEmd = t.emdAmount != null && !isNaN(t.emdAmount) && t.emdAmount > 0;
   const isEmdExempt = t.emdAmount === 0 || (t.source === 'GEM' && t.emdAmount == null && (t.valueExtractionStatus === 'extracted' || t.valueExtractionStatus === 'not_found'));
 
-  const isClosed = t.endDate ? new Date(t.endDate) < new Date() : false;
-
-  const dlColor = dl == null || isClosed ? C.outline
-    : dl <= 2 ? C.error : dl <= 7 ? C.tertiary : C.secondary;
-  const dlLabel = dl == null ? '' : isClosed ? 'Closed' : dl === 0 ? 'Today' : `${dl}d`;
+  const dlColor = dl == null ? C.outline
+    : dl < 0 ? C.outline : dl <= 2 ? C.error : dl <= 7 ? C.tertiary : C.secondary;
+  const dlLabel = dl == null ? '' : dl < 0 ? 'Closed' : dl === 0 ? 'Today' : `${dl}d`;
 
   const orgDisplay = t.organization || t.department || null;
   const orgInit = initials(orgDisplay);
@@ -221,15 +219,13 @@ function TenderCard({ t }) {
       onMouseLeave={() => setHovered(false)}
       style={{
         background: C.surfaceContainer,
-        border: `1px solid ${hovered && !isClosed ? 'color-mix(in srgb, var(--primary) 50%, transparent)' : C.outlineVariant}`,
+        border: `1px solid ${hovered ? 'color-mix(in srgb, var(--primary) 50%, transparent)' : C.outlineVariant}`,
         borderRadius: '2px',
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
-        transition: 'border-color 0.2s,box-shadow 0.2s,opacity 0.2s',
-        boxShadow: hovered && !isClosed ? '0 8px 32px rgba(0,0,0,0.45)' : 'none',
-        opacity: isClosed ? 0.55 : 1,
-        pointerEvents: 'auto',
+        transition: 'border-color 0.2s,box-shadow 0.2s',
+        boxShadow: hovered ? '0 8px 32px rgba(0,0,0,0.45)' : 'none',
       }}
     >
       {/* Card body */}
@@ -292,7 +288,7 @@ function TenderCard({ t }) {
         <h3 style={{
           fontFamily: "'Hanken Grotesk','Inter',sans-serif",
           fontWeight: 700, fontSize: '15px',
-          color: hovered && !isClosed ? C.primary : C.onSurface,
+          color: hovered ? C.primary : C.onSurface,
           lineHeight: 1.4, margin: '0 0 14px',
           minHeight: '42px',
           transition: 'color 0.15s',
@@ -355,7 +351,7 @@ function TenderCard({ t }) {
         </span>
         <a href={detailPath(t)} style={{
           display: 'flex', alignItems: 'center', gap: '2px',
-          fontSize: '12px', fontWeight: 700, color: isClosed ? C.outline : C.primary,
+          fontSize: '12px', fontWeight: 700, color: C.primary,
           textDecoration: 'none', transition: 'color 0.15s',
         }}>
           View Details
@@ -928,10 +924,14 @@ export default function TenderDashboard({
     setPage(1);
   };
 
-  // Client-side plant filter fallback (other filters handled server-side)
+  // Client-side plant and active-time filter fallback (other filters handled server-side)
   const displayedTenders = tenders.filter(t => {
     if (filters.source === 'CSPGCL' && filters.plant && filters.plant !== 'all') {
       if (t.plantId !== filters.plant && t.sourceMeta?.plantId !== filters.plant) return false;
+    }
+    // Filter out closed/expired tenders (real-time check)
+    if (t.endDate && new Date(t.endDate) < new Date()) {
+      return false;
     }
     return true;
   });
