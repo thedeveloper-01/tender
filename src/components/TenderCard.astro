@@ -90,21 +90,22 @@ const isMseYes = isExempt(mseExempt);
 const isStartupYes = isExempt(startupExempt);
 
 // Deadline color: red ≤2, amber ≤7, green otherwise
+const isClosed = t.endDate ? new Date(t.endDate) < new Date() : false;
+
+// Deadline color: red ≤2, amber ≤7, green otherwise
 const dlColor =
-  dl == null
+  dl == null || isClosed
     ? "#8c909f"
-    : dl < 0
-      ? "#8c909f"
-      : dl <= 2
-        ? "#ffb4ab"
-        : dl <= 7
-          ? "#ffb786"
-          : "#4edea3";
+    : dl <= 2
+      ? "#ffb4ab"
+      : dl <= 7
+        ? "#ffb786"
+        : "#4edea3";
 
 const dlLabel =
   dl == null
     ? ""
-    : dl < 0
+    : isClosed
       ? "Closed"
       : dl === 0
         ? "Closes today"
@@ -123,8 +124,8 @@ const risks = t.risks || [];
 ---
 
 <article
-  style="background:var(--surface-container);border:1px solid var(--outline-variant);border-radius:2px;overflow:hidden;display:flex;flex-direction:column;transition:border-color 0.2s,box-shadow 0.2s;"
-  class="md3-tender-card"
+  style={`background:var(--surface-container);border:1px solid var(--outline-variant);border-radius:2px;overflow:hidden;display:flex;flex-direction:column;transition:border-color 0.2s,box-shadow 0.2s,opacity 0.2s;${isClosed ? 'opacity:0.55;filter:grayscale(0.3);' : ''}`}
+  class={`md3-tender-card ${isClosed ? 'is-closed' : ''}`}
 >
   <!-- Card body -->
   <div style="padding:20px;flex:1;">
@@ -319,7 +320,7 @@ const risks = t.risks || [];
     <a
       href={detailUrl}
       data-astro-prefetch
-      style="display:flex;align-items:center;gap:3px;font-size:12px;font-weight:700;color:var(--primary);text-decoration:none;transition:color 0.15s;"
+      style={`display:flex;align-items:center;gap:3px;font-size:12px;font-weight:700;color:${isClosed ? 'var(--outline)' : 'var(--primary)'};text-decoration:none;transition:color 0.15s;`}
       class="md3-view-link"
       aria-label={`View details for ${titleDisplay}`}
     >
@@ -341,5 +342,15 @@ const risks = t.risks || [];
   }
   .md3-view-link:hover {
     color: var(--primary-fixed) !important;
+  }
+  .md3-tender-card.is-closed:hover {
+    border-color: var(--outline-variant) !important;
+    box-shadow: none !important;
+  }
+  .md3-tender-card.is-closed:hover .md3-card-title .md3-title-link {
+    color: inherit !important;
+  }
+  .md3-tender-card.is-closed .md3-view-link:hover {
+    color: var(--outline) !important;
   }
 </style>
