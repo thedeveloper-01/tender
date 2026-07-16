@@ -68,7 +68,7 @@ async def list_tenders(
         if city and city != 'all':
             where['locationCity'] = city
         if state and state != 'all':
-            where['locationState'] = state
+            where['locationState'] = {'$regex': f'^{re.escape(state)}$', '$options': 'i'}
         if source and source != 'all':
             where['source'] = source.upper()
         if plant and plant != 'all':

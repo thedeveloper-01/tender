@@ -398,17 +398,6 @@ function GemSidebar({ filters, onChange, onReset, total, loading }) {
     }
   }
 
-  const isIndia = filters.gemScope === 'india';
-  const selectedState = filters.gemState || 'all';
-  const districtOptions = isIndia && selectedState !== 'all'
-    ? (DISTRICTS_BY_STATE[selectedState] || [])
-    : [];
-
-  function handleScopeToggle(scope) {
-    onChange('gemScope', scope);
-    onChange('gemState', 'all');
-    onChange('city', 'all');
-  }
 
   // Shared select style
   const selectStyle = {
@@ -423,90 +412,21 @@ function GemSidebar({ filters, onChange, onReset, total, loading }) {
   const sidebarContent = (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
-      {/* ── Scope Toggle: Chhattisgarh / All India ── */}
+      {/* ── State Filter ── */}
       <div>
-        <FilterLabel>Location Scope</FilterLabel>
-        <div style={{
-          display: 'grid', gridTemplateColumns: '1fr 1fr',
-          border: `1px solid ${C.outlineVariant}`, borderRadius: '4px', overflow: 'hidden',
-        }}>
-          {[{ key: 'cg', label: 'Chhattisgarh' }, { key: 'india', label: '🇮🇳 All India' }].map(({ key, label }) => {
-            const active = (filters.gemScope || 'cg') === key;
-            return (
-              <button
-                key={key}
-                onClick={() => handleScopeToggle(key)}
-                style={{
-                  padding: '8px 4px',
-                  background: active ? C.primaryContainer : 'transparent',
-                  color: active ? C.onPrimaryContainer : C.onSurfaceVar,
-                  border: 'none',
-                  borderRight: key === 'cg' ? `1px solid ${C.outlineVariant}` : 'none',
-                  fontSize: '11px', fontWeight: active ? 700 : 500,
-                  cursor: 'pointer', fontFamily: 'inherit',
-                  transition: 'all 0.15s', letterSpacing: '0.01em',
-                }}
-              >
-                {label}
-              </button>
-            );
-          })}
-        </div>
+        <FilterLabel>State / UT</FilterLabel>
+        <select
+          value={filters.state || 'all'}
+          onChange={e => {
+            onChange('state', e.target.value);
+            onChange('city', 'all');
+          }}
+          style={selectStyle}
+        >
+          <option value="all">All States</option>
+          {INDIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
       </div>
-
-      {/* ── Chhattisgarh District Filter ── */}
-      {!isIndia && (
-        <div>
-          <FilterLabel>District</FilterLabel>
-          <select
-            value={filters.city}
-            onChange={e => onChange('city', e.target.value)}
-            style={selectStyle}
-          >
-            <option value="all">All Chhattisgarh</option>
-            {CG_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
-        </div>
-      )}
-
-      {/* ── All India: State + District Cascade ── */}
-      {isIndia && (
-        <>
-          <div>
-            <FilterLabel>State</FilterLabel>
-            <select
-              value={selectedState}
-              onChange={e => {
-                onChange('gemState', e.target.value);
-                onChange('city', 'all'); // reset district when state changes
-              }}
-              style={selectStyle}
-            >
-              <option value="all">All States</option>
-              {INDIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </div>
-
-          <div>
-            <FilterLabel>District</FilterLabel>
-            <select
-              value={filters.city}
-              onChange={e => onChange('city', e.target.value)}
-              disabled={selectedState === 'all' || districtOptions.length === 0}
-              style={{
-                ...selectStyle,
-                opacity: selectedState === 'all' ? 0.5 : 1,
-                cursor: selectedState === 'all' ? 'not-allowed' : 'pointer',
-              }}
-            >
-              <option value="all">
-                {selectedState === 'all' ? 'Select a state first' : `All ${selectedState}`}
-              </option>
-              {districtOptions.map(d => <option key={d} value={d}>{d}</option>)}
-            </select>
-          </div>
-        </>
-      )}
 
       {/* Category */}
       <div>
@@ -807,7 +727,7 @@ function CspgclFilterBar({ filters, onChange, onApply }) {
 
 const DEFAULT_FILTERS = {
   source: 'GEM', status: 'open', city: 'all', plant: 'all',
-  gemScope: 'cg', gemState: 'all',
+  state: 'Chhattisgarh',
   category: '', minValue: '', maxValue: '', minEmd: '', maxEmd: '',
   mseStartupOnly: false,
   zeroExperienceOnly: false,
@@ -831,6 +751,7 @@ export default function TenderDashboard({
   const [sort, setSort] = useState('endDate_asc');
   const [filters, setFilters] = useState(() => {
     let city = initialCity || 'all';
+    let state = 'Chhattisgarh';
     let source = initialSource || 'GEM';
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -838,10 +759,12 @@ export default function TenderDashboard({
       if (s === 'GEM' || s === 'CSPGCL') source = s;
       const c = params.get('city');
       if (c) city = c;
+      const st = params.get('state');
+      if (st) state = st;
       const qp = params.get('q');
       if (qp) setQ(qp);
     }
-    return { ...DEFAULT_FILTERS, source, city };
+    return { ...DEFAULT_FILTERS, source, city, state };
   });
 
   const debounceRef = useRef(null);
@@ -856,9 +779,8 @@ export default function TenderDashboard({
       if (currentFilters.source !== 'all') params.set('source', currentFilters.source);
       if (currentFilters.status !== 'all') params.set('status', currentFilters.status);
       if (currentFilters.city !== 'all') params.set('city', currentFilters.city);
-      // Pass state filter when All India scope is active with a specific state selected
-      if (currentFilters.source === 'GEM' && currentFilters.gemScope === 'india' && currentFilters.gemState && currentFilters.gemState !== 'all') {
-        params.set('state', currentFilters.gemState);
+      if (currentFilters.source === 'GEM' && currentFilters.state && currentFilters.state !== 'all') {
+        params.set('state', currentFilters.state);
       }
       if (currentFilters.source === 'CSPGCL' && currentFilters.plant && currentFilters.plant !== 'all') {
         params.set('plant', currentFilters.plant);
@@ -918,7 +840,7 @@ export default function TenderDashboard({
 
   const switchTab = (tab) => {
     setActiveTab(tab);
-    setFilters(f => ({ ...DEFAULT_FILTERS, source: tab, city: 'all', gemScope: 'cg', gemState: 'all' }));
+    setFilters(f => ({ ...DEFAULT_FILTERS, source: tab, city: 'all', state: 'Chhattisgarh' }));
     setQ('');
     setSort('endDate_asc');
     setPage(1);
@@ -970,17 +892,15 @@ export default function TenderDashboard({
             <button className="dashboard-tab-btn" style={tabStyle('GEM')} onClick={() => switchTab('GEM')}>GeM Tenders</button>
             <button className="dashboard-tab-btn" style={tabStyle('CSPGCL')} onClick={() => switchTab('CSPGCL')}>CSPGCL Tenders</button>
           </div>
-          {/* All India breadcrumb indicator under tab bar — only for GEM scope india */}
-          {isGem && filters.gemScope === 'india' && (
+          {/* Location breadcrumb indicator under tab bar */}
+          {isGem && (
             <div style={{
               display: 'flex', alignItems: 'center', gap: '6px',
               padding: '6px 0 5px', borderTop: `1px solid color-mix(in srgb, var(--outline-variant) 20%, transparent)`,
               fontSize: '11px', color: C.outline,
             }}>
-              <span style={{ color: C.primary, fontWeight: 700 }}>🇮🇳 All India</span>
-              {filters.gemState && filters.gemState !== 'all' && (
-                <><span style={{ color: C.outlineVariant }}>›</span><span style={{ color: C.onSurfaceVar, fontWeight: 600 }}>{filters.gemState}</span></>
-              )}
+              <span style={{ color: C.primary, fontWeight: 700 }}>Location:</span>
+              <span style={{ color: C.onSurfaceVar, fontWeight: 600 }}>{filters.state === 'all' ? 'All India' : filters.state}</span>
               {filters.city && filters.city !== 'all' && (
                 <><span style={{ color: C.outlineVariant }}>›</span><span style={{ color: C.onSurfaceVar }}>{filters.city}</span></>
               )}
@@ -1082,9 +1002,7 @@ export default function TenderDashboard({
                   margin: '0 0 4px', letterSpacing: '-0.01em',
                 }}>
                   {isGem
-                    ? (filters.gemScope === 'india'
-                        ? (filters.gemState !== 'all' ? `GeM Tenders — ${filters.gemState}` : 'GeM Tenders — All India')
-                        : 'GeM Tenders')
+                    ? (filters.state !== 'all' ? `GeM Tenders — ${filters.state}` : 'GeM Tenders — All India')
                     : 'CSPGCL Tenders'}
                 </h1>
                 <p style={{ fontSize: '13px', color: C.onSurfaceVar, margin: 0 }}>
